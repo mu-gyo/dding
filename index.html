@@ -1,0 +1,1729 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>띵타 연금 효율 계산기</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+
+    :root{
+      --bg:#d8d1bf;
+      --panel:#efe8dc;
+      --panel2:#f5efe6;
+      --ink:#2b2b2b;
+      --muted:#6f6a60;
+      --line:#c7bda8;
+      --btn:#e9e1d3;
+      --shadow: 0 10px 22px rgba(0,0,0,.12);
+      --r:16px;
+      font-family: system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+    }
+    body{margin:0;background:var(--bg);color:var(--ink);}
+    .wrap{max-width:1180px;margin:24px auto;padding:0 16px 40px;}
+    h1{font-size:20px;margin:0 0 12px;}
+    .sub{color:var(--muted);font-size:13px;margin-bottom:18px;line-height:1.45}
+    .grid{display:grid;grid-template-columns: 420px 1fr;gap:14px;}
+    @media (max-width: 980px){.grid{grid-template-columns:1fr}}
+    .card{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border:1px solid var(--line);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+/* 카드 안에서 섹션(표/블록)끼리 숨 주기 */
+.card h2{
+  margin: 0 0 10px;
+}
+
+/* 두 번째 이후 h2는 위쪽 간격 크게 */
+.card h2 + table,
+.card h2 + .split,
+.card h2 + .note,
+.card h2 + div{
+  margin-top: 8px;
+}
+
+.card table + h2{
+  margin-top: 22px;   /* ✅ 표 다음 섹션 타이틀: 딱 붙는 문제 해결 핵심 */
+}
+
+/* 표 자체도 아래쪽 여백 조금 */
+.card table{
+  margin-bottom: 6px;
+}
+
+    .card h2{font-size:14px;margin:0 0 10px;color:#3a342b}
+    .row{display:flex;gap:10px;align-items:center;margin:8px 0;}
+    label{flex:1;color:var(--muted);font-size:12px}
+    input, select{
+      width:180px;max-width:60%;
+      padding:8px 10px;border-radius:12px;border:1px solid var(--line);
+      background:#fff; color:var(--ink);
+      outline:none;
+    }
+    .btnbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg,var(--btn),#fff);
+      color:var(--ink);
+      padding:10px 14px;border-radius:14px;
+      cursor:pointer;
+      box-shadow: 0 6px 14px rgba(0,0,0,.10);
+      font-weight:800;
+    }
+    button:hover{background:linear-gradient(180deg,#fff,var(--btn))}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:12px;background:#fff}
+    table{width:100%;border-collapse:separate;border-spacing:0;margin-top:8px;overflow:hidden;border-radius:14px;border:1px solid var(--line);background:#fff}
+    th,td{padding:8px 10px;font-size:13px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}
+    th{background:#f7f2ea;color:#3a342b;text-align:left}
+    tr:last-child td{border-bottom:none}
+    td:first-child, th:first-child{text-align:left}
+    .muted{color:var(--muted)}
+    .zero{color:#9a9488}
+    .neg{color:#8b2f2f;font-weight:800}
+    .pos{color:#2f6f3e;font-weight:800}
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width: 720px){.split{grid-template-columns:1fr}}
+    .tabs{display:flex;gap:10px;margin:14px 0 18px;justify-content:center;}
+.actualGrid{align-items:start;}
+.actualGrid .card{max-width:980px;margin:0 auto;}
+.actualGrid .card[style*='grid-column:1 / -1']{max-width:1100px;}
+.row{justify-content:center;}
+
+    .tab{border:1px solid var(--line);background:var(--btn);padding:10px 12px;border-radius:999px;cursor:pointer;box-shadow:var(--shadow);font-weight:700;color:var(--muted);}
+    .tab.active{background:var(--panel2);color:var(--ink);}
+    .note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:8px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  
+    .actualGrid{grid-template-columns:1fr;justify-items:center;gap:18px;}
+    .actualGrid .card{width:min(1100px, 100%);}
+    .badgeRow{display:flex;justify-content:center;margin:10px 0 6px;}
+    .badge{display:flex;gap:10px;align-items:baseline;padding:10px 14px;border:1px solid var(--line);background:var(--panel2);border-radius:14px;box-shadow:var(--shadow);}
+    .badge b{font-size:18px;}
+    .checkCell{width:68px;}
+    .chk{width:18px;height:18px;accent-color: #6b5b3e;}
+    .center{text-align:center;}
+
+
+#tab2{ padding-bottom:48px; }
+
+
+/* === 아이콘 + 텍스트 정렬용 (연금품 / 어패류 공통) === */
+.item-label {
+  display: inline-flex;
+  align-items: center;   /* ← 이게 핵심 */
+  gap: 8px;
+}
+
+.item-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+
+/* === 합계 행 강조 === */
+.sum-row td{
+  border-top: 2px solid #d2c2a8;
+  padding: 14px 12px;     /* ← 높이 핵심 */
+  line-height: 1.6;       /* ← 텍스트 여유 */
+}
+
+.sum-row{
+  background: #fbf7f1;
+}
+
+.sum-row .sum-value{
+  font-weight: 700;
+  font-size: 15px;        /* 살짝 키워도 좋음 */
+}
+.sum-row td{
+  padding: 16px 12px;
+}
+
+.sum-row{
+  background: #faf6ef;
+}
+
+/* summary 오른쪽 배지 */
+.midBadge{
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.70);
+  opacity: .92;
+}
+.midBadge.on{
+  border-color: rgba(206, 184, 155, .90);
+  box-shadow: 0 0 0 2px rgba(206, 184, 155, .18);
+}
+
+/* summary 안의 작은 버튼 */
+.btnTiny{
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+
+/* ================================
+   TAB3: RECIPE (검색 + 티어별 정리)
+   ================================ */
+#panelRecipe .card{ position: relative; }
+.recipeHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.recipeSearchRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin: 10px 0 8px;
+}
+.recipeSearchRow input[type="text"]{
+  flex: 1 1 auto;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.9);
+}
+.recipeList{
+  margin-top: 10px;
+  display: grid;
+  gap: 14px;
+}
+.recipeGroup{
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 12px;
+}
+.recipeGroup:first-child{
+  border-top: 0;
+  padding-top: 0;
+}
+.recipeGroupTitle{
+  font-size: 13px;
+  opacity: .85;
+  margin: 0 0 8px;
+}
+.recipeCards{
+  display: grid;
+  gap: 10px;
+}
+.recipeCard{
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.65);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.recipeCardTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.recipeKind{
+  font-size: 12px;
+  opacity: .6;
+  white-space: nowrap;
+}
+.recipeIngs{
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.recipeIng{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(242,236,227,0.7);
+  border: 1px solid rgba(0,0,0,0.06);
+  font-size: 13px;
+}
+.recipeIng .qty{
+  font-variant-numeric: tabular-nums;
+  opacity: .75;
+}
+
+/* dialog */
+.recipeDialog{
+  border: 0;
+  padding: 0;
+  border-radius: 16px;
+  width: min(980px, 96vw);
+  max-height: 88vh;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.22);
+}
+.recipeDialog::backdrop{
+  background: rgba(0,0,0,0.35);
+}
+.recipeDialogInner{
+  padding: 14px 14px 16px;
+  background: #f7f1e8;
+  max-height: 88vh;
+  overflow: auto;
+}
+.recipeDialogTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.recipeDialogTitle{
+  font-size: 15px;
+  font-weight: 700;
+}
+
+#btnRecipePopup{ display:none !important; }
+
+</style>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+:root{
+  --bg:#E7DFD1;
+  --surface:#F7F2E9;
+  --surface2:#F1E8DA;
+  --line:rgba(46,42,35,.14);
+  --text:#2E2A23;
+  --muted:#6D6457;
+  --accent:#B98747;
+  --accent2:#8E6A37;
+  --shadow:0 10px 30px rgba(0,0,0,.08);
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+  color:var(--text);
+  background:radial-gradient(1200px 700px at 50% -200px, rgba(255,255,255,.8), rgba(255,255,255,0)) , var(--bg);
+}
+a{color:inherit}
+h1,h2,h3{letter-spacing:-0.02em}
+.container, .wrap, #app, main{
+zoom: 1.1;
+  width:min(1180px, calc(100% - 48px));
+  margin:0 auto;
+}
+header{
+  padding:26px 0 12px;
+  text-align:center;
+}
+header .subtitle{color:var(--muted)}
+.card, .panel, .box{
+  background:linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.55));
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  backdrop-filter:saturate(140%) blur(6px);
+}
+.section{
+  padding:18px;
+}
+.grid{
+  display:grid;
+  gap:16px;
+}
+@media (min-width: 960px){
+  .grid.cols-2{grid-template-columns: 1fr 1fr;}
+  .grid.cols-3{grid-template-columns: 1.2fr .8fr 1fr;}
+}
+.btn, button{
+  appearance:none;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(245,240,232,.9));
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:14px;
+  cursor:pointer;
+  font-weight:650;
+  letter-spacing:-0.01em;
+  transition:transform .08s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.btn:hover, button:hover{transform:translateY(-1px); box-shadow:0 10px 18px rgba(0,0,0,.10); border-color:rgba(185,135,71,.55)}
+.btn.primary, button.primary{
+  background:linear-gradient(180deg, rgba(185,135,71,.95), rgba(142,106,55,.95));
+  color:#fff;
+  border-color:rgba(0,0,0,.05);
+}
+
+/* ===============================
+   FIX: 최적화 계산 버튼을
+   '잔여 재고 이월' 버튼과 동일하게
+   =============================== */
+
+/* primary라도 일반 버튼과 동일하게 */
+.btn.primary,
+button.primary{
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.9),
+    rgba(245,240,232,.9)
+  ) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.08) !important;
+}
+
+/* disabled 상태여도 디자인은 동일 */
+.btn.primary:disabled,
+button.primary:disabled{
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.9),
+    rgba(245,240,232,.9)
+  ) !important;
+  color: rgba(46,42,35,.45) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,.08) !important;
+  cursor: not-allowed;
+}
+/* primary 버튼도 hover 시 베이지 테두리 */
+.btn.primary:hover,
+button.primary:hover{
+  border-color: rgba(185,135,71,.55) !important;
+}
+
+/* ===============================
+   hover 시 베이지 배경 틴트
+   =============================== */
+
+/* 일반 버튼 hover */
+.btn:hover,
+button:hover{
+  background-color: rgba(185,135,71,.08); /* 연한 베이지 틴트 */
+}
+
+/* primary 버튼 hover (important로 덮기) */
+.btn.primary:hover,
+button.primary:hover{
+  background-color: rgba(185,135,71,.08) !important;
+  border-color: rgba(185,135,71,.55) !important;
+}
+
+/* ===============================
+   active(클릭) 시 더 진한 베이지
+   =============================== */
+
+/* 일반 버튼 active */
+.btn:active,
+button:active{
+  background-color: rgba(185,135,71,.14); /* hover(.08)보다 진함 */
+  box-shadow: 0 4px 10px rgba(0,0,0,.10);
+  transform: translateY(0); /* 눌리는 느낌 */
+}
+
+/* primary 버튼 active */
+.btn.primary:active,
+button.primary:active{
+  background-color: rgba(185,135,71,.14) !important;
+  border-color: rgba(185,135,71,.65) !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,.10);
+}
+
+/* ===============================
+   버튼 로딩 상태 (spinner)
+   =============================== */
+
+.btn.loading,
+button.loading{
+  pointer-events: none;               /* 중복 클릭 방지 */
+  background-color: rgba(185,135,71,.14) !important; /* active 베이지 유지 */
+  border-color: rgba(185,135,71,.65) !important;
+  color: var(--text) !important;
+}
+
+/* 버튼 내부 스피너 */
+.btn .spinner,
+button .spinner{
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(46,42,35,.25);
+  border-top-color: rgba(46,42,35,.65);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: 8px;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+
+.tabs{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding:10px 0 18px;
+}
+.tabs button{
+  min-width:180px;
+}
+input[type="number"], input[type="text"], select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.8);
+  outline:none;
+}
+input:focus, select:focus{border-color:rgba(185,135,71,.7); box-shadow:0 0 0 4px rgba(185,135,71,.18)}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  overflow:hidden;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.55);
+}
+th,td{
+  padding:10px 10px;
+  border-bottom:1px solid var(--line);
+  font-size:14px;
+}
+th{
+  text-align:left;
+  color:var(--muted);
+  font-weight:700;
+  background:rgba(241,232,218,.6);
+}
+tr:last-child td{border-bottom:none}
+.small{font-size:12px; color:var(--muted)}
+.footer-space{height:48px}
+.mat{display:inline-flex; align-items:center; gap:8px}
+.icon{
+  width:18px; height:18px;
+  image-rendering: pixelated;
+  border-radius:6px;
+  background:rgba(0,0,0,.06);
+}
+
+.checkbox{
+  display:inline-flex; align-items:center; gap:10px;
+}
+.checkbox input{
+  appearance:none;
+  width:18px;height:18px;
+  border-radius:6px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.85);
+  position:relative;
+  cursor:pointer;
+}
+.checkbox input:checked{
+  background:linear-gradient(180deg, rgba(185,135,71,.95), rgba(142,106,55,.95));
+  border-color:rgba(0,0,0,.05);
+}
+.checkbox input:checked::after{
+  content:"";
+  position:absolute;
+  left:5px; top:2px;
+  width:5px; height:9px;
+  border:2px solid #fff;
+  border-top:none;border-left:none;
+  transform:rotate(45deg);
+}
+
+
+/* ===== V11 UI patch: solid bg + no gradients + font unify + table alignment ===== */
+
+
+/* ===============================
+   FIX: 탭1 숫자 폰트(.mono) 통일
+   =============================== */
+.mono{
+  font-family: inherit !important;              /* ❌ 모노스페이스 제거 */
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1, "lnum" 1 !important;
+  letter-spacing: 0 !important;
+}
+
+
+/* ===============================
+   숫자/금액/세트 단위 폰트 완전 통일
+   =============================== */
+
+/* input / select가 body 폰트 안 먹는 문제 해결 */
+input, select, textarea, button{
+  font-family: inherit !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* 모든 테이블 숫자 고정폭 */
+td, th{
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* 매출/가격/합계 */
+.pos, .neg, #revSum, #revSumA, #revBadgeA{
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* 세트(64), 개 단위, badge 안 숫자 */
+.set-unit,
+.material-set-unit,
+.badge b,
+span[data-type="set"]{
+  font-family: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  letter-spacing: 0 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+
+body{ background: #f3efe6 !important; }
+.card{ background: var(--surface) !important; }
+
+/* remove gradients from buttons */
+button, .btn{ background-image: none !important; box-shadow: 0 8px 22px rgba(0,0,0,.08) !important; }
+.btn.primary{ background-image: none !important; }
+input, select, textarea{ font-family: inherit !important; }
+
+/* 체크박스도 단색 */
+.checkbox input:checked{ background-image: none !important; background: var(--accent) !important; }
+
+/* 테이블: 헤더/바디 간격/정렬 통일 */
+table{ table-layout: fixed; }
+th, td{ padding: 10px 12px !important; vertical-align: middle !important; line-height: 1.25 !important; }
+th:first-child, td:first-child{ text-align: left !important; }
+th:nth-child(n+2), td:nth-child(n+2){ text-align: right !important; }
+
+/* 숫자 표기 폰트 통일 */
+.num, .amount, .currency{ font-variant-numeric: tabular-nums; }
+
+/* 부재료 세트 단위(세트 64 등) 폰트가 튀지 않도록 */
+.set-unit, .material-set-unit, .badge, span[data-type="set"], .setHint{ font-family: inherit !important; font-size: inherit !important; font-weight: inherit !important; letter-spacing: normal !important; }
+
+/* 어패류 아이콘 기본 리셋 */
+.icon{
+  width:18px;
+  height:18px;
+  display:inline-block;
+  background-color: transparent !important;
+}
+
+/* 아이콘(부재료/어패류 공통): URL background-image 표시용 */
+.icon{
+  background: transparent !important;          /* 기존 회색 background 단축 속성 무력화 */
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+/* 합계 행(탭1/탭2) 높이 강제 */
+table tfoot tr.sum-row td{
+  padding: 16px 12px !important;   /* ← 높이 여기서 결정 */
+  line-height: 1.7 !important;
+  border-top: 2px solid #d2c2a8 !important;
+  vertical-align: middle !important;
+}
+
+table tfoot tr.sum-row{
+  background: #fbf7f1 !important;
+}
+
+table tfoot tr.sum-row .sum-value{
+  font-weight: 700 !important;
+  font-size: 15px !important;
+}
+
+
+/* ✅ number input이 있는 '연금품 제작량 표'만 타겟 */
+#panelExpected table:has(input[type="number"]),
+#panelActual  table:has(input[type="number"]) {
+  table-layout: fixed;              /* 열 폭 안정 */
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* 행 높이/패딩을 단정하게 */
+#panelExpected table:has(input[type="number"]) th,
+#panelExpected table:has(input[type="number"]) td,
+#panelActual  table:has(input[type="number"]) th,
+#panelActual  table:has(input[type="number"]) td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+/* 헤더는 약간 더 '바' 느낌 */
+#panelExpected table:has(input[type="number"]) thead th,
+#panelActual  table:has(input[type="number"]) thead th {
+  font-weight: 700;
+  color: rgba(0,0,0,0.55);
+  background: #f2ece3;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+/* 바디 행 구분선 깔끔하게 */
+#panelExpected table:has(input[type="number"]) tbody td,
+#panelActual  table:has(input[type="number"]) tbody td {
+  border-bottom: 1px solid rgba(0,0,0,0.10);
+}
+
+/* 행 hover는 은은하게 (너무 티나면 촌스러움) */
+#panelExpected table:has(input[type="number"]) tbody tr:hover td,
+#panelActual  table:has(input[type="number"]) tbody tr:hover td {
+  background: rgba(0,0,0,0.02);
+}
+
+/* 첫 컬럼(연금품)은 왼쪽, 나머지 숫자들은 오른쪽 */
+#panelExpected table:has(input[type="number"]) td:first-child,
+#panelActual  table:has(input[type="number"]) td:first-child{
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#panelExpected table:has(input[type="number"]) td:nth-child(2),
+#panelExpected table:has(input[type="number"]) td:nth-child(3),
+#panelExpected table:has(input[type="number"]) td:nth-child(5),
+#panelActual  table:has(input[type="number"]) td:nth-child(2),
+#panelActual  table:has(input[type="number"]) td:nth-child(3),
+#panelActual  table:has(input[type="number"]) td:nth-child(5){
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 제작량 컬럼(td에 number input이 있는 곳)은 중앙/오른쪽 중 선택 가능 */
+#panelExpected table:has(input[type="number"]) td:has(input[type="number"]),
+#panelActual  table:has(input[type="number"]) td:has(input[type="number"]){
+  text-align: center;               /* ✔ 지금 UI엔 가운데가 더 균형 좋음 */
+  width: 140px;                     /* 제작량 열 폭 */
+}
+
+#panelExpected table:has(input[type="number"]) input[type="number"],
+#panelActual  table:has(input[type="number"]) input[type="number"]{
+  width: 86px !important;          /* 96보다 살짝 여유 주면 고급짐 */
+  height: 34px;
+  padding: 0 12px;
+
+  border-radius: 12px;             /* ✅ pill(999px)보다 단정 */
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 포커스 전(기본) 상태에서만 살짝 강조 */
+#panelExpected table:has(input[type="number"]) input[type="number"]:not(:focus):not(:focus-visible),
+#panelActual  table:has(input[type="number"]) input[type="number"]:not(:focus):not(:focus-visible){
+  background: rgba(255,255,255,0.95);
+}
+#panelExpected table:has(input[type="number"]) tfoot td,
+#panelActual  table:has(input[type="number"]) tfoot td{
+  background: #f7f1e8;
+  border-top: 1px solid rgba(0,0,0,0.12);
+  font-weight: 700;
+}
+/* ✅ 연금품 제작량 표: 첫 컬럼 넓게, 나머지 컬럼 폭 고정 */
+#panelExpected table:has(input[type="number"]),
+#panelActual  table:has(input[type="number"]){
+  table-layout: fixed;   /* 열폭을 우리가 컨트롤 */
+}
+
+/* 1열(연금품) 넓게 */
+#panelExpected table:has(input[type="number"]) th:first-child,
+#panelExpected table:has(input[type="number"]) td:first-child,
+#panelActual  table:has(input[type="number"]) th:first-child,
+#panelActual  table:has(input[type="number"]) td:first-child{
+  width: 44%;                 /* 40~55% 사이로 조절 */
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  text-align: left;
+}
+
+/* 2~3열(기본가/최종가) 폭 고정 */
+#panelExpected table:has(input[type="number"]) th:nth-child(2),
+#panelExpected table:has(input[type="number"]) td:nth-child(2),
+#panelExpected table:has(input[type="number"]) th:nth-child(3),
+#panelExpected table:has(input[type="number"]) td:nth-child(3),
+#panelActual  table:has(input[type="number"]) th:nth-child(2),
+#panelActual  table:has(input[type="number"]) td:nth-child(2),
+#panelActual  table:has(input[type="number"]) th:nth-child(3),
+#panelActual  table:has(input[type="number"]) td:nth-child(3){
+  width: 110px;               /* 숫자 칸 폭 */
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 4열(제작량) */
+#panelExpected table:has(input[type="number"]) th:nth-child(4),
+#panelExpected table:has(input[type="number"]) td:nth-child(4),
+#panelActual  table:has(input[type="number"]) th:nth-child(4),
+#panelActual  table:has(input[type="number"]) td:nth-child(4){
+  width: 140px;
+  text-align: center;
+}
+
+/* 5열(매출) */
+#panelExpected table:has(input[type="number"]) th:nth-child(5),
+#panelExpected table:has(input[type="number"]) td:nth-child(5),
+#panelActual  table:has(input[type="number"]) th:nth-child(5),
+#panelActual  table:has(input[type="number"]) td:nth-child(5){
+  width: 120px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ===== SOFT BEIGE FOCUS RING (FINAL) ===== */
+#panelExpected table input[type="number"]:focus,
+#panelActual  table input[type="number"]:focus,
+#panelExpected table input[type="number"]:focus-visible,
+#panelActual  table input[type="number"]:focus-visible{
+  outline: none !important;
+
+  /* 베이지 테두리 */
+border-color: rgba(206, 184, 155, 0.75) !important;
+box-shadow:
+  inset 0 1px 0 rgba(255,255,255,0.9),
+  0 0 0 2px rgba(206, 184, 155, 0.16) !important;
+
+}
+
+/* ===== SOFT BEIGE FOCUS RING (GLOBAL, FINAL) ===== */
+
+/* 왼쪽 폼 입력 + 오른쪽 테이블 숫자 입력 모두 */
+#panelExpected input:focus,
+#panelExpected select:focus,
+#panelActual  input:focus,
+#panelActual  select:focus,
+#panelExpected input:focus-visible,
+#panelExpected select:focus-visible,
+#panelActual  input:focus-visible,
+#panelActual  select:focus-visible{
+  outline: none !important;
+
+  /* 은은한 베이지 테두리 */
+  border-color: rgba(206, 184, 155, 0.9) !important;
+
+  /* 안쪽 하이라이트 + 부드러운 외곽 링 */
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    0 0 0 2px rgba(206, 184, 155, 0.20) !important;
+}
+
+
+/* 1) 첫 컬럼(td) 라인박스 영향 제거 */
+#panelExpected td:first-child,
+#panelActual  td:first-child{
+  vertical-align: middle !important;
+  line-height: normal !important;
+}
+
+/* 2) 네가 준 래퍼(span.item-label)를 강제로 flex 정렬 */
+#panelExpected td:first-child .item-label,
+#panelActual  td:first-child .item-label{
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px;
+  line-height: 1 !important;        /* 라인박스 흔들림 방지 */
+  vertical-align: middle !important;
+}
+
+/* 3) 아이콘 baseline 여백 제거 */
+#panelExpected td:first-child .item-label .item-icon,
+#panelActual  td:first-child .item-label .item-icon{
+  display: block !important;
+}
+
+/* 4) 텍스트가 ‘살짝 떠보이는’ 경우가 많아서 0.5px만 아래로 시각 보정 */
+#panelExpected td:first-child .item-label > span,
+#panelActual  td:first-child .item-label > span{
+  display: block;
+  transform: translateY(0px);
+}
+
+#panelExpected .item-label img{ margin-right: 2px !important; }
+#panelActual  .item-label img{ margin-right: 2px !important; }
+
+
+/* =========================================================
+   MINIMAL CHECKBOX + COMPLETE ROW DIM (FINAL)
+   ========================================================= */
+
+/* 체크박스 셀 정렬 */
+#panelExpected td:has(input[type="checkbox"]),
+#panelActual  td:has(input[type="checkbox"]){
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* 본체 */
+#panelExpected input[type="checkbox"],
+#panelActual  input[type="checkbox"]{
+  appearance: none;
+  -webkit-appearance: none;
+
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+
+  border: 1px solid rgba(0,0,0,0.20);
+  background: rgba(255,255,255,0.95);
+
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* 체크됨: 배경색 + SVG 체크 아이콘 */
+#panelExpected input[type="checkbox"]:checked,
+#panelActual  input[type="checkbox"]:checked{
+  background: #b88752;
+  border-color: rgba(0,0,0,0.10);
+
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 9'>\
+<path d='M1 5 L4.2 8 L11 1.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>\
+</svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px 8px;
+}
+
+/* 포커스(은은한 베이지 링) */
+#panelExpected input[type="checkbox"]:focus,
+#panelActual  input[type="checkbox"]:focus,
+#panelExpected input[type="checkbox"]:focus-visible,
+#panelActual  input[type="checkbox"]:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(206, 184, 155, 0.16);
+}
+
+
+/* =========================================================
+   완료 체크 시: "텍스트/아이콘만" 흐리게 (라인 유지)
+   ========================================================= */
+
+/* td 자체는 유지 (보더/라인 안 흐려짐) */
+#panelExpected tr:has(input[type="checkbox"]:checked) td,
+#panelActual  tr:has(input[type="checkbox"]:checked) td{
+  opacity: 1;
+}
+
+/* td 안의 요소들만 흐리게 (체크박스 제외) */
+#panelExpected tr:has(input[type="checkbox"]:checked) td *:not(input[type="checkbox"]),
+#panelActual  tr:has(input[type="checkbox"]:checked) td *:not(input[type="checkbox"]){
+  opacity: 0.55;
+}
+
+/* 숫자만 있는 td(텍스트 노드)도 톤다운 */
+#panelExpected tr:has(input[type="checkbox"]:checked) td:not(:has(*)),
+#panelActual  tr:has(input[type="checkbox"]:checked) td:not(:has(*)){
+  color: rgba(0,0,0,0.40);
+}
+
+/* 체크박스는 항상 선명 */
+#panelExpected tr:has(input[type="checkbox"]:checked) input[type="checkbox"],
+#panelActual  tr:has(input[type="checkbox"]:checked) input[type="checkbox"]{
+  opacity: 1;
+}
+
+#panelExpected td:has(input[type="checkbox"]),
+#panelActual  td:has(input[type="checkbox"]){
+  width: 46px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+/* ===== 금액 표시 공통 ===== */
+.money{
+  white-space: nowrap;
+}
+
+/* G 단위는 살짝 톤 다운 */
+.money .unit{
+  margin-left: 4px;        /* ← 공백 1칸 역할 */
+  font-size: 0.85em;
+  opacity: 0.65;
+}
+
+/* 0 G는 전체 흐림 */
+.money.zero{
+  opacity: 0.35;
+}
+
+/* ================================
+   MID INVENTORY (탭 공통 UI)
+   ================================ */
+/* ✅ details 자체는 그림자/테두리로 ‘따로 노는’ 느낌이 나지 않도록 정리 */
+:is(#midInvDetails, #midInvDetailsA){
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* ✅ summary: 클릭 가능 커서 + hover 하이라이트 */
+:is(#midInvDetails, #midInvDetailsA) > summary{
+  cursor: pointer;
+  position: relative;
+  transition: background .15s ease, border-color .15s ease;
+}
+:is(#midInvDetails, #midInvDetailsA) > summary:hover{
+  background: rgba(185,135,71,.08);
+  border-color: rgba(185,135,71,.28);
+}
+
+/* ✅ 펼치기 chevron (타이틀 옆) */
+:is(#midInvDetails, #midInvDetailsA) .midTitle{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+:is(#midInvDetails, #midInvDetailsA) .midTitle::after{
+  content: "▾";
+  opacity: .6;
+  transform: translateY(-1px);
+  transition: transform .15s ease, opacity .15s ease;
+}
+:is(#midInvDetails, #midInvDetailsA)[open] .midTitle::after{
+  transform: translateY(-1px) rotate(180deg);
+  opacity: .85;
+}
+
+/* ✅ 중간재 이름(라벨) 폰트 살짝 키우기 */
+:is(#midInvDetails, #midInvDetailsA) .midInvRow .midLabel span{
+  font-size: 14.5px;
+  font-weight: 400; /* 기본 굵기 */
+  line-height: 1.25;
+}
+
+#midInvCard, #midInvCardA{
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+/* details/summary 미니멀하게 (탭1+탭2 공통) */
+:is(#midInvDetails, #midInvDetailsA){
+  border-radius: 16px;
+}
+
+/* 중간재 라벨 글씨만 살짝 작게 + 줄간격 타이트 */
+:is(#midInvDetails, #midInvDetailsA) .midInvRow .mat{
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+/* 섹션 제목도 다른 카드들과 톤 맞추기 */
+:is(#midInvDetails, #midInvDetailsA) .midSecTitle{
+  font-size: 12.5px;
+  opacity: .8;
+}
+
+
+:is(#midInvDetails, #midInvDetailsA) > summary{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 12px 14px;
+  min-height: 46px; /* ✅ 추가: 헤더 높이 고정(클릭 타겟 좋아짐) */
+
+  border-radius: 14px;
+  background: #f2ece3;
+  border: 1px solid rgba(0,0,0,0.08);
+  user-select: none;
+}
+
+
+
+.midRight{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.btnTiny{
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 12px;
+  opacity: .85;
+}
+.btnTiny:hover{
+  opacity: 1;
+}
+
+:is(#midInvDetails, #midInvDetailsA)[open] > summary{
+  background: rgba(242,236,227,0.85);
+  border-color: rgba(0,0,0,0.10);
+}
+
+
+
+
+
+:is(#midInvDetails, #midInvDetailsA) > summary::-webkit-details-marker{ display:none; }
+
+:is(#midInvDetails, #midInvDetailsA) .midTitle{
+  font-weight: 700;           /* 굵게 제거 */
+  color: rgba(0,0,0,0.75);    /* 살짝 진하게 */
+  letter-spacing: -0.01em;    /* 선택: 또렷함만 살짝 */
+}
+
+:is(#midInvDetails, #midInvDetailsA) .midHint{ font-size: 12px; opacity: 0.55; }
+
+/* 내용 영역 */
+:is(#midInvDetails, #midInvDetailsA) > .midInvGrid{
+  padding: 12px 10px 6px; /* 기존 16px → 12px로 살짝 줄임 */
+}
+
+/* midInvGrid는 "섹션들을 세로로 쌓는 컨테이너" */
+.midInvGrid{
+  display: block;
+  padding-top: 12px;
+}
+
+.midInvRow{
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.75);
+}
+
+.midInvRow .midLabel{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.midInvRow .midLabel img{
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.midInvRow .midLabel span{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 입력칸: 기존 테이블 숫자 input 톤과 맞추기 */
+.midInvRow input[type="number"]{
+  width: 86px;
+  height: 34px;
+  padding: 0 12px;
+
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 섹션 타이틀 */
+.midSecTitle{
+  font-weight: 800;
+  opacity: .85;
+  margin: 18px 2px 10px; /* ✅ 위(섹션 간격) / 아래(타이틀-카드 간격) */
+  font-size: 13px;
+}
+
+
+/* 섹션 안에서만 2열 그리드 */
+.midSecGrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 10px 14px;
+  margin-bottom: 14px; /* ✅ 섹션 끝 여백(다음 섹션과 거리) */
+}
+
+
+@media (max-width: 900px){
+  .midSecGrid{ grid-template-columns: 1fr; }
+}
+
+
+#midInvCard input:focus,
+#midInvCard input:focus-visible,
+#midInvCardA input:focus,
+#midInvCardA input:focus-visible{
+  outline: none !important;
+  border-color: rgba(206, 184, 155, 0.9) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    0 0 0 2px rgba(206, 184, 155, 0.20) !important;
+}
+
+/* 요약 카드 숫자만 작게 */
+.card .mono{
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+/* ===== START / 재고 초기화 버튼 영역 ===== */
+.btnbar{
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  margin-bottom: 14px; /* ⬅ 안내문과 거리 */
+  align-items: center;
+}
+
+/* 버튼 공통 높이/톤 정리 */
+.btnbar button{
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+}
+
+/* START 버튼: 주 액션 */
+#btnOpt{
+  flex: 1;                 /* ⬅ 넓게 */
+  font-weight: 600;
+}
+
+/* 재고 초기화: 보조 액션 */
+#btnZero{
+  flex: 0 0 auto;
+  opacity: 0.85;
+}
+#btnZero:hover{
+  opacity: 1;
+}
+
+/* ===== 안내 문구 ===== */
+.note{
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  font-size: 12.5px;
+  line-height: 1.45;
+  opacity: 0.75;
+}
+
+/* 배지 기본 */
+.badgeRow .badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;           /* 라벨-값 사이 */
+}
+
+/* 라벨(예상 총 매출)은 조용하게 */
+.badgeRow .badge .muted{
+  opacity: .65;
+}
+
+/* ✅ 값만 강조 */
+#revBadgeA{
+  font-weight: 700;                 /* 숫자만 또렷 */
+  color: #2f7a4f;                   /* 은은한 그린 */
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ===== 예상 총 매출 배지: 값만 확실히 강조 ===== */
+.badgeRow .badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px; /* 라벨-값 간격 확실히 */
+}
+
+.badgeRow .badge > .muted{
+  opacity: .65;
+}
+
+/* ✅ 기존 .badge b 를 확실히 덮어씀 */
+.badgeRow .badge > b#revBadgeA{
+  font-weight: 700 !important;
+  color: #2f7a4f !important;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+
+/* 채집 후 버튼 2개: 확실히 정렬/크기 통일 */
+#btnSolveActual, #btnCarryToExpected{
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 12px !important;
+  font-size: 13.5px !important;
+}
+
+/* 같은 줄로 묶고 간격 만들기 */
+#btnSolveActual{
+  margin-right: 10px !important;
+}
+
+/* 주 버튼(최적화 계산)은 넓게 */
+#btnSolveActual{
+  min-width: 130px !important;
+  font-weight: 600 !important;
+}
+
+/* 보조 버튼(남은 재고 이월)은 살짝 톤 다운 */
+#btnCarryToExpected{
+  opacity: 0.88 !important;
+}
+#btnCarryToExpected:hover{
+  opacity: 1 !important;
+}
+
+/* 채집 후 버튼 줄(row)만 액션바로 바꾸기 */
+.row:has(#btnSolveActual){
+  display: flex !important;
+  justify-content: flex-start !important; /* ✅ 왼쪽 정렬 */
+  align-items: center !important;
+  gap: 10px !important;
+  margin-top: 12px !important;
+}
+
+/* 버튼 크기 통일 */
+#btnSolveActual, #btnCarryToExpected{
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 12px !important;
+}
+
+/* 배지도 왼쪽 정렬 + 버튼 아래로 */
+.badgeRow{
+  display: flex !important;
+  justify-content: flex-start !important; /* ✅ 왼쪽 정렬 */
+  margin-top: 10px !important;
+}
+
+/* 채집 후 액션 전체 영역 */
+.row:has(#btnSolveActual){
+  display: flex !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  margin: 14px 0 10px !important;
+  padding: 14px 0 !important;
+
+  border-top: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.badgeRow{
+  margin-top: 18px !important;
+  padding-left: 2px;
+}
+
+/* TAB3(레시피) 카드/리스트는 전체 폭 사용 */
+#panelRecipe .card{
+  grid-column: 1 / -1;
+  max-width: 980px;   /* 팝업처럼 넓게 느껴지는 값 */
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 레시피 리스트 자체도 꽉 차게 */
+#panelRecipe #recipeList{
+  width: 100%;
+}
+
+#midInvCard,
+#midInvCardA,
+#midInvDetails,
+#midInvDetailsA{
+  box-shadow: none !important;
+}
+
+.number,
+td.right,
+.price {
+  font-variant-numeric: tabular-nums;
+}
+
+.tabs .tab{
+  font-weight: 600; /* 700 → 600 */
+}
+
+
+padding: 10px 14px;
+
+}
+
+/* 탭 hover */
+.tabs .tab:hover{
+  border-color: rgba(185,135,71,.25) !important;
+}
+
+/* 일반 버튼 hover */
+.btn:hover,
+button:hover{
+  background-color: rgba(185,135,71,.08);
+  border-color: rgba(185,135,71,.25);
+}
+.tabs .tab.active{
+  border-color: rgba(185,135,71,.25);
+}
+
+@media (max-width: 768px){
+  body{ padding: 8px; }
+  .tabs .tab{ padding: 12px 12px; font-size: 15px; }
+  input, select, button{ min-height: 44px; font-size: 16px; }
+  .tableWrap{ overflow-x: auto; }
+}
+
+/* 중간 연금품 재고 제목 */
+.midTitle{
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0,0,0,.65);
+}
+
+
+
+</style>
+
+</head>
+<body>
+  <div class="wrap">
+    <h1></h1>
+    <div class="sub">
+      <span class="pill">🐣 메이드 바이 조무교⠀</span>
+<br/>
+    </div>
+
+    
+    <div class="tabs">
+      <button class="tab active" id="tabExpected">🔋 채집 전 (스태미나 분배)</button>
+      <button class="tab" id="tabActual">⚙️ 채집 후 (제작 효율)</button>
+      <button class="tab" id="tabRecipe">📘 연금 레시피</button>
+    </div>
+
+
+
+    <div id="panelExpected">
+    <div class="grid">
+      <div class="card">
+        <h2>1) 입력</h2>
+
+        <div class="row">
+          <label>총 스태미나</label>
+          <input id="totalStamina" type="number" value="3000" min="0" step="1"/>
+        </div>
+
+        <div class="row">
+          <label>채집 1회 스태미나</label>
+          <input id="staminaPerCast" type="number" value="15" min="1" step="1"/>
+        </div>
+
+        <div class="row">
+          <label>도구 강화 단계</label>
+          <select id="toolLevel">
+            <option value="3">3~5강 (2개 드랍)</option>
+            <option value="6">6~8강 (3개 드랍)</option>
+            <option value="9" selected>9~11강 (4개 드랍)</option>
+            <option value="12">12~14강 (5개 드랍)</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label>프리미엄 한정가 단계 (0~6)</label>
+          <input id="premiumLevel" type="number" value="0" min="0" max="6" step="1"/>
+        </div>
+
+        <div class="row">
+          <label>폭풍의 물질꾼 단계 (0~5)</label>
+          <input id="stormLevel" type="number" value="0" min="0" max="5" step="1"/>
+        </div>
+
+        <div class="row">
+          <label>별별별 단계 (0~6)</label>
+          <input id="starLevel" type="number" value="0" min="0" max="6" step="1"/>
+        </div>
+
+        <h2 style="margin-top:14px">2) 기본 확률</h2>
+        <div class="row">
+          <label>1성 확률</label><input id="p1" type="number" value="0.6" step="0.01" min="0" max="1">
+        </div>
+        <div class="row">
+          <label>2성 확률</label><input id="p2" type="number" value="0.3" step="0.01" min="0" max="1">
+        </div>
+        <div class="row">
+          <label>3성 확률</label><input id="p3" type="number" value="0.1" step="0.01" min="0" max="1">
+        </div>
+
+        <div class="btnbar">
+          <button id="btnOpt">📊 계산</button>
+          <button id="btnZero">🗑️ 재고 초기화</button>
+        </div>
+
+        <div class="note">
+          • 계산을 누르면 <b>스태미나 5종 분배 (100 단위)</b> + <b>연금품 제작량 (기댓값)</b>을 한 번에 추천합니다.<br/>
+          • 보유 중인 어패류와 중간 단계 연금품 재고이 있다면 <b>계산을 누르기 전</b>에 먼저 입력해야 반영됩니다.<br/>
+          • 이후 제작량을 직접 수정하면, 필요 재료/부재료 표는 즉시 업데이트됩니다.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>요약</h2>
+        <div class="split">
+          <div>
+            <div class="row"><label>프리미엄 배율</label><div class="mono" id="outPremium">-</div></div>
+            <div class="row"><label>폭풍 확률(p)</label><div class="mono" id="outStorm">-</div></div>
+            <div class="row"><label>기대 드랍/캐스트</label><div class="mono" id="outDropPerCast">-</div></div>
+            <div class="row"><label>총 캐스트</label><div class="mono" id="outCasts">-</div></div>
+            <div class="row"><label>총 기대 드랍</label><div class="mono" id="outTotalDrops">-</div></div>
+          </div>
+          <div>
+            <div class="row"><label>보정 1성 확률</label><div class="mono" id="outP1">-</div></div>
+            <div class="row"><label>보정 2성 확률</label><div class="mono" id="outP2">-</div></div>
+            <div class="row"><label>보정 3성 확률</label><div class="mono" id="outP3">-</div></div>
+            <div class="row"><label>총 매출</label><div class="mono" id="outRevenue">-</div></div>
+          </div>
+        </div>
+
+        <h2 style="margin-top:14px">스태미나 분배 (결과)</h2>
+        <table id="allocTbl">
+          <thead><tr><th>어종</th><th>100 단위</th><th>스태미나</th><th>캐스트</th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h2>연금품 제작량 (결과)</h2>
+<table id="craftTbl">
+  <thead>
+    <tr><th>연금품</th><th>기본가</th><th>최종가</th><th>제작량</th><th>매출</th></tr>
+  </thead>
+  <tbody></tbody>
+  <tfoot>
+    <tr class="sum-row">
+      <td colspan="4" class="muted">합계</td>
+      <td id="revSum" class="pos sum-value">0 G</td>
+    </tr>
+  </tfoot>
+</table>
+
+
+
+        <h2>어패류 재고 입력</h2>
+        <table id="invTbl">
+          <thead><tr><th>어패류</th><th>재고</th></tr></thead>
+          <tbody></tbody>
+        </table>
+<!-- ✅ 중간 연금품 재고(탭 공통, 접힘) -->
+<div class="card midCard" id="midInvCard">
+  <details id="midInvDetails">
+<summary>
+  <span class="midTitle">중간 연금품 재고 (선택)</span>
+
+  <div class="midRight">
+    <span class="midBadge" id="midInvBadge">미입력</span>
+    <button type="button" class="btnTiny" id="midInvReset">초기화</button>
+  </div>
+</summary>
+
+
+    <!-- app.js가 여기 안에 row들을 만들어 넣게 할 예정 -->
+    <div id="midInvGrid" class="midInvGrid"></div>
+
+    <div class="note" style="margin-top:10px">
+      • 탭1에서는 중간재 재고를 “어패류 환산 크레딧”으로만 반영합니다. (부재료 필요량에는 영향 없음)
+    </div>
+  </details>
+</div>
+      </div>
+
+      <div class="card" style="grid-column:1 / -1">
+        <h2>필요 재료</h2>
+        <div class="split">
+          <div>
+            <h2 style="margin:0 0 8px">어패류 필요량 / 부족분</h2>
+            <table id="needFishTbl">
+              <thead><tr><th>어패류</th><th>필요</th><th>재고</th><th>부족</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div>
+            <h2 style="margin:0 0 8px">부재료 필요량</h2>
+            <table id="needMatTbl">
+              <thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="note">
+          • 부재료 재고는 받지 않으므로, “부족” 대신 필요량만 표시합니다.
+        </div>
+      </div>
+
+    </div> <!-- /.grid -->
+  </div>   <!-- /#panelExpected -->
+
+  <div id="panelActual" style="display:none">
+
+      <div class="grid actualGrid">
+        <div class="card">
+          <h2>채집 후 “실제 제작” 최적화</h2>
+          <div class="note">
+            • 여기서는 스태미나 분배를 하지 않습니다. (이미 채집이 끝난 상태에서, 보유 재고로 제작량을 최대 매출로 추천)<br/>
+            • “어패류 기존 재고”는 한 번 입력하면 브라우저에 저장되어 다음에도 자동으로 불러옵니다.<br/>
+            • “중간 연금품 재고” 또한 저장되어 자동으로 불러옵니다. 저장됨 hh:mm이 뜬다면 꼭 확인하세요.
+          </div>
+
+          <div class="row"><button class="btn primary" id="btnSolveActual">📊 계산</button>
+            <button class="btn" id="btnCarryToExpected">📦 재고 이월</button>
+          </div>
+          <div class="badgeRow"><div class="badge"><span class="muted">예상 총 매출</span><b id="revBadgeA">0 G</b></div></div>
+
+          <h2 style="margin-top:20px">어패류 재고 (채집 후)</h2>
+          <table id="invActualTbl">
+            <thead><tr><th>어패류(등급)</th><th>기존 재고</th><th>오늘 채집(실측)</th><th>총 재고</th></tr></thead>
+            <tbody></tbody>
+          </table>
+
+
+<!-- ✅ 중간 연금품 재고(탭 공통, 접힘) -->
+<div class="card midCard" id="midInvCardA">
+  <details id="midInvDetailsA">
+<summary>
+  <span class="midTitle">중간 연금품 재고 (선택)</span>
+
+  <div class="midRight">
+    <span class="midBadge" id="midInvBadgeA">미입력</span>
+    <button type="button" class="btnTiny" id="midInvResetA">초기화</button>
+  </div>
+</summary>
+
+    <div id="midInvGridA" class="midInvGrid"></div>
+
+    <div class="note" style="margin-top:10px">
+      • 탭2에서는 중간재 재고를 중간재로만 사용하며, 어패류로 환산하지 않습니다. (표시는 “순 필요량” 기준)
+    </div>
+  </details>
+</div>
+
+          <h2 style="margin-top:14px">추천 제작량</h2>
+<table id="craftTblA">
+  <thead>
+    <tr><th>연금품</th><th>최종가</th><th>제작량</th><th>매출</th><th class="center">완료</th></tr>
+  </thead>
+  <tbody></tbody>
+  <tfoot>
+    <tr class="sum-row">
+      <td colspan="3" class="muted">합계</td>
+      <td id="revSumA" class="pos sum-value">0 G</td>
+      <td></td>
+    </tr>
+  </tfoot>
+</table>
+
+        </div>
+
+        <div class="card" style="grid-column:1 / -1">
+          <h2>필요 재료 (채집 후 기준)</h2>
+          <div class="split">
+            <div>
+              <h2 style="margin:0 0 8px">어패류 필요량 / 부족분</h2>
+              <table id="needFishTblA">
+                <thead><tr><th>어패류</th><th>필요</th><th>재고</th><th>부족</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div>
+              <h2 style="margin:0 0 8px">부재료 필요량</h2>
+              <table id="needMatTblA">
+                <thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="note">• 부재료 재고는 받지 않으므로, 필요량만 표시합니다.</div>
+        </div>
+      </div>
+    </div>
+
+  <div id="panelRecipe" style="display:none">
+    <div class="grid recipeGrid">
+      <div class="card">
+        <div class="recipeHead">
+          <h2 style="margin:0">레시피</h2>
+          <div class="recipeActions">
+            <button class="btn" id="btnRecipePopup">팝업으로 보기</button>
+          </div>
+        </div>
+
+        <div class="row recipeSearchRow">
+          <input id="recipeSearch" type="text" placeholder="레시피 검색 (이름/재료) 예: 아쿠티스, 굴 ★, 네더랙" />
+          <button class="btn" id="btnRecipeClear" type="button">지우기</button>
+        </div>
+
+        <div class="note">• 검색은 ‘완성품 이름’ 또는 ‘재료 이름’에 모두 적용됩니다.</div>
+        <div id="recipeList" class="recipeList"></div>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="recipeDialog" class="recipeDialog">
+    <div class="recipeDialogInner">
+      <div class="recipeDialogTop">
+        <div class="recipeDialogTitle">레시피</div>
+        <div class="recipeDialogBtns">
+          <button class="btn" id="btnRecipePopClose" type="button">닫기</button>
+        </div>
+      </div>
+
+      <div class="row recipeSearchRow">
+        <input id="recipeSearchDlg" type="text" placeholder="레시피 검색 (이름/재료)" />
+        <button class="btn" id="btnRecipeClearDlg" type="button">지우기</button>
+      </div>
+
+      <div id="recipeListDlg" class="recipeList"></div>
+    </div>
+  </dialog>
+  <script src="./app.js"></script>
+<script>
+  // 첫 로딩에서 폰트 로드로 레이아웃이 바뀌는 문제 방지
+  (async () => {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready; // Pretendard 로드 완료 대기
+      }
+    } catch (e) {}
+
+    // 1프레임/2프레임 뒤에 강제로 리플로우 유도
+    requestAnimationFrame(() => {
+      // 레이아웃 강제 계산 트리거
+      document.body.offsetHeight;
+      requestAnimationFrame(() => {
+        // 혹시라도 스크롤/표 높이 계산 꼬임 방지
+        window.dispatchEvent(new Event("resize"));
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
