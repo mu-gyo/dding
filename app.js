@@ -2724,6 +2724,7 @@ function escapeHtml(s){
       items: [
         { id: "stam",  label: "⚡스태미나" },
         { id: "req",   label: "📝의뢰" },
+    { id: "ocean", label: "🌊오션오더" },
       ],
     },
   ];
