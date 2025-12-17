@@ -1,11 +1,12 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>띵타 연금 효율 계산기</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>띵타 연금 효율 계산기</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<style>
 
     :root{
       --bg:#d8d1bf;
@@ -290,10 +291,21 @@
 
 #btnRecipePopup{ display:none !important; }
 
-</style>
+.uiTitleHide{
+  visibility: hidden;   /* 공간 유지 */
+  height: 0;            /* 여백 최소화 */
+  margin: 0;
+  padding: 0;
+}
 
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+[data-tipname] {
+  cursor: pointer;
+}
+
+
+</style>
+<link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet"/>
 <style>
 :root{
   --bg:#E7DFD1;
@@ -1232,112 +1244,6 @@ box-shadow:
   opacity: 0.75;
 }
 
-/* 배지 기본 */
-.badgeRow .badge{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;           /* 라벨-값 사이 */
-}
-
-/* 라벨(예상 총 매출)은 조용하게 */
-.badgeRow .badge .muted{
-  opacity: .65;
-}
-
-/* ✅ 값만 강조 */
-#revBadgeA{
-  font-weight: 700;                 /* 숫자만 또렷 */
-  color: #2f7a4f;                   /* 은은한 그린 */
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-/* ===== 예상 총 매출 배지: 값만 확실히 강조 ===== */
-.badgeRow .badge{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px; /* 라벨-값 간격 확실히 */
-}
-
-.badgeRow .badge > .muted{
-  opacity: .65;
-}
-
-/* ✅ 기존 .badge b 를 확실히 덮어씀 */
-.badgeRow .badge > b#revBadgeA{
-  font-weight: 700 !important;
-  color: #2f7a4f !important;
-  font-size: 14px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-
-/* 채집 후 버튼 2개: 확실히 정렬/크기 통일 */
-#btnSolveActual, #btnCarryToExpected{
-  height: 38px !important;
-  padding: 0 16px !important;
-  border-radius: 12px !important;
-  font-size: 13.5px !important;
-}
-
-/* 같은 줄로 묶고 간격 만들기 */
-#btnSolveActual{
-  margin-right: 10px !important;
-}
-
-/* 주 버튼(최적화 계산)은 넓게 */
-#btnSolveActual{
-  min-width: 130px !important;
-  font-weight: 600 !important;
-}
-
-/* 보조 버튼(남은 재고 이월)은 살짝 톤 다운 */
-#btnCarryToExpected{
-  opacity: 0.88 !important;
-}
-#btnCarryToExpected:hover{
-  opacity: 1 !important;
-}
-
-/* 채집 후 버튼 줄(row)만 액션바로 바꾸기 */
-.row:has(#btnSolveActual){
-  display: flex !important;
-  justify-content: flex-start !important; /* ✅ 왼쪽 정렬 */
-  align-items: center !important;
-  gap: 10px !important;
-  margin-top: 12px !important;
-}
-
-/* 버튼 크기 통일 */
-#btnSolveActual, #btnCarryToExpected{
-  height: 38px !important;
-  padding: 0 16px !important;
-  border-radius: 12px !important;
-}
-
-/* 배지도 왼쪽 정렬 + 버튼 아래로 */
-.badgeRow{
-  display: flex !important;
-  justify-content: flex-start !important; /* ✅ 왼쪽 정렬 */
-  margin-top: 10px !important;
-}
-
-/* 채집 후 액션 전체 영역 */
-.row:has(#btnSolveActual){
-  display: flex !important;
-  justify-content: flex-start !important;
-  gap: 10px !important;
-  margin: 14px 0 10px !important;
-  padding: 14px 0 !important;
-
-  border-top: 1px solid rgba(0,0,0,0.06);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-}
-.badgeRow{
-  margin-top: 18px !important;
-  padding-left: 2px;
-}
 
 /* TAB3(레시피) 카드/리스트는 전체 폭 사용 */
 #panelRecipe .card{
@@ -1402,308 +1308,651 @@ button:hover{
   font-weight: 400;
   color: rgba(0,0,0,.65);
 }
+.recipeTip{
+  position: fixed;
+  z-index: 9999;
+  max-width: 380px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid rgba(0,0,0,.10);
+  box-shadow: 0 14px 34px rgba(0,0,0,.18);
+  font-size: 13.5px;     /* ✅ 글씨 키움 */
+  line-height: 1.35;
+  color: var(--text);
+  pointer-events: none;
+}
+
+.recipeTip .t{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.recipeTip .sub{
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.recipeTip .m{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-top: 1px dashed rgba(0,0,0,.08);
+}
+.recipeTip .m:first-of-type{ border-top: 0; }
+
+.recipeTip .m .left{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  min-width: 0;
+}
+.recipeTip .m .left .mat,
+.recipeTip .m .left .item-label{
+  display:inline-flex;
+  align-items:center;
+  gap: 6px;
+  min-width: 0;
+}
+.recipeTip img{
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+.recipeTip .m .qty{
+  font-variant-numeric: tabular-nums;
+  opacity: .8;
+}
+
+/* =========================
+   Recipe Tooltip (ONE BLOCK) v4
+   - No strong
+   - Size-based hierarchy
+   - Solid separators
+   - Row hover highlight
+   ========================= */
+
+.recipeTip{
+  position: fixed;
+  z-index: 9999;
+
+  max-width: min(380px, calc(100vw - 24px));
+  min-width: 260px;
+
+  background: #f4efe7;
+  color: rgba(0,0,0,.84);
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 46px rgba(0,0,0,.18);
+
+  padding: 12px 12px 10px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* pinned 상태 */
+.recipeTip.pinned{
+  border-color: rgba(185,135,71,.18);
+  box-shadow: 0 22px 54px rgba(0,0,0,.22);
+}
+
+/* ===== Top ===== */
+.recipeTip .tipTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom: 10px;
+}
+
+.recipeTip .tipTitle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.1px;
+}
+
+/* 아이콘 */
+.recipeTip img,
+.recipeTip .icon,
+.recipeTip .item-icon{
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  display:block;
+}
+
+/* ===== Badge ===== */
+.recipeTip .tipBadges{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.recipeTip .tipBadge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  height: 20px;
+  padding: 0 9px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+
+  /* ✅ 더 잘 보이게(톤/크기는 유지, 대비만 살짝 업) */
+  background: rgba(185,135,71,.075);
+  border: 1px solid rgba(185,135,71,.12);
+  color: rgba(70,48,18,.80);
+
+  /* ✅ 또렷함 + 고급스러운 느낌(과하지 않게) */
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset;
+}
+
+.recipeTip .tipBadge.strong{
+  font-weight: 500;
+  background: rgba(185,135,71,.075);
+  border-color: rgba(185,135,71,.12);
+  color: rgba(70,48,18,.80);
+}
+
+
+/* ===== List ===== */
+.recipeTip .tipList{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.recipeTip .tipRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+
+  padding: 6px 0;
+  border-bottom: 1px dashed rgba(0,0,0,.08);
+
+  transition: background-color .12s ease; /* hover 부드럽게 */
+}
+.recipeTip .tipRow:last-child{ border-bottom:none; }
+
+/* ✅ hover highlight */
+.recipeTip .tipRow:hover{
+  background: rgba(185,135,71,.06);
+  border-radius: 6px;
+}
+
+.recipeTip .tipLeft{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.recipeTip .tipLeft span{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(0,0,0,.82);
+}
+
+/* 수량: 크기/대비로만 강조 */
+.recipeTip .tipQty{
+  flex:0 0 auto;
+
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: rgba(0,0,0,.70);
+}
+
+/* 모바일 보정 */
+@media (max-width: 420px){
+  .recipeTip{
+    min-width: 0;
+    max-width: calc(100vw - 16px);
+    padding: 11px 11px 9px;
+  }
+}
+
+
+.uiHide{ display:none !important; }
+
+
+/* 탭2 상단: note의 기본 border-top 제거 */
+#panelActual .note.noteNoLine{
+  border-top: 0 !important;
+  padding-top: 0 !important;
+  margin-top: 6px !important;
+}
+
+/* 우리가 원하는 '딱 한 줄' 구분선 */
+#panelActual .divider{
+  height: 1px;
+  background: rgba(0,0,0,0.06);
+  margin: 12px 0 12px;
+}
+
+/* 기존 action row의 위/아래 라인(2줄) 제거 */
+#panelActual .row:has(#btnSolveActual){
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  padding: 0 !important;
+  margin: 10px 0 0 !important;
+}
+
+/* (선택) 버튼 row를 actionRow로 명확히 */
+#panelActual .row.actionRow{
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+/* =========================
+   TAB2: actualActionBar (FINAL)
+   - 배지/버튼 높이/정렬 통일
+   - 버튼 디자인은 기존 .btn 시스템 유지
+   ========================= */
+
+#panelActual .actualActionBar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  margin: 14px 0 12px;
+  padding: 12px 0;
+
+  border-top: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+/* 배지 + 버튼 공통 치수 */
+#panelActual .actualActionBar .badge,
+#panelActual .actualActionBar .btn{
+  height: 38px;
+  border-radius: 12px;
+  display:inline-flex;
+  align-items:center;
+  box-sizing:border-box;
+  line-height: 1;
+}
+
+/* 배지(정보) */
+#panelActual .actualActionBar .badge{
+  padding: 0 16px;
+  gap: 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: rgba(255,255,255,0.45);
+  cursor: default;
+  user-select: none;
+}
+
+/* 버튼(액션) */
+#panelActual .actualActionBar .btn{
+  padding: 0 16px;
+  justify-content:center;
+  font-size: 13.5px;
+}
+
+/* 계산 버튼 폭만 통일 */
+#panelActual #btnSolveActual{
+  min-width: 130px;
+  font-weight: 600;
+}
+
+/* 숫자 강조는 유지 */
+#panelActual #revBadgeA{
+  font-weight: 700;
+  color: #2f7a4f;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ===== 탭2: 예상 총 매출 (정보 라인) ===== */
+#panelActual .revLine{
+  display: flex;
+  align-items: baseline;      /* 숫자 안정 */
+  gap: 10px;
+  margin: 10px 0 14px;         /* divider 아래 여백 */
+  padding-left: 2px;          /* 카드 좌측 정렬감 */
+}
+
+#panelActual .revLine .muted{
+  opacity: .65;
+  font-size: 15.5px;
+}
+
+#panelActual #revBadgeA{
+  font-weight: 700;
+  color: #2f7a4f;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* 탭2 버튼 줄: 폭 들쑥날쑥 해결 + 정렬 안정화 */
+#panelActual .row.actionRow{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+}
+
+/* 버튼 공통 규격 */
+#panelActual .row.actionRow .btn{
+  height: 38px;
+  min-width: 140px;         /* ✅ 두 버튼 폭 통일 */
+  padding: 0 16px;
+  display: inline-flex;     /* ✅ 내부 정렬 통일 */
+  align-items: center;      /* ✅ 세로 중앙 */
+  justify-content: center;  /* ✅ 가로 중앙 */
+  line-height: 1;           /* ✅ 텍스트 뜸 방지 */
+  gap: 8px;                 /* ✅ 아이콘-텍스트 간격 */
+  white-space: nowrap;      /* 줄바꿈 방지 */
+}
+
+/* 혹시 .btn 안쪽에 span/svg가 있으면 baseline 흔들림 방지 */
+#panelActual .row.actionRow .btn *{
+  line-height: 1;
+}
+
+#panelActual #btnSolveActual{ min-width: 150px; }
+
+
+
+
 
 
 
 </style>
-
 </head>
 <body>
-  <div class="wrap">
-    <h1></h1>
-    <div class="sub">
-      <span class="pill">🐣 메이드 바이 조무교⠀</span>
+<div class="wrap">
+<h1></h1>
+<div class="sub">
+<span class="pill">🐣 메이드 바이 조무교⠀</span>
 <br/>
-    </div>
-
-    
-    <div class="tabs">
-      <button class="tab active" id="tabExpected">🔋 채집 전 (스태미나 분배)</button>
-      <button class="tab" id="tabActual">⚙️ 채집 후 (제작 효율)</button>
-      <button class="tab" id="tabRecipe">📘 연금 레시피</button>
-    </div>
-
-
-
-    <div id="panelExpected">
-    <div class="grid">
-      <div class="card">
-        <h2>1) 입력</h2>
-
-        <div class="row">
-          <label>총 스태미나</label>
-          <input id="totalStamina" type="number" value="3000" min="0" step="1"/>
-        </div>
-
-        <div class="row">
-          <label>채집 1회 스태미나</label>
-          <input id="staminaPerCast" type="number" value="15" min="1" step="1"/>
-        </div>
-
-        <div class="row">
-          <label>도구 강화 단계</label>
-          <select id="toolLevel">
-            <option value="3">3~5강 (2개 드랍)</option>
-            <option value="6">6~8강 (3개 드랍)</option>
-            <option value="9" selected>9~11강 (4개 드랍)</option>
-            <option value="12">12~14강 (5개 드랍)</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <label>프리미엄 한정가 단계 (0~6)</label>
-          <input id="premiumLevel" type="number" value="0" min="0" max="6" step="1"/>
-        </div>
-
-        <div class="row">
-          <label>폭풍의 물질꾼 단계 (0~5)</label>
-          <input id="stormLevel" type="number" value="0" min="0" max="5" step="1"/>
-        </div>
-
-        <div class="row">
-          <label>별별별 단계 (0~6)</label>
-          <input id="starLevel" type="number" value="0" min="0" max="6" step="1"/>
-        </div>
-
-        <h2 style="margin-top:14px">2) 기본 확률</h2>
-        <div class="row">
-          <label>1성 확률</label><input id="p1" type="number" value="0.6" step="0.01" min="0" max="1">
-        </div>
-        <div class="row">
-          <label>2성 확률</label><input id="p2" type="number" value="0.3" step="0.01" min="0" max="1">
-        </div>
-        <div class="row">
-          <label>3성 확률</label><input id="p3" type="number" value="0.1" step="0.01" min="0" max="1">
-        </div>
-
-        <div class="btnbar">
-          <button id="btnOpt">📊 계산</button>
-          <button id="btnZero">🗑️ 재고 초기화</button>
-        </div>
-
-        <div class="note">
+</div>
+<div class="tabs">
+<button class="tab active" id="tabExpected">🔋 채집 전 (스태미나 분배)</button>
+<button class="tab" id="tabActual">⚙️ 채집 후 (제작 효율)</button>
+<button class="tab" id="tabRecipe">📘 연금 레시피</button>
+</div>
+<div id="panelExpected">
+<div class="grid">
+<div class="card">
+<h2>입력</h2>
+<div class="row">
+<label>총 스태미나</label>
+<input id="totalStamina" min="0" step="1" type="number" value="3000"/>
+</div>
+<div class="row uiHide">
+<label>채집 1회 스태미나</label>
+<input id="staminaPerCast" min="1" step="1" type="number" value="15"/>
+</div>
+<div class="row">
+<label>도구 강화 단계</label>
+<select id="toolLevel">
+<option value="3">3~5강 (2개 드랍)</option>
+<option value="6">6~8강 (3개 드랍)</option>
+<option selected="" value="9">9~11강 (4개 드랍)</option>
+<option value="12">12~14강 (5개 드랍)</option>
+</select>
+</div>
+<div class="row">
+<label>프리미엄 한정가 단계 (0~6)</label>
+<input id="premiumLevel" max="6" min="0" step="1" type="number" value="0"/>
+</div>
+<div class="row">
+<label>폭풍의 물질꾼 단계 (0~5)</label>
+<input id="stormLevel" max="5" min="0" step="1" type="number" value="0"/>
+</div>
+<div class="row">
+<label>별별별 단계 (0~6)</label>
+<input id="starLevel" max="6" min="0" step="1" type="number" value="0"/>
+</div>
+<h2 class="uiTitleHide" style="margin-top:1px">2) 기본 확률</h2>
+<!-- after -->
+<div class="row uiHide">
+<label>1성 확률</label><input id="p1" max="1" min="0" step="0.01" type="number" value="0.6"/>
+</div>
+<div class="row uiHide">
+<label>2성 확률</label><input id="p2" max="1" min="0" step="0.01" type="number" value="0.3"/>
+</div>
+<div class="row uiHide">
+<label>3성 확률</label><input id="p3" max="1" min="0" step="0.01" type="number" value="0.1"/>
+</div>
+<div class="btnbar">
+<button id="btnOpt">📊 계산</button>
+<button id="btnZero">🗑️ 재고 초기화</button>
+</div>
+<div class="note">
           • 계산을 누르면 <b>스태미나 5종 분배 (100 단위)</b> + <b>연금품 제작량 (기댓값)</b>을 한 번에 추천합니다.<br/>
           • 보유 중인 어패류와 중간 단계 연금품 재고이 있다면 <b>계산을 누르기 전</b>에 먼저 입력해야 반영됩니다.<br/>
           • 이후 제작량을 직접 수정하면, 필요 재료/부재료 표는 즉시 업데이트됩니다.
         </div>
-      </div>
-
-      <div class="card">
-        <h2>요약</h2>
-        <div class="split">
-          <div>
-            <div class="row"><label>프리미엄 배율</label><div class="mono" id="outPremium">-</div></div>
-            <div class="row"><label>폭풍 확률(p)</label><div class="mono" id="outStorm">-</div></div>
-            <div class="row"><label>기대 드랍/캐스트</label><div class="mono" id="outDropPerCast">-</div></div>
-            <div class="row"><label>총 캐스트</label><div class="mono" id="outCasts">-</div></div>
-            <div class="row"><label>총 기대 드랍</label><div class="mono" id="outTotalDrops">-</div></div>
-          </div>
-          <div>
-            <div class="row"><label>보정 1성 확률</label><div class="mono" id="outP1">-</div></div>
-            <div class="row"><label>보정 2성 확률</label><div class="mono" id="outP2">-</div></div>
-            <div class="row"><label>보정 3성 확률</label><div class="mono" id="outP3">-</div></div>
-            <div class="row"><label>총 매출</label><div class="mono" id="outRevenue">-</div></div>
-          </div>
-        </div>
-
-        <h2 style="margin-top:14px">스태미나 분배 (결과)</h2>
-        <table id="allocTbl">
-          <thead><tr><th>어종</th><th>100 단위</th><th>스태미나</th><th>캐스트</th></tr></thead>
-          <tbody></tbody>
-        </table>
-
-        <h2>연금품 제작량 (결과)</h2>
-<table id="craftTbl">
-  <thead>
-    <tr><th>연금품</th><th>기본가</th><th>최종가</th><th>제작량</th><th>매출</th></tr>
-  </thead>
-  <tbody></tbody>
-  <tfoot>
-    <tr class="sum-row">
-      <td colspan="4" class="muted">합계</td>
-      <td id="revSum" class="pos sum-value">0 G</td>
-    </tr>
-  </tfoot>
+</div>
+<div class="card">
+<h2>요약</h2>
+<div class="split">
+<div>
+<div class="row"><label>프리미엄 배율</label><div class="mono" id="outPremium">-</div></div>
+<div class="row"><label>폭풍 확률</label><div class="mono" id="outStorm">-</div></div>
+<div class="row"><label>기대 드랍/캐스트</label><div class="mono" id="outDropPerCast">-</div></div>
+<div class="row"><label>총 캐스트</label><div class="mono" id="outCasts">-</div></div>
+<div class="row"><label>총 기대 드랍</label><div class="mono" id="outTotalDrops">-</div></div>
+</div>
+<div>
+<div class="row"><label>1성 확률</label><div class="mono" id="outP1">-</div></div>
+<div class="row"><label>2성 확률</label><div class="mono" id="outP2">-</div></div>
+<div class="row"><label>3성 확률</label><div class="mono" id="outP3">-</div></div>
+<div class="row"><label>총 매출</label><div class="mono" id="outRevenue">-</div></div>
+</div>
+</div>
+<h2 style="margin-top:14px">스태미나 분배 (결과)</h2>
+<table id="allocTbl">
+<thead><tr><th>어종</th><th>100 단위</th><th>스태미나</th><th>캐스트</th></tr></thead>
+<tbody></tbody>
 </table>
-
-
-
-        <h2>어패류 재고 입력</h2>
-        <table id="invTbl">
-          <thead><tr><th>어패류</th><th>재고</th></tr></thead>
-          <tbody></tbody>
-        </table>
+<h2>연금품 제작량 (결과)</h2>
+<table id="craftTbl">
+<thead>
+<tr><th>연금품</th><th>기본가</th><th>최종가</th><th>제작량</th><th>매출</th></tr>
+</thead>
+<tbody></tbody>
+<tfoot>
+<tr class="sum-row">
+<td class="muted" colspan="4">합계</td>
+<td class="pos sum-value" id="revSum">0 G</td>
+</tr>
+</tfoot>
+</table>
+<h2>어패류 재고 입력</h2>
+<table id="invTbl">
+<thead><tr><th>어패류</th><th>재고</th></tr></thead>
+<tbody></tbody>
+</table>
 <!-- ✅ 중간 연금품 재고(탭 공통, 접힘) -->
 <div class="card midCard" id="midInvCard">
-  <details id="midInvDetails">
+<details id="midInvDetails">
 <summary>
-  <span class="midTitle">중간 연금품 재고 (선택)</span>
-
-  <div class="midRight">
-    <span class="midBadge" id="midInvBadge">미입력</span>
-    <button type="button" class="btnTiny" id="midInvReset">초기화</button>
-  </div>
+<span class="midTitle">중간 연금품 재고 (선택)</span>
+<div class="midRight">
+<span class="midBadge" id="midInvBadge">미입력</span>
+<button class="btnTiny" id="midInvReset" type="button">초기화</button>
+</div>
 </summary>
-
-
-    <!-- app.js가 여기 안에 row들을 만들어 넣게 할 예정 -->
-    <div id="midInvGrid" class="midInvGrid"></div>
-
-    <div class="note" style="margin-top:10px">
+<!-- app.js가 여기 안에 row들을 만들어 넣게 할 예정 -->
+<div class="midInvGrid" id="midInvGrid"></div>
+<div class="note" style="margin-top:10px">
       • 탭1에서는 중간재 재고를 “어패류 환산 크레딧”으로만 반영합니다. (부재료 필요량에는 영향 없음)
     </div>
-  </details>
+</details>
 </div>
-      </div>
-
-      <div class="card" style="grid-column:1 / -1">
-        <h2>필요 재료</h2>
-        <div class="split">
-          <div>
-            <h2 style="margin:0 0 8px">어패류 필요량 / 부족분</h2>
-            <table id="needFishTbl">
-              <thead><tr><th>어패류</th><th>필요</th><th>재고</th><th>부족</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div>
-            <h2 style="margin:0 0 8px">부재료 필요량</h2>
-            <table id="needMatTbl">
-              <thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="note">
+</div>
+<div class="card" style="grid-column:1 / -1">
+<h2>필요 재료</h2>
+<div class="split">
+<div>
+<h2 style="margin:0 0 8px">어패류 재고 / 소모 / 부족</h2>
+<table id="needFishTbl">
+<thead><tr><th>어패류</th><th>재고</th><th>소모</th><th>부족</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<div>
+<h2 style="margin:0 0 8px">부재료 필요량</h2>
+<table id="needMatTbl">
+<thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+<div class="note">
           • 부재료 재고는 받지 않으므로, “부족” 대신 필요량만 표시합니다.
         </div>
-      </div>
-
-    </div> <!-- /.grid -->
-  </div>   <!-- /#panelExpected -->
-
-  <div id="panelActual" style="display:none">
-
-      <div class="grid actualGrid">
-        <div class="card">
-          <h2>채집 후 “실제 제작” 최적화</h2>
-          <div class="note">
-            • 오늘 채집량 + 기존 재고로 최대 매출 제작 추천<br/>
-            • “중간 연금품 재고”는 한 번 입력하면 브라우저에 저장되어 다음에도 자동으로 불러옵니다.<br/>
-            • 재고 이월을 누르면 제작 후 잔여 어패류가 채집 전 탭으로 동기화됩니다. (다음에 다시 입력할 필요 없음)<br/>
-          </div>
-
-          <div class="row"><button class="btn primary" id="btnSolveActual">📊 계산</button>
-            <button class="btn" id="btnCarryToExpected">📦 재고 이월</button>
-          </div>
-          <div class="badgeRow"><div class="badge"><span class="muted">예상 총 매출</span><b id="revBadgeA">0 G</b></div></div>
-
-          <h2 style="margin-top:20px">어패류 재고 (채집 후)</h2>
-          <table id="invActualTbl">
-            <thead><tr><th>어패류(등급)</th><th>기존 재고</th><th>오늘 채집(실측)</th><th>총 재고</th></tr></thead>
-            <tbody></tbody>
-          </table>
-
-
+</div>
+</div> <!-- /.grid -->
+</div> <!-- /#panelExpected -->
+<div id="panelActual" style="display:none">
+<div class="grid actualGrid">
+<div class="card">
+<h2>채집 후 “실제 제작” 최적화</h2>
+<div class="note noteNoLine">
+  • 오늘 채집량 + 기존 재고로 최대 매출 제작 추천<br/>
+  • “중간 연금품 재고”는 한 번 입력하면 브라우저에 저장되어 다음에도 자동으로 불러옵니다.<br/>
+</div>
+<div class="divider"></div>
+<!-- 🔹 정보 줄: 총 매출 -->
+<div class="revLine">
+<span class="muted">🪙 예상 총 매출</span>
+<b id="revBadgeA">0 G</b>
+</div>
+<!-- 🔹 액션 줄: 버튼만 -->
+<div class="row actionRow">
+<button class="btn primary" id="btnSolveActual">📊 계산</button>
+</div>
+<h2 style="margin-top:27px">어패류 재고 (채집 후)</h2>
+<table id="invActualTbl">
+<thead><tr><th>어패류(등급)</th><th>기존 재고</th><th>오늘 채집(실측)</th><th>총 재고</th></tr></thead>
+<tbody></tbody>
+</table>
 <!-- ✅ 중간 연금품 재고(탭 공통, 접힘) -->
 <div class="card midCard" id="midInvCardA">
-  <details id="midInvDetailsA">
+<details id="midInvDetailsA">
 <summary>
-  <span class="midTitle">중간 연금품 재고 (선택)</span>
-
-  <div class="midRight">
-    <span class="midBadge" id="midInvBadgeA">미입력</span>
-    <button type="button" class="btnTiny" id="midInvResetA">초기화</button>
-  </div>
+<span class="midTitle">중간 연금품 재고 (선택)</span>
+<div class="midRight">
+<span class="midBadge" id="midInvBadgeA">미입력</span>
+<button class="btnTiny" id="midInvResetA" type="button">초기화</button>
+</div>
 </summary>
-
-    <div id="midInvGridA" class="midInvGrid"></div>
-
-    <div class="note" style="margin-top:10px">
+<div class="midInvGrid" id="midInvGridA"></div>
+<div class="note" style="margin-top:10px">
       • 탭2에서는 중간재 재고를 중간재로만 사용하며, 어패류로 환산하지 않습니다. (표시는 “순 필요량” 기준)
     </div>
-  </details>
+</details>
 </div>
-
-          <h2 style="margin-top:14px">추천 제작량</h2>
+<h2 style="margin-top:14px">추천 제작량</h2>
 <table id="craftTblA">
-  <thead>
-    <tr><th>연금품</th><th>최종가</th><th>제작량</th><th>매출</th><th class="center">완료</th></tr>
-  </thead>
-  <tbody></tbody>
-  <tfoot>
-    <tr class="sum-row">
-      <td colspan="3" class="muted">합계</td>
-      <td id="revSumA" class="pos sum-value">0 G</td>
-      <td></td>
-    </tr>
-  </tfoot>
+<thead>
+<tr><th>연금품</th><th>최종가</th><th>제작량</th><th>매출</th><th class="center">완료</th></tr>
+</thead>
+<tbody></tbody>
+<tfoot>
+<tr class="sum-row">
+<td class="muted" colspan="3">합계</td>
+<td class="pos sum-value" id="revSumA">0 G</td>
+<td></td>
+</tr>
+</tfoot>
 </table>
-
-        </div>
-
-        <div class="card" style="grid-column:1 / -1">
-          <h2>필요 재료 (채집 후 기준)</h2>
-          <div class="split">
-            <div>
-              <h2 style="margin:0 0 8px">어패류 필요량 / 부족분</h2>
-              <table id="needFishTblA">
-                <thead><tr><th>어패류</th><th>필요</th><th>재고</th><th>부족</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-            <div>
-              <h2 style="margin:0 0 8px">부재료 필요량</h2>
-              <table id="needMatTblA">
-                <thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
-                <tbody></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="note">• 부재료 재고는 받지 않으므로, 필요량만 표시합니다.</div>
-        </div>
-      </div>
-    </div>
-
-  <div id="panelRecipe" style="display:none">
-    <div class="grid recipeGrid">
-      <div class="card">
-        <div class="recipeHead">
-          <h2 style="margin:0">레시피</h2>
-          <div class="recipeActions">
-            <button class="btn" id="btnRecipePopup">팝업으로 보기</button>
-          </div>
-        </div>
-
-        <div class="row recipeSearchRow">
-          <input id="recipeSearch" type="text" placeholder="레시피 검색 (이름/재료) 예: 아쿠티스, 굴 ★, 네더랙" />
-          <button class="btn" id="btnRecipeClear" type="button">지우기</button>
-        </div>
-
-        <div class="note">• 검색은 ‘완성품 이름’ 또는 ‘재료 이름’에 모두 적용됩니다.</div>
-        <div id="recipeList" class="recipeList"></div>
-      </div>
-    </div>
-  </div>
-
-  <dialog id="recipeDialog" class="recipeDialog">
-    <div class="recipeDialogInner">
-      <div class="recipeDialogTop">
-        <div class="recipeDialogTitle">레시피</div>
-        <div class="recipeDialogBtns">
-          <button class="btn" id="btnRecipePopClose" type="button">닫기</button>
-        </div>
-      </div>
-
-      <div class="row recipeSearchRow">
-        <input id="recipeSearchDlg" type="text" placeholder="레시피 검색 (이름/재료)" />
-        <button class="btn" id="btnRecipeClearDlg" type="button">지우기</button>
-      </div>
-
-      <div id="recipeListDlg" class="recipeList"></div>
-    </div>
-  </dialog>
-  <script src="./app.js"></script>
+</div>
+<div class="card" style="grid-column:1 / -1">
+<h2>필요 재료 (채집 후 기준)</h2>
+<div class="split">
+<div>
+<h2 style="margin:0 0 8px">어패류 재고 / 소모 / 잔여</h2>
+<table id="needFishTblA">
+<thead><tr><th>어패류</th><th>재고</th><th>소모</th><th>잔여</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<div>
+<h2 style="margin:0 0 8px">부재료 필요량</h2>
+<table id="needMatTblA">
+<thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+<div style="margin-top:14px">
+<h2 style="margin:0 0 8px">하위 제작 필요량 (중간재 재고 반영)</h2>
+<table id="needCraftTblA">
+<thead><tr><th>중간재</th><th>추가 제작</th><th>재고</th><th>총 필요</th></tr></thead>
+<tbody></tbody>
+</table>
+<div class="note">• “추가 제작”은 현재 중간재 재고를 뺀 실제 제작 필요량, “총 필요”는 추천 제작량을 만들기 위해 필요한 총량입니다.</div>
+</div>
+<div class="note">• 부재료 재고는 받지 않으므로, 필요량만 표시합니다.</div>
+</div>
+</div>
+</div>
+<div id="panelRecipe" style="display:none">
+<div class="grid recipeGrid">
+<div class="card">
+<div class="recipeHead">
+<h2 style="margin:0">레시피</h2>
+<div class="recipeActions">
+<button class="btn" id="btnRecipePopup">팝업으로 보기</button>
+</div>
+</div>
+<div class="row recipeSearchRow">
+<input id="recipeSearch" placeholder="레시피 검색 (이름/재료) 예: 아쿠티스, 굴 ★, 네더랙" type="text">
+<button class="btn" id="btnRecipeClear" type="button">지우기</button>
+</input></div>
+<div class="note">• 검색은 ‘완성품 이름’ 또는 ‘재료 이름’에 모두 적용됩니다.</div>
+<div class="recipeList" id="recipeList"></div>
+</div>
+</div>
+</div>
+<dialog class="recipeDialog" id="recipeDialog">
+<div class="recipeDialogInner">
+<div class="recipeDialogTop">
+<div class="recipeDialogTitle">레시피</div>
+<div class="recipeDialogBtns">
+<button class="btn" id="btnRecipePopClose" type="button">닫기</button>
+</div>
+</div>
+<div class="row recipeSearchRow">
+<input id="recipeSearchDlg" placeholder="레시피 검색 (이름/재료)" type="text">
+<button class="btn" id="btnRecipeClearDlg" type="button">지우기</button>
+</input></div>
+<div class="recipeList" id="recipeListDlg"></div>
+</div>
+</dialog>
+<script defer="" src="./app.js"></script>
 <script>
   // 첫 로딩에서 폰트 로드로 레이아웃이 바뀌는 문제 방지
   (async () => {
@@ -1724,6 +1973,6 @@ button:hover{
     });
   })();
 </script>
-
-</body>
+<div class="recipeTip" hidden="" id="recipeTip"></div>
+</div></body>
 </html>

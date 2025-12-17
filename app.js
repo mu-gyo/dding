@@ -192,34 +192,30 @@ function getAllRecipesForMid(){
     "혼란 에센스 ★★": { "문어 ★★": 1, "해초": 2, "죽은 거품 산호 블록": 1 },
     "생명 에센스 ★★": { "미역 ★★": 1, "해초": 2, "죽은 불 산호 블록": 1 },
     "부식 에센스 ★★": { "성게 ★★": 1, "해초": 2, "죽은 뇌 산호 블록": 1 },
-
-    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "먹물 주머니": 1, "청금석 블록": 2 },
-    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "먹물 주머니": 1, "레드스톤 블록": 2 },
-    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "먹물 주머니": 1, "철 주괴": 2 },
-    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "먹물 주머니": 1, "금 주괴": 2 },
-    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "먹물 주머니": 1, "다이아몬드": 2 },
-
+    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "먹물 주머니": 1, "청금석 블록": 1 },
+    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "먹물 주머니": 1, "레드스톤 블록": 1 },
+    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "먹물 주머니": 1, "철 주괴": 1 },
+    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "먹물 주머니": 1, "금 주괴": 1 },
+    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "먹물 주머니": 1, "다이아몬드": 1 },
     "해구 파동의 코어 ★★": { "활기 보존의 결정 ★★": 1, "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1 },
     "침묵의 심해 비약 ★★": { "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1 },
-    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 }
+    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 },
   };
 
   const R3 = {
-    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "네더랙": 32 },
-    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "마그마 블록": 16 },
-    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "영혼 흙": 16 },
-    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "진홍빛 자루": 8 },
-    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "뒤틀린 자루": 8 },
-
-    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "수레국화": 2 },
-    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "민들레": 2 },
-    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "데이지": 2 },
-    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "양귀비": 2 },
-    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "선애기별꽃": 2 },
-
+    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "네더랙": 16 },
+    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "마그마 블록": 8 },
+    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "영혼 흙": 8 },
+    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "진홍빛 자루": 4 },
+    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "뒤틀린 자루": 4 },
+    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "수레국화": 1 },
+    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "민들레": 1 },
+    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "데이지": 1 },
+    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "양귀비": 1 },
+    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "선애기별꽃": 1 },
     "아쿠아 펄스 파편 ★★★": { "불멸 재생의 영약 ★★★": 1, "파동 장벽의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1 },
     "나우틸러스의 손 ★★★": { "파동 장벽의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1, "불멸 재생의 영약 ★★★": 1 },
-    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 }
+    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 },
   };
 
   return { ...R1, ...R2, ...R3 };
@@ -598,35 +594,31 @@ function calcMatNeed(y) {
     "혼란 에센스 ★★": { "문어 ★★": 1, "해초": 2, "죽은 거품 산호 블록": 1 },
     "생명 에센스 ★★": { "미역 ★★": 1, "해초": 2, "죽은 불 산호 블록": 1 },
     "부식 에센스 ★★": { "성게 ★★": 1, "해초": 2, "죽은 뇌 산호 블록": 1 },
-
-    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "먹물 주머니": 1, "청금석 블록": 2 },
-    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "먹물 주머니": 1, "레드스톤 블록": 2 },
-    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "먹물 주머니": 1, "철 주괴": 2 },
-    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "먹물 주머니": 1, "금 주괴": 2 },
-    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "먹물 주머니": 1, "다이아몬드": 2 },
-
+    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "먹물 주머니": 1, "청금석 블록": 1 },
+    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "먹물 주머니": 1, "레드스톤 블록": 1 },
+    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "먹물 주머니": 1, "철 주괴": 1 },
+    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "먹물 주머니": 1, "금 주괴": 1 },
+    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "먹물 주머니": 1, "다이아몬드": 1 },
     "해구 파동의 코어 ★★": { "활기 보존의 결정 ★★": 1, "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1 },
     "침묵의 심해 비약 ★★": { "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1 },
-    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 }
+    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 },
   };
 
   // 3성
   const R3 = {
-    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "네더랙": 32 },
-    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "마그마 블록": 16 },
-    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "영혼 흙": 16 },
-    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "진홍빛 자루": 8 },
-    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 3, "유리병": 5, "뒤틀린 자루": 8 },
-
-    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "수레국화": 2 },
-    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "민들레": 2 },
-    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "데이지": 2 },
-    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "양귀비": 2 },
-    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 4, "선애기별꽃": 2 },
-
+    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "네더랙": 16 },
+    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "마그마 블록": 8 },
+    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "영혼 흙": 8 },
+    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "진홍빛 자루": 4 },
+    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "뒤틀린 자루": 4 },
+    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "수레국화": 1 },
+    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "민들레": 1 },
+    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "데이지": 1 },
+    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "양귀비": 1 },
+    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "선애기별꽃": 1 },
     "아쿠아 펄스 파편 ★★★": { "불멸 재생의 영약 ★★★": 1, "파동 장벽의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1 },
     "나우틸러스의 손 ★★★": { "파동 장벽의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1, "불멸 재생의 영약 ★★★": 1 },
-    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 }
+    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 },
   };
 
   // 최종 9개와 y 인덱스 매핑
@@ -711,7 +703,7 @@ return totals;
 // 프리미엄 한정가 배율 (강화 단계 → 배율)
 // ================================
 function premiumMulFromLevel(level) {
-  const map = { 0:1.0, 1:1.05, 2:1.07, 3:1.10, 4:1.15, 5:1.20, 6:1.30 };
+  const map = { 0:1.0, 1:1.05, 2:1.07, 3:1.10, 4:1.15, 5:1.20, 6:1.30, 7:1.40, 8:1.50 };
   return map[level] ?? 1.0;
 }
 
@@ -941,15 +933,15 @@ function matLabel(name){
 }
 
 const PRODUCTS = [
-  { name:"영생의 아쿠티스 ★", base:2643 },
-  { name:"크라켄의 광란체 ★", base:2682 },
-  { name:"리바이던의 깃털 ★", base:2763 },
-  { name:"해구 파동의 코어 ★★", base:5702 },
-  { name:"침묵의 심해 비약 ★★", base:5760 },
-  { name:"청해룡의 날개 ★★", base:5840 },
-  { name:"아쿠아 펄스 파편 ★★★", base:8230 },
-  { name:"나우틸러스의 손 ★★★", base:8326 },
-  { name:"무저의 척추 ★★★", base:8379 },
+{ name:"영생의 아쿠티스 ★", base:3436 },
+  { name:"크라켄의 광란체 ★", base:3486 },
+  { name:"리바이던의 깃털 ★", base:3592 },
+  { name:"해구 파동의 코어 ★★", base:7413 },
+  { name:"침묵의 심해 비약 ★★", base:7487 },
+  { name:"청해룡의 날개 ★★", base:7592 },
+  { name:"아쿠아 펄스 파편 ★★★", base:10699 },
+  { name:"나우틸러스의 손 ★★★", base:10824 },
+  { name:"무저의 척추 ★★★", base:10892 },
 ];
 
 const FISH_ROWS = [
@@ -973,59 +965,142 @@ function matRank(name){
 /** Decomposition per final product (fish + materials) */
 const DECOMP = {
   "영생의 아쿠티스 ★": {
-    "굴 ★":1, "소라 ★":1, "문어 ★":1, "미역 ★":2, "성게 ★":1,
-    "점토":1, "모래":3, "흙":4, "자갈":4, "화강암":1,
-    "익히지 않은 새우":1, "익히지 않은 청어":1, "금붕어":1
+    "굴 ★":1,
+    "소라 ★":1,
+    "문어 ★":1,
+    "미역 ★":2,
+    "성게 ★":1,
+    "금붕어":1,
+    "모래":3,
+    "익히지 않은 새우":1,
+    "익히지 않은 청어":1,
+    "자갈":4,
+    "점토":1,
+    "화강암":1,
+    "흙":4,
   },
   "크라켄의 광란체 ★": {
-    "소라 ★":1, "문어 ★":2, "미역 ★":2, "성게 ★":1,
-    "모래":3, "흙":8, "자갈":4, "화강암":1,
-    "익히지 않은 도미":1, "익히지 않은 청어":1, "금붕어":1
+    "소라 ★":1,
+    "문어 ★":2,
+    "미역 ★":2,
+    "성게 ★":1,
+    "금붕어":1,
+    "모래":3,
+    "익히지 않은 도미":1,
+    "익히지 않은 청어":1,
+    "자갈":4,
+    "화강암":1,
+    "흙":8,
   },
   "리바이던의 깃털 ★": {
-    "굴 ★":2, "소라 ★":2, "문어 ★":1, "성게 ★":1,
-    "점토":2, "모래":6, "흙":4, "화강암":1,
-    "익히지 않은 새우":1, "익히지 않은 도미":1, "농어":1
+    "굴 ★":2,
+    "소라 ★":2,
+    "문어 ★":1,
+    "성게 ★":1,
+    "농어":1,
+    "모래":6,
+    "익히지 않은 도미":1,
+    "익히지 않은 새우":1,
+    "점토":2,
+    "화강암":1,
+    "흙":4,
   },
   "해구 파동의 코어 ★★": {
-    "굴 ★★":1, "미역 ★★":2, "소라 ★★":2, "성게 ★★":1,
-    "해초":12, "먹물 주머니":3,
-    "죽은 관 산호 블록":1, "죽은 불 산호 블록":2, "죽은 사방 산호 블록":2, "죽은 뇌 산호 블록":1,
-    "청금석 블록":2, "레드스톤 블록":2, "금 주괴":2
+    "굴 ★★":1,
+    "소라 ★★":2,
+    "미역 ★★":2,
+    "성게 ★★":1,
+    "금 주괴":1,
+    "레드스톤 블록":1,
+    "먹물 주머니":3,
+    "죽은 관 산호 블록":1,
+    "죽은 뇌 산호 블록":1,
+    "죽은 불 산호 블록":2,
+    "죽은 사방 산호 블록":2,
+    "청금석 블록":1,
+    "해초":12,
   },
   "침묵의 심해 비약 ★★": {
-    "소라 ★★":2, "성게 ★★":2, "미역 ★★":1, "문어 ★★":1,
-    "해초":12, "먹물 주머니":3,
-    "죽은 사방 산호 블록":2, "죽은 뇌 산호 블록":2, "죽은 불 산호 블록":1, "죽은 거품 산호 블록":1,
-    "레드스톤 블록":2, "금 주괴":2, "다이아몬드":2
+    "소라 ★★":2,
+    "문어 ★★":1,
+    "미역 ★★":1,
+    "성게 ★★":2,
+    "금 주괴":1,
+    "다이아몬드":1,
+    "레드스톤 블록":1,
+    "먹물 주머니":3,
+    "죽은 거품 산호 블록":1,
+    "죽은 뇌 산호 블록":2,
+    "죽은 불 산호 블록":1,
+    "죽은 사방 산호 블록":2,
+    "해초":12,
   },
   "청해룡의 날개 ★★": {
-    "문어 ★★":2, "굴 ★★":2, "성게 ★★":1, "미역 ★★":1,
-    "해초":12, "먹물 주머니":3,
-    "죽은 거품 산호 블록":2, "죽은 관 산호 블록":2, "죽은 뇌 산호 블록":1, "죽은 불 산호 블록":1,
-    "철 주괴":2, "다이아몬드":2, "청금석 블록":2
+    "굴 ★★":2,
+    "문어 ★★":2,
+    "미역 ★★":1,
+    "성게 ★★":1,
+    "다이아몬드":1,
+    "먹물 주머니":3,
+    "죽은 거품 산호 블록":2,
+    "죽은 관 산호 블록":2,
+    "죽은 뇌 산호 블록":1,
+    "죽은 불 산호 블록":1,
+    "철 주괴":1,
+    "청금석 블록":1,
+    "해초":12,
   },
   "아쿠아 펄스 파편 ★★★": {
-    "굴 ★★★":2, "미역 ★★★":1, "소라 ★★★":2, "성게 ★★★":1,
-    "불우렁쉥이":18, "유리병":30,
-    "네더랙":64, "마그마 블록":32, "진홍빛 자루":8, "뒤틀린 자루":8,
-    "발광 먹물 주머니":3, "발광 열매":12,
-    "수레국화":2, "민들레":2, "선애기별꽃":2
+    "굴 ★★★":2,
+    "소라 ★★★":2,
+    "미역 ★★★":1,
+    "성게 ★★★":1,
+    "네더랙":32,
+    "뒤틀린 자루":4,
+    "마그마 블록":16,
+    "민들레":1,
+    "발광 먹물 주머니":3,
+    "발광 열매":6,
+    "불우렁쉥이":6,
+    "선애기별꽃":1,
+    "수레국화":1,
+    "유리병":18,
+    "진홍빛 자루":4,
   },
   "나우틸러스의 손 ★★★": {
-    "굴 ★★★":2, "소라 ★★★":1, "미역 ★★★":2, "문어 ★★★":1,
-    "불우렁쉥이":18, "유리병":30,
-    "네더랙":64, "마그마 블록":16, "진홍빛 자루":16, "영혼 흙":16,
-    "발광 먹물 주머니":3, "발광 열매":12,
-    "수레국화":2, "민들레":2, "양귀비":2
+    "굴 ★★★":2,
+    "소라 ★★★":1,
+    "문어 ★★★":1,
+    "미역 ★★★":2,
+    "네더랙":32,
+    "마그마 블록":8,
+    "민들레":1,
+    "발광 먹물 주머니":3,
+    "발광 열매":6,
+    "불우렁쉥이":6,
+    "수레국화":1,
+    "양귀비":1,
+    "영혼 흙":8,
+    "유리병":18,
+    "진홍빛 자루":8,
   },
   "무저의 척추 ★★★": {
-    "문어 ★★★":2, "성게 ★★★":2, "소라 ★★★":1, "미역 ★★★":1,
-    "불우렁쉥이":18, "유리병":30,
-    "영혼 흙":32, "뒤틀린 자루":16, "마그마 블록":16, "진홍빛 자루":8,
-    "발광 먹물 주머니":3, "발광 열매":12,
-    "데이지":2, "선애기별꽃":2, "양귀비":2
-  }
+    "소라 ★★★":1,
+    "문어 ★★★":2,
+    "미역 ★★★":1,
+    "성게 ★★★":2,
+    "데이지":1,
+    "뒤틀린 자루":8,
+    "마그마 블록":8,
+    "발광 먹물 주머니":3,
+    "발광 열매":6,
+    "불우렁쉥이":6,
+    "선애기별꽃":1,
+    "양귀비":1,
+    "영혼 흙":16,
+    "유리병":18,
+    "진홍빛 자루":4,
+  },
 };
 
 // fish usage matrix A[fishIdx][prodIdx]
@@ -1038,7 +1113,7 @@ function clampInt(v, lo, hi){
   return Math.max(lo, Math.min(hi, v));
 }
 function premiumMultiplier(level){
-  const map = {0:1.00, 1:1.05, 2:1.07, 3:1.10, 4:1.15, 5:1.20, 6:1.30};
+  const map = {0:1.00, 1:1.05, 2:1.07, 3:1.10, 4:1.15, 5:1.20, 6:1.30, 7:1.40, 8:1.50};
   return map[level] ?? 1.00;
 }
 function stormProb(level){
@@ -1111,7 +1186,7 @@ function buildTables(){
   PRODUCTS.forEach((p, idx)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-<td>${productLabel(p.name)}</td>
+<td><span class="tipName" data-tipname="${p.name}">${productLabel(p.name)}</span></td>
       <td class="mono">${fmtGold(p.base)}</td>
       <td class="mono" id="final_${idx}">-</td>
       <td><input type="number" min="0" step="1" value="0" style="width:120px;max-width:100%" id="qty_${idx}"></td>
@@ -1156,8 +1231,9 @@ function getDerived(){
 const stormP = stormProb(inp.stormLevel);
 const baseDrop = baseDropFromTool(inp.toolLevel);
 
-// (변경) 기본 드랍 k개 각각이 확률 p로 +1개 추가되는 모델 => 기대값: k + k*p = k*(1+p)
-const dropPerCast = baseDrop * (1 + stormP);
+// (변경) 폭풍은 '캐스트당' 확률 p로 +1개 추가 드랍 (단계별 p)
+// 기대 드랍/캐스트 = 기본 드랍 k + p
+const dropPerCast = baseDrop + stormP;
 
 
   const baseProbs = {p1:inp.p1, p2:inp.p2, p3:inp.p3};
@@ -1491,8 +1567,8 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${matLabel(name)}</td>
-      <td class="mono ${need===0?'zero':''}">${fmtNum(need)}</td>
       <td class="mono ${inv===0?'zero':''}">${inv}</td>
+      <td class="mono ${need===0?'zero':''}">${fmtNum(need)}</td>
       <td class="mono ${lack>0?'neg':'zero'}">${fmtNum(lack)}</td>
     `;
     fishTBody.appendChild(tr);
@@ -1635,10 +1711,21 @@ function renderActualResult(y, prices, supply, usedFish){
     sum += rev;
     const tr = document.createElement("tr");
     const ck = getCraftCheck(i);
-    tr.innerHTML =
-      `<td>${productLabel(p.name)}</td>
-<td class="right">${fmtGold(prices[i])}</td><td class="right">${qty}</td><td class="right">${fmtGold(rev)}</td>`+
-      `<td class="center checkCell"><label class="checkbox"><input class="chk" type="checkbox" ${ck?"checked":""} data-idx="${i}"></label></td>`;
+   tr.innerHTML =
+`<td><span class="tipName"
+      data-tipname="${p.name}"
+      data-tipkind="final"
+      data-tipqty="${qty}"
+    >${productLabel(p.name)}</span></td>
+ <td class="right">${fmtGold(prices[i])}</td>
+ <td class="right">${qty}</td>
+ <td class="right">${fmtGold(rev)}</td>` +
+  `<td class="center checkCell">
+     <label class="checkbox">
+       <input class="chk" type="checkbox" ${ck?"checked":""} data-idx="${i}">
+     </label>
+   </td>`;
+
     tb.appendChild(tr);
   });
   document.getElementById("revSumA").textContent = fmtGold(sum);
@@ -1648,6 +1735,9 @@ function renderActualResult(y, prices, supply, usedFish){
 const {needFish, needMat} = calcNetNeedsForActualWithMidInv(y);
 renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
 renderNeedMatTableTo("#needMatTblA tbody", needMat);
+
+  const craftPlan = calcNetCraftPlanFromActual(y);
+  renderNeedCraftTableTo("#needCraftTblA tbody", craftPlan);
 
 
 }
@@ -1661,12 +1751,20 @@ function renderNeedFishTableTo(sel, needFish, supply){
   const isMap = (needFish instanceof Map);
 
   FISH_ROWS.forEach((label, i)=>{
-    const needRaw = isMap ? (needFish.get(label) || 0) : (needFish[i] || 0);
-    const need = Math.round(Number(needRaw || 0));
-    const have = Math.floor(Number(supply[i] || 0));
-    const lack = Math.max(0, need - have);
+    const useRaw = isMap ? (needFish.get(label) || 0) : (needFish[i] || 0);
+    const used = Math.round(Number(useRaw || 0));      // ✅ 소모
+    const have = Math.floor(Number(supply[i] || 0));   // ✅ 재고
+    const remain = Math.max(0, have - used);           // ✅ 잔여
+
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${matLabel(label)}</td><td class="right">${need}</td><td class="right">${have}</td><td class="right ${lack>0?"neg":"muted"}">${lack}</td>`;
+        const remCls  = remain > 0 ? "pos" : "muted";
+
+    // 컬럼: 재고 / 소모 / 잔여
+    tr.innerHTML =
+      `<td>${matLabel(label)}</td>` +
+      `<td class="right">${have}</td>` +
+      `<td class="right">${used}</td>` +
+      `<td class="right ${remCls}">${remain}</td>`;
     tb.appendChild(tr);
   });
 }
@@ -1693,223 +1791,115 @@ function renderNeedMatTableTo(sel, needMat){
     });
 }
 
+
 // ===============================
-// TAB3: Recipe browser (search by name/ingredient)
+// TAB2: 하위 제작 필요량(중간재) - 재고 반영
+// - 추천 제작량(y)로부터 하위(정수/핵/에센스/결정/엘릭서/영약) 총 필요량을 전개
+// - 중간재 재고(loadMidInv)를 먼저 소진하고, 부족분만 "추가 제작"으로 집계
 // ===============================
-let __recipeUIInited = false;
-
-function countStars(name){
-  const m = String(name||"").match(/★+/);
-  return m ? m[0].length : 0;
-}
-function isFinalProduct(name){
-  return PRODUCTS.some(p=>p.name === name);
-}
-function fmtQtyClean(x){
-  const n = Number(x||0);
-  if(!isFinite(n)) return String(x||"");
-  const rounded = Math.round(n);
-  if(Math.abs(n - rounded) < 1e-9) return String(rounded);
-  // 최대 2자리, 뒤 0 제거
-  return n.toFixed(2).replace(/\.?0+$/,"");
+function isMidItemName(name){
+  // MID_SECTIONS 정의 순서를 그대로 사용
+  for(const sec of MID_SECTIONS){
+    if(sec.items && sec.items.includes(name)) return true;
+  }
+  return false;
 }
 
-function buildRecipeEntries(){
-  const all = getAllRecipesForMid(); // {out:{ing:qty}}
-  return Object.keys(all).map(name=>({ name, ing: all[name] || {} }));
-}
+function calcNetCraftPlanFromActual(yFinal){
+  const recipes = getAllRecipesForMid(); // 최종품 포함(키:아이템명, 값:재료맵)
+  const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
+  const inv = {};
+  for(const [k,v] of Object.entries(inv0)) inv[k] = Math.max(0, Math.floor(Number(v||0)));
 
-function getMidOrderByTier(tier){
-  // MID_SECTIONS의 섹션/아이템 순서를 그대로 사용 (해당 티어만)
-  const out = [];
-  MID_SECTIONS.forEach(sec=>{
-    (sec.items || []).forEach(n=>{
-      if(countStars(n) === tier) out.push(n);
-    });
-  });
-  return out;
-}
+  const gross = {}; // 총 필요
+  const net   = {}; // 추가 제작(재고 반영)
 
-function getFinalOrderByTier(tier){
-  return PRODUCTS.filter(p=>countStars(p.name) === tier).map(p=>p.name);
-}
-
-function renderRecipeList(targetId, queryRaw){
-  const root = document.getElementById(targetId);
-  if(!root) return;
-
-  const q = String(queryRaw||"").trim().toLowerCase();
-  const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
-
-  const entries = buildRecipeEntries();
-
-  const match = (entry)=>{
-    if(tokens.length === 0) return true;
-    const name = entry.name.toLowerCase();
-    const ingNames = Object.keys(entry.ing||{}).map(s=>s.toLowerCase());
-    return tokens.every(tok => name.includes(tok) || ingNames.some(n=>n.includes(tok)));
+  const add = (obj, k, v) => {
+    if(v <= 0) return;
+    obj[k] = (obj[k] || 0) + v;
   };
 
-  const filtered = entries.filter(match);
+  const expandGross = (item, qty, depth=0) => {
+    qty = Math.max(0, Math.floor(Number(qty||0)));
+    if(qty <= 0) return;
+    if(depth > 60) return;
 
- // 이름이 속한 MID_SECTIONS 섹션(정수/핵/에센스/결정/엘릭서/영약) 찾아오기
-const midSectionOf = (name)=>{
-  for(const sec of (MID_SECTIONS || [])){
-    if((sec.items || []).includes(name)) return sec.title; // 예: "정수 ★"
-  }
-  return "";
-};
+    if(isMidItemName(item)) add(gross, item, qty);
 
-// 섹션별(정수/핵/에센스/결정/엘릭서/영약) 내부 정렬 순서
-const getMidOrderBySectionKey = (tier, key)=>{
-  const sec = (MID_SECTIONS || []).find(s => String(s.title||"").includes(key));
-  if(!sec) return [];
-  return (sec.items || []).filter(n => countStars(n) === tier);
-};
-
-const groups = [
-  // 1티어
-  { tier:1, kind:"mid",   key:"정수",   title:"1티어 정수" },
-  { tier:1, kind:"mid",   key:"핵",     title:"1티어 핵" },
-  { tier:1, kind:"final",              title:"1티어 완성품" },
-
-  // 2티어
-  { tier:2, kind:"mid",   key:"에센스", title:"2티어 에센스" },
-  { tier:2, kind:"mid",   key:"결정",   title:"2티어 결정" },
-  { tier:2, kind:"final",              title:"2티어 완성품" },
-
-  // 3티어
-  { tier:3, kind:"mid",   key:"엘릭서", title:"3티어 엘릭서" },
-  { tier:3, kind:"mid",   key:"영약",   title:"3티어 영약" },
-  { tier:3, kind:"final",              title:"3티어 완성품" },
-];
-
-const finOrder = {
-  1: getFinalOrderByTier(1),
-  2: getFinalOrderByTier(2),
-  3: getFinalOrderByTier(3),
-};
-
-const orderIndex = (arr, name)=>{
-  const i = arr.indexOf(name);
-  return i < 0 ? 1e9 : i;
-};
-
-root.innerHTML = "";
-groups.forEach(g=>{
-  const list = filtered.filter(e=>{
-    if(countStars(e.name) !== g.tier) return false;
-
-    if(g.kind === "final") return isFinalProduct(e.name);
-
-    // mid: 섹션(정수/핵/에센스/결정/엘릭서/영약)까지 매칭
-    const secTitle = midSectionOf(e.name); // 예: "결정 ★★"
-    return !isFinalProduct(e.name) && secTitle.includes(g.key);
-  });
-
-  // 정렬
-  const ordArr =
-    (g.kind === "final")
-      ? finOrder[g.tier]
-      : getMidOrderBySectionKey(g.tier, g.key);
-
-  list.sort((a,b)=>
-    (orderIndex(ordArr, a.name) - orderIndex(ordArr, b.name)) || a.name.localeCompare(b.name)
-  );
-
-  if(list.length === 0) return;
-
-    const grp = document.createElement("div");
-    grp.className = "recipeGroup";
-    grp.innerHTML = `<div class="recipeGroupTitle">${g.title}</div>`;
-    const cards = document.createElement("div");
-    cards.className = "recipeCards";
-
-const recipeTitleHtml = (e)=>{
-  return (g.kind === "final")
-    ? productLabel(e.name)   // ✅ 완성품 → 완성품 아이콘
-    : matLabel(e.name);      // ✅ 중간재 → 재료 아이콘
-};
-
-
-    list.forEach(e=>{
-      const card = document.createElement("div");
-      card.className = "recipeCard";
-
-      const kindText = g.kind === "final" ? "완성품" : "중간재";
-      const ingEntries = Object.entries(e.ing||{})
-        .sort((a,b)=> (matRank(a[0]) - matRank(b[0])) || a[0].localeCompare(b[0]));
-
-      const ingHtml = ingEntries.map(([k,v])=>{
-        const qty = fmtQtyClean(v);
-        return `<span class="recipeIng">${matLabel(k)} <span class="qty">×${qty}</span></span>`;
-      }).join("");
-
-      card.innerHTML = `
-        <div class="recipeCardTop">
-          <div>${recipeTitleHtml(e)}</div>
-          <div class="recipeKind">${kindText}</div>
-        </div>
-        <div class="recipeIngs">${ingHtml}</div>
-      `;
-      cards.appendChild(card);
-    });
-
-    grp.appendChild(cards);
-    root.appendChild(grp);
-  });
-
-  if(root.innerHTML.trim() === ""){
-    root.innerHTML = `<div class="note">검색 결과가 없습니다.</div>`;
-  }
-}
-
-function initRecipeUI(){
-  if(__recipeUIInited) return;
-  __recipeUIInited = true;
-
-  const inp = document.getElementById("recipeSearch");
-  const clearBtn = document.getElementById("btnRecipeClear");
-  const listId = "recipeList";
-
-  const dlg = document.getElementById("recipeDialog");
-  const btnOpen = document.getElementById("btnRecipePopup");
-  const btnClose = document.getElementById("btnRecipePopClose");
-  const inpDlg = document.getElementById("recipeSearchDlg");
-  const clearDlg = document.getElementById("btnRecipeClearDlg");
-
-  const renderAll = (q)=>{
-    renderRecipeList(listId, q);
-    renderRecipeList("recipeListDlg", q);
+    const r = recipes[item];
+    if(!r) return;
+    for(const [mat, per] of Object.entries(r)){
+      expandGross(mat, qty * Number(per||0), depth+1);
+    }
   };
 
-  // 초기 렌더
-  renderAll("");
+  const expandNet = (item, qty, depth=0) => {
+    qty = Math.max(0, Math.floor(Number(qty||0)));
+    if(qty <= 0) return;
+    if(depth > 60) return;
 
-  inp?.addEventListener("input", ()=>renderAll(inp.value));
-  clearBtn?.addEventListener("click", ()=>{
-    if(inp){ inp.value=""; inp.dispatchEvent(new Event("input")); inp.focus(); }
+    const r = recipes[item];
+    if(!r) return;
+
+    // ✅ 중간재면 재고를 먼저 소비하고, 부족분만 제작/전개
+    if(isMidItemName(item)){
+      const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
+      const use = Math.min(have, qty);
+      if(use > 0) inv[item] = have - use;
+      qty -= use;
+      if(qty <= 0) return;
+
+      add(net, item, qty);
+    }
+
+    for(const [mat, per] of Object.entries(r)){
+      expandNet(mat, qty * Number(per||0), depth+1);
+    }
+  };
+
+  PRODUCTS.forEach((p,i)=>{
+    const qty = Math.max(0, Math.floor(Number(yFinal[i]||0)));
+    if(!qty) return;
+    expandGross(p.name, qty, 0);
+    expandNet(p.name, qty, 0);
   });
 
-  inpDlg?.addEventListener("input", ()=>renderAll(inpDlg.value));
-  clearDlg?.addEventListener("click", ()=>{
-    if(inpDlg){ inpDlg.value=""; inpDlg.dispatchEvent(new Event("input")); inpDlg.focus(); }
+  // 출력용 rows: MID_SECTIONS 순서로, 필요/재고/추가제작이 있는 것만
+  const rows = [];
+  for(const sec of MID_SECTIONS){
+    for(const name of (sec.items || [])){
+      const need = Math.max(0, Math.floor(Number(gross[name] || 0)));
+      const invv = Math.max(0, Math.floor(Number(inv0[name] || 0)));
+      const craft = Math.max(0, Math.floor(Number(net[name] || 0)));
+      if(need <= 0 && invv <= 0 && craft <= 0) continue;
+      rows.push({ name, need, inv: invv, craft });
+    }
+  }
+  return rows;
+}
+
+function renderNeedCraftTableTo(sel, rows){
+  const tb = document.querySelector(sel);
+  if(!tb) return;
+  tb.innerHTML = "";
+
+  (rows || []).forEach(r=>{
+    const tr = document.createElement("tr");
+    const craftCls = r.craft > 0 ? "neg" : "muted";
+    const remInv = Math.max(0, Math.floor(Number(r.inv || 0)) - Math.floor(Number(r.need || 0)));
+    tr.innerHTML =
+      `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${r.craft}">${matLabel(r.name)}</span></td>` +
+      `<td class="right ${craftCls}">${r.craft}</td>` +
+      `<td class="right">${r.inv}</td>` +
+      `<td class="right">${r.need}</td>`;
+    tb.appendChild(tr);
   });
 
-  btnOpen?.addEventListener("click", ()=>{
-    if(!dlg || typeof dlg.showModal !== "function") return;
-    // 동기화: 현재 탭 검색어를 다이얼로그로
-    if(inpDlg && inp) inpDlg.value = inp.value || "";
-    renderAll(inpDlg?.value || inp?.value || "");
-    dlg.showModal();
-    setTimeout(()=>inpDlg?.focus(), 30);
-  });
-  btnClose?.addEventListener("click", ()=>dlg?.close());
-
-  // 다이얼로그 바깥 클릭 닫기
-  dlg?.addEventListener("click", (e)=>{
-    if(e.target === dlg) dlg.close();
-  });
+  if(!rows || rows.length === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="muted" colspan="4">필요한 하위 제작템이 없습니다.</td>`;
+    tb.appendChild(tr);
+  }
 }
 
 // ===============================
@@ -1940,7 +1930,11 @@ function buildActualBalanceLP(pricesFinal){
   const midInv = loadMidInv();                    // ✅ 중간재 재고(그대로)
 
   // "중간재+최종품 레시피" 맵
-  const recipes = getAllRecipesForMid();          // { itemName: {ingredientName: qty, ...}, ... }
+const TIP_RECIPES = getAllRecipesForMid();
+
+function getRecipeForTip(name){
+  return TIP_RECIPES[name] || null;
+}
 
   const items = Object.keys(recipes);
   const A = resources.map(()=> Array(items.length).fill(0));
@@ -2028,33 +2022,6 @@ renderActualResult(yFinal, prices, fishSupply, usedFish);
 
 }
 
-function carryRemainingToExpected(){
-  if(!LAST_ACTUAL){ alert("먼저 '최적화 계산'을 실행해줘."); return; }
-
-  const {x, fishSupply, A} = LAST_ACTUAL;
-
-  // ✅ 실제 어패류 사용량 = A*x의 fish 행
-  const usedFish = calcFishUsedFromLP(A, x);
-
-  const remain = fishSupply.map((have,i)=> Math.max(0, Math.floor(have) - Math.round(usedFish[i]||0)));
-  setExpectedInv(remain);
-
-  // 탭2의 기존 재고에도 반영하고 저장
-  remain.forEach((v,i)=>{
-    const el = document.getElementById(`base_${i}`);
-    if(el) el.value = v;
-    const h = document.getElementById(`harv_${i}`);
-    if(h) h.value = 0;
-  });
-
-  updateTotalsActual();
-  localStorage.setItem(LS_KEY_EXPECTED, JSON.stringify(remain));
-  localStorage.setItem(LS_KEY_BASE, JSON.stringify(remain));
-  alert("남은 재고를 탭1/탭2에 이월했어. (오늘 채집 값은 0으로 초기화)");
-
-  showPanel("expected");
-  window.scrollTo({top:0, behavior:"smooth"});
-}
  
 
 // ===============================
@@ -2182,7 +2149,6 @@ document.getElementById("btnSolveActual").addEventListener("click", () => {
   });
 });
 
-document.getElementById("btnCarryToExpected").addEventListener("click", carryRemainingToExpected);
 
 document.getElementById("craftTblA").addEventListener("change",(e)=>{
   const t = e.target;
@@ -2252,6 +2218,240 @@ FISH_ROWS.forEach((_, i)=>{
 });
 
 
+/* =========================
+   Tooltip (hover + pin)
+   - no flicker: mousemove only moves position
+   - click pin / outside click close / ESC close
+   ========================= */
+
+(() => {
+  const tip = document.getElementById("recipeTip");
+  if (!tip) return;
+
+  let pinned = false;
+  let pinnedEl = null;   // 고정시킨 원본 요소(수량 갱신용)
+  let lastHtml = "";     // 같은 내용이면 innerHTML 재세팅 방지
+
+  // 레시피 테이블 lazy init
+  let TIP_RECIPES = null;
+  const getRecipe = (name) => {
+    if (!TIP_RECIPES) {
+      TIP_RECIPES = (typeof getAllRecipesForMid === "function") ? (getAllRecipesForMid() || {}) : {};
+    }
+    return TIP_RECIPES[name] || null;
+  };
+
+  // 완성품 판별(없으면 PRODUCTS 기반으로라도)
+  const isFinalProductName = (name) => {
+    if (typeof isFinalProduct === "function") return !!isFinalProduct(name);
+    return (typeof PRODUCTS !== "undefined") && PRODUCTS.some(p => p.name === name);
+  };
+
+  // ✅ 툴팁 라벨: ★ 숨기지 않음(원본 그대로 표시)
+  // - 완성품: productLabel 사용
+  // - 중간재/재료: matLabel 사용
+  function tipLabel(name) {
+    const raw = String(name || "");
+    if (isFinalProductName(raw)) {
+      return (typeof productLabel === "function") ? productLabel(raw) : raw;
+    }
+    return (typeof matLabel === "function") ? matLabel(raw) : raw;
+  }
+
+
+  function clampPos(x, y) {
+    const pad = 12;
+    const rect = tip.getBoundingClientRect();
+    let nx = x, ny = y;
+
+    if (nx + rect.width > window.innerWidth - pad) nx = window.innerWidth - pad - rect.width;
+    if (nx < pad) nx = pad;
+
+    if (ny + rect.height > window.innerHeight - pad) ny = window.innerHeight - pad - rect.height;
+    if (ny < pad) ny = pad;
+
+    return { nx, ny };
+  }
+
+  function setPosNearCursor(clientX, clientY) {
+    // 기본: 커서 위쪽에 띄우고, 위가 부족하면 아래로
+    tip.style.left = (clientX + 14) + "px";
+    tip.style.top  = (clientY + 14) + "px";
+
+    const rect = tip.getBoundingClientRect();
+    let x = clientX + 14;
+    let y = clientY - rect.height - 14;
+    if (y < 12) y = clientY + 18;
+
+    const p = clampPos(x, y);
+    tip.style.left = p.nx + "px";
+    tip.style.top  = p.ny + "px";
+  }
+
+  function buildTipHtml(name, meta) {
+    const r = getRecipe(name);
+    if (!r) return null;
+
+    const kind  = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
+  const qty   = Math.max(0, Math.floor(Number(meta?.qty ?? 0)));
+const craft = Math.max(0, Math.floor(Number(meta?.craft ?? qty ?? 0)));
+const need  = Math.max(0, Math.floor(Number(meta?.need ?? craft ?? 0)));
+
+    const inv   = Math.max(0, Math.floor(Number(meta?.inv || 0)));
+
+    // 레시피 수량 배수는 “추가 제작” 기준(A 선택)
+const mul = (kind === "final")
+  ? Math.max(1, Math.floor(Number(qty ?? craft ?? 0))) // rec와 같은 기준
+  : Math.max(1, craft);
+
+
+const titleHtml = (kind === "final") ? productLabel(name) : matLabel(name);
+
+
+// 배지 규칙
+let badges = "";
+
+if (kind === "final") {
+  const rec = Math.max(0, Number(qty || craft || 0));
+
+  badges = rec > 0
+    ? `<span class="tipBadge">추천 제작 ${rec}</span>`
+    : `<span class="tipBadge">레시피</span>`;
+} else {
+  badges = craft > 0
+    ? `<span class="tipBadge">추가 제작 ${craft}</span>`
+    : `<span class="tipBadge">레시피</span>`;
+}
+
+
+
+
+   const lines = Object.entries(r)
+  .map(([mat, per]) => {
+    const total = Math.max(0, Math.floor(Number(per || 0) * mul));
+    return `
+      <div class="tipRow">
+        <div class="tipLeft">${matLabel(mat)}</div>
+        <div class="tipQty">×${total}</div>
+      </div>
+    `;
+  })
+  .join("");
+
+
+    return `
+      <div class="tipTop">
+        <div class="tipTitle">${titleHtml}</div>
+        <div class="tipBadges">${badges}</div>
+      </div>
+      <div class="tipList">${lines}</div>
+    `;
+  }
+
+  function showTip(clientX, clientY, name, meta) {
+    const html = buildTipHtml(name, meta);
+    if (!html) return;
+
+    // 내용이 바뀔 때만 innerHTML (깜빡임 방지 핵심)
+    if (html !== lastHtml) {
+      tip.innerHTML = html;
+      lastHtml = html;
+    }
+
+    tip.hidden = false;
+    setPosNearCursor(clientX, clientY);
+  }
+
+  function hideTip() {
+    tip.hidden = true;
+    tip.classList.remove("pinned");
+    lastHtml = "";
+  }
+
+  function unpin() {
+    pinned = false;
+    pinnedEl = null;
+    hideTip();
+  }
+
+  // ✅ hover
+  document.addEventListener("pointerover", (e) => {
+    if (pinned) return;
+    const el = e.target.closest("[data-tipname]");
+    if (!el) return;
+
+    const name = el.getAttribute("data-tipname");
+    const meta = {
+      kind: el.getAttribute("data-tipkind") || undefined,
+      qty:  el.getAttribute("data-tipqty"),
+      craft:el.getAttribute("data-tipcraft"),
+      need: el.getAttribute("data-tipneed"),
+      inv:  el.getAttribute("data-tipinv"),
+    };
+
+    showTip(e.clientX, e.clientY, name, meta);
+  });
+
+  // ✅ move: 위치만 이동(내용 X)
+  document.addEventListener("pointermove", (e) => {
+    if (tip.hidden) return;
+    if (pinned) return;
+    setPosNearCursor(e.clientX, e.clientY);
+  });
+
+  // ✅ out: 숨김(고정 중이면 유지)
+  document.addEventListener("pointerout", (e) => {
+    if (pinned) return;
+    const el = e.target.closest("[data-tipname]");
+    if (!el) return;
+    hideTip();
+  });
+
+  // ✅ click pin / outside click close
+  document.addEventListener("click", (e) => {
+    // tooltip 자체 클릭은 유지
+    if (e.target.closest("#recipeTip")) return;
+
+    const el = e.target.closest("[data-tipname]");
+    if (el) {
+      // 클릭한 항목 고정
+      pinned = true;
+      pinnedEl = el;
+      tip.classList.add("pinned");
+
+      const name = el.getAttribute("data-tipname");
+      const meta = {
+        kind: el.getAttribute("data-tipkind") || undefined,
+        qty:  el.getAttribute("data-tipqty"),
+        craft:el.getAttribute("data-tipcraft"),
+        need: el.getAttribute("data-tipneed"),
+        inv:  el.getAttribute("data-tipinv"),
+      };
+
+      showTip(e.clientX, e.clientY, name, meta);
+      return;
+    }
+
+    // 다른 곳 클릭하면 닫기
+    if (pinned) unpin();
+  });
+
+  // ✅ ESC 해제
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && pinned) unpin();
+  });
+
+  // (선택) 아이콘 늦게 뜨는 거 줄이기: 미리 로드
+  window.addEventListener("DOMContentLoaded", () => {
+    try {
+      const urls = [];
+      if (typeof PRODUCT_ICON_URL === "object") urls.push(...Object.values(PRODUCT_ICON_URL));
+      if (typeof MATERIAL_ICON_URL === "object") urls.push(...Object.values(MATERIAL_ICON_URL));
+      urls.filter(Boolean).forEach(u => { const im = new Image(); im.src = u; });
+    } catch (_) {}
+  });
+})();
+
 
 
 buildInvActual();
@@ -2264,4 +2464,853 @@ loadBaseInv();
 recalcFromCurrent();
 updateTotalsActual();
 
+
+
+
+/* =========================
+   TAB3: 연금 레시피 UI (복구)
+   - index.html의 #panelRecipe/#recipeList 구조를 그대로 사용
+   - 새 기능/리디자인 없이 "목록이 안 뜨는" 문제만 해결
+   ========================= */
+
+let __RECIPE_UI_INITED__ = false;
+
+function initRecipeUI(){
+  if(__RECIPE_UI_INITED__) return;
+  __RECIPE_UI_INITED__ = true;
+
+  const host = document.getElementById("recipeList");
+  if(!host) return;
+
+  // 데이터: 기존 레시피 맵 재사용(중간재 + 최종품 포함)
+  const RECIPES = (typeof getAllRecipesForMid === "function") ? (getAllRecipesForMid() || {}) : {};
+  const NAMES = Object.keys(RECIPES);
+
+  const FINAL_SET = new Set(((typeof PRODUCTS !== "undefined") && Array.isArray(PRODUCTS)) ? PRODUCTS.map(p=>p.name) : []);
+
+  const hostDlg = document.getElementById("recipeListDlg");
+
+  const inp = document.getElementById("recipeSearch");
+  const btnClear = document.getElementById("btnRecipeClear");
+
+  const dlg = document.getElementById("recipeDialog");
+  const btnPop = document.getElementById("btnRecipePopup");
+  const btnClose = document.getElementById("btnRecipePopClose");
+  const inpDlg = document.getElementById("recipeSearchDlg");
+  const btnClearDlg = document.getElementById("btnRecipeClearDlg");
+
+  const kindText = (name) => FINAL_SET.has(name) ? "완성품" : "중간재";
+  const titleHtml = (name) => FINAL_SET.has(name)
+    ? (typeof productLabel === "function" ? productLabel(name) : escapeHtml(name))
+    : (typeof matLabel === "function" ? matLabel(name) : escapeHtml(name));
+
+  function normQ(q){
+    return String(q||"").trim().toLowerCase();
+  }
+
+  function matchRecipe(name, q){
+    if(!q) return true;
+    const nq = normQ(q);
+    if(String(name).toLowerCase().includes(nq)) return true;
+    const ing = RECIPES[name] || {};
+    return Object.keys(ing).some(k => String(k).toLowerCase().includes(nq));
+  }
+
+  // ---- 섹션/정렬 정책 ----
+  // index.html에 이미 있는 .recipeGroup/.recipeGroupTitle UI를 그대로 사용
+  // 별(★) 단계별로: (중간재 2개) → (완성품) 순서 고정
+  // 1티어: 정수/핵, 2티어: 에센스/결정, 3티어: 엘릭서/영약
+
+  const SECTIONS = [];
+  const used = new Set();
+
+  const starCount = (name)=>{
+    const m = String(name).match(/★+/);
+    return m ? m[0].length : 0;
+  };
+
+  const kindKey = (name)=>{
+    name = String(name);
+    if(name.includes("정수")) return "mid1a";
+    if(name.includes("핵")) return "mid1b";
+    if(name.includes("에센스")) return "mid2a";
+    if(name.includes("결정")) return "mid2b";
+    if(name.includes("엘릭서")) return "mid3a";
+    if(name.includes("영약")) return "mid3b";
+    return "final";
+  };
+
+  const ORDER = [
+    { tier:1, kind:"mid1a", title:"정수 ★" },
+    { tier:1, kind:"mid1b", title:"핵 ★" },
+    { tier:1, kind:"final", title:"1티어 완성품 ★" },
+
+    { tier:2, kind:"mid2a", title:"에센스 ★★" },
+    { tier:2, kind:"mid2b", title:"결정 ★★" },
+    { tier:2, kind:"final", title:"2티어 완성품 ★★" },
+
+    { tier:3, kind:"mid3a", title:"엘릭서 ★★★" },
+    { tier:3, kind:"mid3b", title:"영약 ★★★" },
+    { tier:3, kind:"final", title:"3티어 완성품 ★★★" },
+  ];
+
+  // NAMES는 RECIPES 키 목록(원본 삽입 순서 유지)
+  ORDER.forEach(sec=>{
+    const items = NAMES.filter(n=>{
+      if(starCount(n) !== sec.tier) return false;
+      if(kindKey(n) !== sec.kind) return false;
+      return true;
+    });
+    if(items.length){
+      items.forEach(n=>used.add(n));
+      SECTIONS.push({ title: sec.title, items });
+    }
+  });
+
+  // 나머지(혹시 누락된 레시피가 있다면): 기존처럼 가나다 정렬
+  const rest = NAMES.filter(n => !used.has(n));
+  if(rest.length){
+    rest.sort((a,b)=> a.localeCompare(b, "ko"));
+    SECTIONS.push({ title: "기타", items: rest });
+  }
+
+  function renderCards(items){
+    return items.map(name=>{
+      const ing = RECIPES[name] || {};
+      const ingHtml = Object.entries(ing).map(([mat, qty])=>{
+        const qn = Math.max(0, Math.floor(Number(qty||0)));
+        // tooltip 호버/핀 동작을 그대로 사용하기 위해 data-tipname 부여
+        return `
+          <div class="recipeIng" data-tipname="${escapeHtml(mat)}" data-tipkind="mid">
+            ${typeof matLabel === "function" ? matLabel(mat) : escapeHtml(mat)}
+            <span class="qty">×${qn}</span>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="recipeCard">
+          <div class="recipeCardTop">
+            <div><span class="tipName" data-tipname="${escapeHtml(name)}" data-tipkind="${FINAL_SET.has(name) ? "final" : "mid"}">${titleHtml(name)}</span></div>
+            <div class="recipeKind">${kindText(name)}</div>
+          </div>
+          <div class="recipeIngs">${ingHtml}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderInto(el, q){
+    if(!el) return;
+    const qq = normQ(q);
+
+    const groups = SECTIONS
+      .map(sec=>{
+        const items = sec.items.filter(n => matchRecipe(n, qq));
+        return { title: sec.title, items };
+      })
+      .filter(g => g.items.length > 0);
+
+    if(groups.length === 0){
+      el.innerHTML = `<div class="small" style="padding:6px 2px;opacity:.75">검색 결과가 없습니다.</div>`;
+      return;
+    }
+
+    const html = groups.map(g=>{
+      const cards = renderCards(g.items);
+      return `
+        <div class="recipeGroup">
+          <div class="recipeGroupTitle">${escapeHtml(g.title)}</div>
+          <div class="recipeCards">${cards}</div>
+        </div>
+      `;
+    }).join("");
+
+    el.innerHTML = html;
+  }
+
+  function syncAndRender(from){
+    // from: "main" | "dlg"
+    const qMain = inp ? inp.value : "";
+    const qDlg  = inpDlg ? inpDlg.value : "";
+    const q = (from === "dlg") ? qDlg : qMain;
+
+    // 서로 검색어 동기화(UX)
+    if(from === "dlg" && inp) inp.value = q;
+    if(from === "main" && inpDlg) inpDlg.value = q;
+
+    renderInto(host, q);
+    renderInto(hostDlg, q);
+  }
+
+  // 초기 렌더
+  syncAndRender("main");
+
+  // 이벤트: 메인
+  if(inp){
+    inp.addEventListener("input", ()=>syncAndRender("main"));
+  }
+  if(btnClear){
+    btnClear.addEventListener("click", ()=>{
+      if(inp) inp.value = "";
+      if(inpDlg) inpDlg.value = "";
+      syncAndRender("main");
+      inp?.focus({preventScroll:true});
+    });
+  }
+
+  // 이벤트: 다이얼로그(있으면)
+  if(inpDlg){
+    inpDlg.addEventListener("input", ()=>syncAndRender("dlg"));
+  }
+  if(btnClearDlg){
+    btnClearDlg.addEventListener("click", ()=>{
+      if(inp) inp.value = "";
+      if(inpDlg) inpDlg.value = "";
+      syncAndRender("dlg");
+      inpDlg?.focus({preventScroll:true});
+    });
+  }
+
+  // 다이얼로그 열기/닫기 (기존 UI 존재 시에만)
+  if(btnPop && dlg && typeof dlg.showModal === "function"){
+    btnPop.addEventListener("click", ()=>{
+      try{ dlg.showModal(); }catch(e){}
+      syncAndRender("main");
+      inpDlg?.focus({preventScroll:true});
+    });
+  }
+  if(btnClose && dlg){
+    btnClose.addEventListener("click", ()=>{ try{ dlg.close(); }catch(e){} });
+  }
+}
+
+
+// 아주 작은 HTML escape (data-* 안전)
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
+}
+
+
+
+/* =========================
+   TODO BAR (개인 체크리스트)
+   - 로그인/서버 없이 localStorage에 저장
+   - 매일 00:00 초기화 그룹 / 매일 03:00 초기화 그룹
+   - 남은 시간 타이머 표시
+   - B 정책: 기본 펼침, 해당 그룹 모두 체크되면 자동 접힘, 초기화 시 자동 펼침
+   ========================= */
+
+(function(){
+  const TODO_SPEC = [
+    {
+      key: "daily00",
+      title: "00:00 초기화",
+      resetHour: 0,
+      items: [
+        { id: "vote",  label: "👍추천", link: "https://minelist.kr/servers/16527-ddingtycoon.kr/votes/new" },
+        { id: "login", label: "🎁접속 보상" },
+        { id: "trade", label: "🚢무역" },
+      ],
+    },
+    {
+      key: "daily03",
+      title: "03:00 초기화",
+      resetHour: 3,
+      items: [
+        { id: "stam",  label: "⚡스태미나" },
+        { id: "req",   label: "📝의뢰" },
+      ],
+    },
+  ];
+
+  const LS_KEY = "dd_todo_state_v1";
+  const LS_UI_KEY = "dd_todo_ui_v1";
+  const INACTIVITY_MS = 10 * 60 * 1000; // 상호작용 없으면 자동 숨김(10분)
+  let _inactTimer = null;
+
+
+  // --- 체크 사운드 (로그인 없이/외부 파일 없이 WebAudio로 아주 짧게) ---
+  let _audioCtx = null;
+  let _audioArmed = false;
+
+  function armAudioOnce(){
+    if(_audioArmed) return;
+    _audioArmed = true;
+    try{
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(_audioCtx.state === "suspended"){
+        _audioCtx.resume().catch(()=>{});
+      }
+    }catch(_e){
+      _audioCtx = null;
+    }
+  }
+
+  // 유저 제스처가 한 번이라도 있으면 사운드 가능
+  window.addEventListener("pointerdown", armAudioOnce, { once:true });
+  window.addEventListener("keydown", armAudioOnce, { once:true });
+
+  function playCheckTick(){
+    if(!_audioCtx) return;
+    try{
+      if(_audioCtx.state === "suspended"){
+        _audioCtx.resume().catch(()=>{});
+      }
+      const t0 = _audioCtx.currentTime;
+
+      const osc = _audioCtx.createOscillator();
+      const gain = _audioCtx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, t0);
+
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.05, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08);
+
+      osc.connect(gain);
+      gain.connect(_audioCtx.destination);
+
+      osc.start(t0);
+      osc.stop(t0 + 0.09);
+    }catch(_e){}
+  }
+
+  function popAnim(labelEl){
+    if(!labelEl) return;
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    labelEl.classList.remove("todoPop");
+    // reflow to restart animation
+    void labelEl.offsetWidth;
+    labelEl.classList.add("todoPop");
+  }
+
+
+  function setupAutoHide(bar){
+    if(!bar || bar.__todoAutoHideBound) return;
+    bar.__todoAutoHideBound = true;
+
+    const bump = ()=> resetInactivity(bar);
+
+    // 페이지 어디서든 상호작용이면 타이머 갱신
+    ["mousemove","mousedown","keydown","scroll","touchstart","pointerdown","wheel"].forEach(ev=>{
+      window.addEventListener(ev, bump, { passive:true });
+    });
+
+    // 패널 내부 상호작용도 포함
+    bar.addEventListener("mouseenter", bump, { passive:true });
+    bar.addEventListener("click", bump);
+
+    resetInactivity(bar);
+  }
+
+  function resetInactivity(bar){
+    if(_inactTimer) clearTimeout(_inactTimer);
+    _inactTimer = setTimeout(()=>{
+      try{
+        const ui = loadTodoUI();
+        if(ui && !ui.hidden){
+          bar.classList.add("hidden");
+          saveTodoUI({ hidden:true });
+        }
+      }catch(_e){}
+    }, INACTIVITY_MS);
+  }
+
+
+  function now(){ return new Date(); }
+
+  function pad2(n){ return String(n).padStart(2,"0"); }
+  function fmtRemain(ms){
+    // HH:MM:SS
+    const s = Math.max(0, Math.floor(ms/1000));
+    const h = pad2(Math.floor(s/3600));
+    const m = pad2(Math.floor((s%3600)/60));
+    const sec = pad2(s%60);
+    return `${h}:${m}:${sec}`;
+  }
+
+  function dayKeyForReset(hour){
+    // "리셋 기준일" 키: 해당 hour 기준으로 하루가 시작되는 날짜 문자열(YYYY-MM-DD)
+    const d = now();
+    const base = new Date(d);
+    base.setHours(hour,0,0,0);
+    // 현재 시간이 리셋 시각 이전이면 "어제"가 아직 같은 사이클
+    if(d < base) base.setDate(base.getDate()-1);
+    return `${base.getFullYear()}-${pad2(base.getMonth()+1)}-${pad2(base.getDate())}`;
+  }
+
+  function nextResetAt(hour){
+    const d = now();
+    const t = new Date(d);
+    t.setHours(hour,0,0,0);
+    if(d >= t) t.setDate(t.getDate()+1);
+    return t;
+  }
+
+  function loadState(){
+    try{
+      return JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {};
+    }catch(_){ return {}; }
+  }
+
+  function loadTodoUI(){
+    try{
+      const raw = localStorage.getItem(LS_UI_KEY);
+      if(!raw) return { hidden:false };
+      const u = JSON.parse(raw);
+      return { hidden: !!u.hidden };
+    }catch(_e){
+      return { hidden:false };
+    }
+  }
+
+  function saveTodoUI(u){
+    try{ localStorage.setItem(LS_UI_KEY, JSON.stringify({ hidden: !!u.hidden })); }catch(_e){}
+  }
+  function saveState(state){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state||{})); }catch(_){}
+  }
+
+  function ensureCycle(state, groupKey, resetHour){
+    state[groupKey] = state[groupKey] || { cycleDay:"", checked:{} , collapsed:false };
+    const cycleDay = dayKeyForReset(resetHour);
+    if(state[groupKey].cycleDay !== cycleDay){
+      // 초기화
+      state[groupKey].cycleDay = cycleDay;
+      state[groupKey].checked = {};
+      state[groupKey].collapsed = false; // 초기화 시 자동 펼침
+    }
+  }
+
+  function isAllChecked(state, groupKey, items){
+    const checked = state[groupKey]?.checked || {};
+    return items.every(it => !!checked[it.id]);
+  }
+
+  function mountTodoBar(){
+    // 이미 있으면 스킵
+    if(document.getElementById("todoBar")) return;
+
+    const tabs = document.querySelector(".tabs");
+    if(!tabs) return;
+
+    // style inject (기존 UI를 크게 바꾸지 않는 최소 스타일)
+    if(!document.getElementById("todoBarStyle")){
+      const st = document.createElement("style");
+      st.id = "todoBarStyle";
+      st.textContent = `
+#todoBar{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  width: min(260px, calc(100vw - 32px));
+  pointer-events: auto;
+}
+#todoBar .todoCard{
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  padding: 8px 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+}
+#todoBar .todoHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom: 6px;
+}
+#todoBar .todoTitle{
+  font-weight: 700;
+  font-size: 13px;
+}
+#todoBar .todoHint{
+  font-size: 11px;
+  opacity: 0.75;
+}
+#todoBar .todoToggle{
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.60);
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+}
+#todoBar .todoToggle:hover{ background: rgba(255,255,255,0.80); }
+#todoBar .groups{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height: 42vh;
+  overflow:auto;
+  padding-right: 4px;
+}
+#todoBar .group{
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 8px;
+}
+#todoBar .group:first-child{
+  border-top: 0;
+  padding-top: 0;
+}
+#todoBar .gTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  cursor:pointer;
+  user-select:none;
+}
+#todoBar .gName{
+  font-weight: 700;
+  font-size: 12px;
+}
+#todoBar .timer{
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+#todoBar .items{
+  margin-top: 6px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 12px;
+}
+#todoBar label.todoItem{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#todoBar label.todoItem input[type=checkbox]{
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  transform: none !important;
+  margin: 0;
+}
+#todoBar label.todoItem span{ display:inline; }
+#todoBar label.todoItem a{ text-decoration: underline; }
+#todoBar label.todoItem.todoPop{ animation: todoPop 180ms ease-out; }
+@keyframes todoPop { 0%{ transform: scale(1); } 60%{ transform: scale(1.06); } 100%{ transform: scale(1); } }
+@media (prefers-reduced-motion: reduce){
+  #todoBar label.todoItem.todoPop{ animation: none; }
+}
+
+#todoBar .collapsed .items{ display:none; }
+#todoBar .doneHint{
+  font-size: 12px;
+  opacity: 0.75;
+}
+#todoBar label{ flex: initial !important; width: auto !important; }
+
+#todoBar.hidden{ width:auto; display:flex; justify-content:flex-end; }
+#todoBar.hidden .todoCard{ display:none; }
+#todoBar .todoMini{
+  display:none;
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 999px;
+  padding: 8px 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  font-size: 12px;
+  cursor: pointer;
+  user-select:none;
+}
+#todoBar.hidden .todoMini{ display:inline-flex; align-items:center; gap:8px; }
+      `.trim();
+      document.head.appendChild(st);
+    }
+
+    const bar = document.createElement("div");
+    bar.id = "todoBar";
+    bar.innerHTML = `
+<div class="todoCard">
+  <div class="todoHead">
+    <div class="todoTitle">✅ TO-DO LIST</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="todoHint">완료 시 자동 접힘</div>
+      <button type="button" class="todoToggle" id="todoHideBtn" title="숨기기">숨김</button>
+    </div>
+  </div>
+  <div class="todoGroups groups" id="todoGroups"></div>
+</div>
+<div class="todoMini" id="todoMiniBtn" title="체크리스트 펼치기">✅ TO-DO</div>
+    `.trim();
+
+    tabs.parentNode.insertBefore(bar, tabs);
+
+    // hide/show
+    const ui = loadTodoUI();
+    if(ui.hidden) bar.classList.add("hidden");
+    const hideBtn = bar.querySelector("#todoHideBtn");
+    const miniBtn = bar.querySelector("#todoMiniBtn");
+    if(hideBtn) hideBtn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      bar.classList.add("hidden");
+      saveTodoUI({ hidden:true });
+    });
+    if(miniBtn) miniBtn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      bar.classList.remove("hidden");
+      saveTodoUI({ hidden:false });
+      resetInactivity(bar);
+    });
+
+    setupAutoHide(bar);
+  }
+
+  function renderTodo(state){
+    const host = document.getElementById("todoGroups");
+    if(!host) return;
+    host.innerHTML = "";
+
+    TODO_SPEC.forEach(g=>{
+      const gState = state[g.key] || {checked:{}, collapsed:false};
+      const allDone = isAllChecked(state, g.key, g.items);
+
+      // B 정책: 모두 체크되면 자동 접힘(사용자가 다시 펼쳐도 다음 렌더에서 다시 접히지 않도록, collapsed만 강제 true)
+      if(allDone) gState.collapsed = true;
+
+      const group = document.createElement("div");
+      group.className = "group" + (gState.collapsed ? " collapsed" : "");
+      group.dataset.group = g.key;
+
+      const arrow = gState.collapsed ? "▸" : "▾";
+      const doneHint = allDone ? `<span class="doneHint">✔ 완료됨</span>` : ``;
+
+      group.innerHTML = `
+<div class="gTop" title="클릭해서 펼치기/접기">
+  <div class="gName">${arrow} ${g.title} ${doneHint}</div>
+  <div class="timer" id="timer_${g.key}">--:--:--</div>
+</div>
+<div class="items"></div>
+      `.trim();
+
+      const itemsHost = group.querySelector(".items");
+
+      g.items.forEach(it=>{
+        const id = `${g.key}__${it.id}`;
+        const checked = !!(gState.checked && gState.checked[it.id]);
+
+        const label = document.createElement("label");
+        label.className = "todoItem";
+
+        const labelText = it.link
+          ? `${it.label} (<a href="${it.link}" target="_blank" rel="noopener noreferrer">링크</a>)`
+          : it.label;
+
+        label.innerHTML = `<input type="checkbox" id="${id}" ${checked ? "checked":""}/> <span>${labelText}</span>`;
+        itemsHost.appendChild(label);
+
+        const cb = label.querySelector("input");
+        cb.addEventListener("change", ()=>{
+          const st = loadState();
+          ensureCycle(st, g.key, g.resetHour);
+          st[g.key].checked = st[g.key].checked || {};
+          st[g.key].checked[it.id] = !!cb.checked;
+
+
+          // 체크 완료 시: 사운드 + 미세 애니메이션
+          if(cb.checked){
+            playCheckTick();
+            popAnim(label);
+          }
+          resetInactivity(document.getElementById('todoBar'));
+
+          // 완료되면 자동 접힘
+          const doneNow = g.items.every(x => !!st[g.key].checked[x.id]);
+          if(doneNow) st[g.key].collapsed = true;
+
+          saveState(st);
+          renderTodo(st);
+        });
+      });
+
+      // 접기/펼치기(완료된 그룹은 펼쳐도 체크 하나라도 풀리면 다음 렌더에서 자동 펼침됨)
+      group.querySelector(".gTop").addEventListener("click", (e)=>{
+        // 링크 클릭은 토글 막기
+        if(e.target && e.target.closest && e.target.closest("a")) return;
+
+        const st = loadState();
+        ensureCycle(st, g.key, g.resetHour);
+
+        const allDone2 = g.items.every(x => !!(st[g.key].checked||{})[x.id]);
+        // 완료된 상태에서는 접힘 유지(원하면 펼치기는 허용)
+        st[g.key].collapsed = !st[g.key].collapsed;
+
+        // 다만 완료되어 있는데 펼쳤다면, UI만 펼쳐진 상태로 두되(사용자 선택) 다음 렌더에서 강제로 접히지 않게:
+        // -> B 정책과 충돌할 수 있어서, '완료된 그룹은 기본 접힘'만 유지하고 사용자 펼침은 허용
+        // renderTodo에서 allDone이면 collapsed=true로 강제하므로 펼침이 다시 접힘으로 돌아감.
+        // 사용자가 펼쳐볼 수 있게 하려면 강제 로직을 약하게 해야 함.
+        // 여기서는 "완료되면 자동 접힘"만 보장하고, 사용자가 펼치면 유지되도록 강제 로직 제거.
+        // 따라서 위에서 강제 true는 제거하고, 완료 시점에만 collapsed=true로 설정한다.
+        // (renderTodo의 강제 true는 아래에서 제거됨)
+
+        saveState(st);
+        renderTodo(st);
+      });
+
+      host.appendChild(group);
+      state[g.key] = gState; // keep updated
+    });
+  }
+
+  function updateTimers(){
+    const nowD = now();
+    TODO_SPEC.forEach(g=>{
+      const el = document.getElementById(`timer_${g.key}`);
+      if(el){
+        const nx = nextResetAt(g.resetHour);
+        el.textContent = `${fmtRemain(nx - nowD)}`;
+      }
+    });
+  }
+
+  function tick(){
+    // 사이클 변경(리셋) 감지 + 자동 초기화
+    const st = loadState();
+    let changed = false;
+    TODO_SPEC.forEach(g=>{
+      const before = st[g.key]?.cycleDay || "";
+      ensureCycle(st, g.key, g.resetHour);
+      if(before !== st[g.key].cycleDay) changed = true;
+    });
+    if(changed) saveState(st);
+
+    renderTodo(st);
+    updateTimers();
+  }
+
+  function initTodoBar(){
+    mountTodoBar();
+    const st = loadState();
+    TODO_SPEC.forEach(g=>ensureCycle(st, g.key, g.resetHour));
+    saveState(st);
+
+    // render + timers
+    renderTodo(st);
+    updateTimers();
+
+    // 1초마다 타이머, 10초마다 리셋 체크(1초 tick로 해도 부담 적지만, 안전하게 통합)
+    setInterval(()=>{
+      const st2 = loadState();
+      let changed = false;
+      TODO_SPEC.forEach(g=>{
+        const before = st2[g.key]?.cycleDay || "";
+        ensureCycle(st2, g.key, g.resetHour);
+        if(before !== st2[g.key].cycleDay) changed = true;
+      });
+      if(changed){
+        saveState(st2);
+        renderTodo(st2);
+      }
+      updateTimers();
+    }, 1000);
+  }
+
+  // renderTodo에서 "완료면 강제 접힘" 로직 제거(완료 시점에만 접힘 처리)
+  // => 위에서 이미 완료 시 change 핸들러에서 collapsed=true로 처리.
+  const _renderTodo = renderTodo;
+  renderTodo = function(state){
+    const host = document.getElementById("todoGroups");
+    if(!host) return;
+    host.innerHTML = "";
+    TODO_SPEC.forEach(g=>{
+      const gState = state[g.key] || {checked:{}, collapsed:false};
+      const allDone = isAllChecked(state, g.key, g.items);
+
+      const group = document.createElement("div");
+      group.className = "group" + (gState.collapsed ? " collapsed" : "");
+      group.dataset.group = g.key;
+
+      const arrow = gState.collapsed ? "▸" : "▾";
+      const doneHint = allDone ? `<span class="doneHint">✔ 완료됨</span>` : ``;
+
+      group.innerHTML = `
+<div class="gTop" title="클릭해서 펼치기/접기">
+  <div class="gName">${arrow} ${g.title} ${doneHint}</div>
+  <div class="timer" id="timer_${g.key}">--:--:--</div>
+</div>
+<div class="items"></div>
+      `.trim();
+
+      const itemsHost = group.querySelector(".items");
+
+      g.items.forEach(it=>{
+        const id = `${g.key}__${it.id}`;
+        const checked = !!(gState.checked && gState.checked[it.id]);
+
+        const label = document.createElement("label");
+        label.className = "todoItem";
+
+        const labelText = it.link
+          ? `${it.label} (<a href="${it.link}" target="_blank" rel="noopener noreferrer">링크</a>)`
+          : it.label;
+
+        label.innerHTML = `<input type="checkbox" id="${id}" ${checked ? "checked":""}/> <span>${labelText}</span>`;
+        itemsHost.appendChild(label);
+
+        const cb = label.querySelector("input");
+        cb.addEventListener("change", ()=>{
+          const st = loadState();
+          ensureCycle(st, g.key, g.resetHour);
+          st[g.key].checked = st[g.key].checked || {};
+          st[g.key].checked[it.id] = !!cb.checked;
+
+
+          // 체크 완료 시: 사운드 + 미세 애니메이션
+          if(cb.checked){
+            playCheckTick();
+            popAnim(label);
+          }
+          resetInactivity(document.getElementById('todoBar'));
+
+          // 완료되면 자동 접힘
+          const doneNow = g.items.every(x => !!st[g.key].checked[x.id]);
+          if(doneNow) st[g.key].collapsed = true;
+          // 하나라도 풀리면 자동 펼침
+          if(!doneNow) st[g.key].collapsed = false;
+
+          saveState(st);
+          renderTodo(st);
+        });
+      });
+
+      group.querySelector(".gTop").addEventListener("click", (e)=>{
+        if(e.target && e.target.closest && e.target.closest("a")) return;
+        const st = loadState();
+        ensureCycle(st, g.key, g.resetHour);
+        st[g.key].collapsed = !st[g.key].collapsed;
+        saveState(st);
+        renderTodo(st);
+      });
+
+      host.appendChild(group);
+    });
+
+    updateTimers();
+  };
+
+  // 앱 초기화 후 DOM이 있을 때 붙이기
+  window.addEventListener("DOMContentLoaded", ()=>{
+    try{ initTodoBar(); }catch(err){ console.warn("[todoBar] init failed", err); }
+  });
+})();
 
