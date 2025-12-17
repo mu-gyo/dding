@@ -1214,7 +1214,7 @@ function readInputs(){
   const staminaPerCast = Math.max(1, Number(document.getElementById("staminaPerCast").value) || 15);
   const toolLevel = Number(document.getElementById("toolLevel").value) || 9;
 
-  const premiumLevel = clampInt(document.getElementById("premiumLevel").value, 0, 6);
+  const premiumLevel = clampInt(document.getElementById("premiumLevel").value, 0, 8);
   const stormLevel = clampInt(document.getElementById("stormLevel").value, 0, 5);
   const starLevel = clampInt(document.getElementById("starLevel").value, 0, 6);
 
@@ -1231,8 +1231,9 @@ function getDerived(){
 const stormP = stormProb(inp.stormLevel);
 const baseDrop = baseDropFromTool(inp.toolLevel);
 
-// (변경) 폭풍은 '캐스트당' 확률 p로 +1개 추가 드랍 (단계별 p)
-// 기대 드랍/캐스트 = 기본 드랍 k + p
+// (변경) 채집 1회(=캐스트)마다 독립 확률 p로 '추가 드랍 +1'이 1번만 터지는 모델
+//   - 기본 드랍이 4개면: 미발동 4개 / 발동 5개
+//   - 기대값: k + p
 const dropPerCast = baseDrop + stormP;
 
 
