@@ -1231,10 +1231,8 @@ function getDerived(){
 const stormP = stormProb(inp.stormLevel);
 const baseDrop = baseDropFromTool(inp.toolLevel);
 
-// (변경) 채집 1회(=캐스트)마다 독립 확률 p로 '추가 드랍 +1'이 1번만 터지는 모델
-//   - 기본 드랍이 4개면: 미발동 4개 / 발동 5개
-//   - 기대값: k + p
-const dropPerCast = baseDrop + stormP;
+// (변경) 기본 드랍 k개 각각이 확률 p로 +1개 추가되는 모델 => 기대값: k + k*p = k*(1+p)
+const dropPerCast = baseDrop * (1 + stormP);
 
 
   const baseProbs = {p1:inp.p1, p2:inp.p2, p3:inp.p3};
@@ -1887,12 +1885,12 @@ function renderNeedCraftTableTo(sel, rows){
   (rows || []).forEach(r=>{
     const tr = document.createElement("tr");
     const craftCls = r.craft > 0 ? "neg" : "muted";
-    const remInv = Math.max(0, Math.floor(Number(r.inv || 0)) - Math.floor(Number(r.need || 0)));
+    const totalNeed = Math.max(0, Math.floor(Number(r.craft || 0)) + Math.floor(Number(r.inv || 0)));
     tr.innerHTML =
       `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${r.craft}">${matLabel(r.name)}</span></td>` +
       `<td class="right ${craftCls}">${r.craft}</td>` +
       `<td class="right">${r.inv}</td>` +
-      `<td class="right">${r.need}</td>`;
+      `<td class="right">${totalNeed}</td>`;
     tb.appendChild(tr);
   });
 
