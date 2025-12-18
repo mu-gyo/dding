@@ -3,7 +3,6 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>띵타 연금 효율 계산기</title>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <style>
@@ -330,10 +329,16 @@ body{
 a{color:inherit}
 h1,h2,h3{letter-spacing:-0.02em}
 .container, .wrap, #app, main{
-zoom: 1.1;
+zoom: 1;
   width:min(1180px, calc(100% - 48px));
   margin:0 auto;
 }
+
+/* === Mobile optimization patch (non-functional) === */
+@media (min-width: 960px){
+  .container, .wrap, #app, main{ zoom: 1.1; }
+}
+
 header{
   padding:26px 0 12px;
   text-align:center;
@@ -1686,6 +1691,116 @@ button:hover{
 
 
 
+
+
+/* === Mobile optimization patch (layout only) === */
+html{ -webkit-text-size-adjust: 100%; }
+body{ overscroll-behavior-y: contain; }
+
+/* tables: allow horizontal scroll on small screens without breaking layout */
+.tableWrap{ overflow-x:auto; -webkit-overflow-scrolling: touch; }
+.tableWrap table{ min-width: 640px; }
+
+/* checkbox squish fix (tables) */
+.checkCell{ width: 68px; }
+.checkCell .chk,
+.checkCell input[type="checkbox"]{
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  flex: 0 0 18px !important;
+}
+
+/* small screens: reduce side gutters a bit */
+@media (max-width: 520px){
+  .container, .wrap, #app, main{ width: calc(100% - 24px); }
+  header{ padding: 18px 0 8px; }
+  .card, .section{ padding: 14px; }
+}
+
+
+
+/* =========================
+   Mobile layout stabilization (2025-12-18)
+   - Fix inconsistent table widths
+   - Prevent long product names overlapping
+   - Keep fish inventory inputs aligned
+   - Prevent mid-inventory reset button squishing
+   (CSS-only; no structure/feature changes)
+   ========================= */
+@media (max-width: 720px){
+
+  /* tables can overflow on small screens; allow horizontal scroll per card */
+  .card{
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table{
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  th, td{
+    padding: 8px 8px !important;
+    vertical-align: middle !important;
+  }
+
+  /* first column (names): wrap instead of overlapping */
+  td:first-child, th:first-child{
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: keep-all;
+    line-height: 1.15 !important;
+  }
+
+  /* override the input-table ellipsis rule on mobile */
+  #panelExpected table:has(input[type="number"]) td:first-child,
+  #panelActual  table:has(input[type="number"]) td:first-child{
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  /* numeric columns stay compact */
+  td:not(:first-child), th:not(:first-child){
+    white-space: nowrap;
+  }
+
+  input[type="number"], input[type="text"], select{
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  /* prevent number inputs (fish inv / qty) from collapsing */
+  td input[type="number"],
+  .row input[type="number"]{
+    min-width: 64px;
+    height: 34px;
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+
+  /* mid inventory summary: allow wrapping and keep reset buttons readable */
+  #midInvDetails > summary,
+  #midInvDetailsA > summary{
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #midInvDetails > summary .btnTiny,
+  #midInvDetailsA > summary .btnTiny,
+  #midInvReset, #midInvResetA{
+    flex: 0 0 auto;
+    min-width: 72px;
+    height: 34px;
+    padding: 6px 10px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* checkbox column a bit tighter on mobile */
+  .checkCell, td.checkCell{ width: 44px; }
+}
 
 </style>
 </head>
