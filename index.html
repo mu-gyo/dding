@@ -1307,20 +1307,6 @@ button:hover{
   .tableWrap{ overflow-x: auto; }
 }
 
-/* 모바일에서만 커지는 '작은 버튼'들(중간재 재고/체크리스트 등) 예외 처리 */
-@media (max-width: 768px){
-  .btnTiny,
-  #midInvReset,
-  #midInvResetA,
-  #todoBar button,
-  #todoBar .todoToggle{
-    min-height: auto !important;
-    font-size: 13px !important;
-    padding: 6px 10px !important;
-    border-radius: 12px !important;
-  }
-}
-
 /* 중간 연금품 재고 제목 */
 .midTitle{
   font-size: 14px;
@@ -1752,25 +1738,16 @@ body{ overscroll-behavior-y: contain; }
 
   /* (B) 카드 안 표: 가로 스크롤이 반드시 생기도록 */
   .card{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .card table{ min-width: 560px; } /* 기본 */
-  /* 결과 표(#craftTbl)는 컬럼이 많아 560px이면 글자가 '세로줄'처럼 깨짐 → 더 넓게 */
-  #craftTbl{ min-width: 760px; }
+  .card table{ min-width: 560px; } /* 4열 이상 테이블에서 이름/입력칸 겹침 방지 */
 
-  /* (C) 제작품/재료 이름: 긴 텍스트 겹침 방지
-     - overflow-wrap:anywhere 는 한 글자씩 줄바꿈(세로쓰기처럼) 유발 → 제거
-     - 대신 '단어 단위'로만 줄바꿈 + 첫 컬럼 최소 폭 확보(스크롤로 해결)
-  */
+  /* (C) 제작품/재료 이름: 긴 텍스트 겹침 방지 (해당 표만 줄바꿈) */
   #craftTbl td:first-child,
-  #craftTbl th:first-child,
   #craftTblA td:first-child,
-  #craftTblA th:first-child,
-  #needCraftTblA td:first-child,
-  #needCraftTblA th:first-child{
+  #needCraftTblA td:first-child{
     white-space: normal;
     word-break: keep-all;
-    overflow-wrap: normal;
-    line-height: 1.2;
-    min-width: 220px;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
   }
 
   /* (D) 숫자/값 컬럼은 줄바꿈 금지(정렬 유지) */
@@ -1812,6 +1789,51 @@ body{ overscroll-behavior-y: contain; }
 }
 
 
+</style>
+
+
+<!-- =========================
+     Mobile layout patch v3
+     (CSS-only, no 구조/기능 변경)
+     ========================= -->
+<style id="mobile-hotfix-v3">
+@media (max-width: 768px){
+
+  /* 1) 상단 탭(채집 전/후/레시피) 잘림 방지: 줄바꿈 + 과도한 최소폭 제거 */
+  .tabs{ flex-wrap: wrap; justify-content: center; }
+  .tabs button, .tabs .tab{
+    min-width: 140px !important;
+    flex: 1 1 140px;
+  }
+
+  /* 2) 결과/필요재료 표: 지나친 수축 방지(가로 스크롤로 보는 방식 유지) */
+  #craftTbl, #craftTblA, #needCraftTblA,
+  #needFishTbl, #needMatTbl{
+    min-width: 760px;
+  }
+  .tableWrap{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* 3) '초기화' 버튼 폭/높이 정상화(모바일 공통 44px 강제 확대 예외) */
+  .btnTiny, #midInvReset, #midInvResetA{
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+  }
+  /* 미입력 배지와 small 버튼 폭을 비슷하게 */
+  #midInvDetails .midBadge, #midInvDetailsA .midBadge{
+    min-width: 72px;
+    text-align: center;
+  }
+  #midInvDetails #midInvReset, #midInvDetailsA #midInvResetA{
+    min-width: 72px;
+  }
+
+  /* 4) '계산' / '재고 초기화' 버튼 줄: 두 버튼 폭 균등(있을 때만) */
+  .btnbar{ flex-wrap: wrap; }
+  .btnbar button{ flex: 1 1 0; }
+}
 </style>
 
 </head>
