@@ -5,6 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>띵타 연금 효율 계산기</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <style>
 
     :root{
@@ -329,16 +330,10 @@ body{
 a{color:inherit}
 h1,h2,h3{letter-spacing:-0.02em}
 .container, .wrap, #app, main{
-zoom: 1;
+zoom: 1.1;
   width:min(1180px, calc(100% - 48px));
   margin:0 auto;
 }
-
-/* === Mobile optimization patch (non-functional) === */
-@media (min-width: 960px){
-  .container, .wrap, #app, main{ zoom: 1.1; }
-}
-
 header{
   padding:26px 0 12px;
   text-align:center;
@@ -1692,108 +1687,7 @@ button:hover{
 
 
 
-
-/* === Mobile optimization patch (layout only) === */
-html{ -webkit-text-size-adjust: 100%; }
-body{ overscroll-behavior-y: contain; }
-
-/* tables: allow horizontal scroll on small screens without breaking layout */
-.tableWrap{ overflow-x:auto; -webkit-overflow-scrolling: touch; }
-.tableWrap table{ min-width: 640px; }
-
-/* checkbox squish fix (tables) */
-.checkCell{ width: 68px; }
-.checkCell .chk,
-.checkCell input[type="checkbox"]{
-  width: 18px !important;
-  height: 18px !important;
-  min-width: 18px !important;
-  min-height: 18px !important;
-  flex: 0 0 18px !important;
-}
-
-/* small screens: reduce side gutters a bit */
-@media (max-width: 520px){
-  .container, .wrap, #app, main{ width: calc(100% - 24px); }
-  header{ padding: 18px 0 8px; }
-  .card, .section{ padding: 14px; }
-}
-
 </style>
-<!-- =========================
-     Mobile layout hotfix patch
-     (CSS-only, no 구조/기능 변경)
-     ========================= -->
-<style id="mobile-hotfix-patch">
-/* 모바일에서만: 입력칸/셀 찌그러짐 + 긴 이름 겹침 + 가로 스크롤 안정화 */
-@media (max-width: 768px){
-
-  /* (A) 폼 row: 라벨/셀렉트가 너무 좁아져 세로줄쓰기 되는 문제 방지 */
-  .row{ flex-wrap: wrap; align-items: stretch; }
-  .row > label{ flex: 0 0 100%; }
-  .row input, .row select{
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* (B) 카드 안 표: 가로 스크롤이 반드시 생기도록 */
-  .card{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .card table{ min-width: 560px; } /* 4열 이상 테이블에서 이름/입력칸 겹침 방지 */
-
-  /* (C) 제작품/재료 이름: 긴 텍스트 겹침 방지 (해당 표만 줄바꿈) */
-  #craftTbl td:first-child,
-  #craftTblA td:first-child,
-  #needCraftTblA td:first-child{
-    white-space: normal;
-    word-break: keep-all;
-    overflow-wrap: anywhere;
-    line-height: 1.15;
-  }
-
-  /* (D) 숫자/값 컬럼은 줄바꿈 금지(정렬 유지) */
-  #craftTbl td:not(:first-child),
-  #craftTblA td:not(:first-child),
-  #invTbl td:not(:first-child),
-  #invActualTbl td:not(:first-child),
-  #needFishTblA td:not(:first-child),
-  #needMatTblA td:not(:first-child),
-  #needCraftTblA td:not(:first-child){
-    white-space: nowrap;
-  }
-
-  /* (E) 테이블 안 입력칸 폭 뒤죽박죽 방지 */
-  table input[type="number"], table input[type="text"]{
-    box-sizing: border-box;
-    min-width: 72px;
-    width: 100%;
-    max-width: 140px;
-  }
-
-  /* (F) 중간 연금품 재고: summary 내부 버튼 찌그러짐 방지 (A/B 둘 다) */
-  #midInvDetails > summary,
-  #midInvDetailsA > summary{
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  #midInvDetails .midRight,
-  #midInvDetailsA .midRight{
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  #midInvDetails button,
-  #midInvDetailsA button{
-    flex: 0 0 auto;
-    min-width: 84px;
-    white-space: nowrap;
-  }
-}
-
-/* PC 줌 1.1 유지: 기존 규칙이 있더라도 안전하게(모바일 영향 없음) */
-@media (hover: hover) and (pointer: fine){
-  html{ zoom: 1.1; }
-}
-</style>
-
 </head>
 <body>
 <div class="wrap">

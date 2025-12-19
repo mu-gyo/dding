@@ -1231,8 +1231,8 @@ function getDerived(){
 const stormP = stormProb(inp.stormLevel);
 const baseDrop = baseDropFromTool(inp.toolLevel);
 
-// (변경) 채집 1회(캐스트)당 확률 p로 드랍이 +1개 되는 모델 => 기대값: k + 1*p
-const dropPerCast = baseDrop + stormP;
+// (변경) 기본 드랍 k개 각각이 확률 p로 +1개 추가되는 모델 => 기대값: k + k*p = k*(1+p)
+const dropPerCast = baseDrop * (1 + stormP);
 
 
   const baseProbs = {p1:inp.p1, p2:inp.p2, p3:inp.p3};
@@ -2724,7 +2724,6 @@ function escapeHtml(s){
       items: [
         { id: "stam",  label: "⚡스태미나" },
         { id: "req",   label: "📝의뢰" },
-    { id: "ocean", label: "🌊오션오더" },
       ],
     },
   ];
