@@ -1728,7 +1728,12 @@ body{ overscroll-behavior-y: contain; }
 /* 모바일에서만: 입력칸/셀 찌그러짐 + 긴 이름 겹침 + 가로 스크롤 안정화 */
 @media (max-width: 768px){
 
-  /* (A) 폼 row: 라벨/셀렉트가 너무 좁아져 세로줄쓰기 되는 문제 방지 */
+  
+
+  /* (0) 탭 버튼: 모바일 가로폭 과확장 방지 */
+  .tabs{ flex-wrap: wrap; justify-content: center; }
+  .tabs button{ min-width: 140px; flex: 1 1 140px; }
+/* (A) 폼 row: 라벨/셀렉트가 너무 좁아져 세로줄쓰기 되는 문제 방지 */
   .row{ flex-wrap: wrap; align-items: stretch; }
   .row > label{ flex: 0 0 100%; }
   .row input, .row select{
@@ -1744,13 +1749,24 @@ body{ overscroll-behavior-y: contain; }
   #craftTbl td:first-child,
   #craftTblA td:first-child,
   #needCraftTblA td:first-child{
-    white-space: normal;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
     word-break: keep-all;
     overflow-wrap: anywhere;
     line-height: 1.15;
   }
 
-  /* (D) 숫자/값 컬럼은 줄바꿈 금지(정렬 유지) */
+  /* (C-1) :has() 기반 '첫 컬럼 nowrap/폭 고정' 규칙을 모바일에서 확실히 무력화 */
+  #panelExpected table:has(input[type="number"]) td:first-child,
+  #panelActual  table:has(input[type="number"]) td:first-child,
+  #panelExpected table:has(input[type="number"]) th:first-child,
+  #panelActual  table:has(input[type="number"]) th:first-child{
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+/* (D) 숫자/값 컬럼은 줄바꿈 금지(정렬 유지) */
   #craftTbl td:not(:first-child),
   #craftTblA td:not(:first-child),
   #invTbl td:not(:first-child),
