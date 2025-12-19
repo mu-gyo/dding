@@ -1307,6 +1307,20 @@ button:hover{
   .tableWrap{ overflow-x: auto; }
 }
 
+/* 모바일에서만 커지는 '작은 버튼'들(중간재 재고/체크리스트 등) 예외 처리 */
+@media (max-width: 768px){
+  .btnTiny,
+  #midInvReset,
+  #midInvResetA,
+  #todoBar button,
+  #todoBar .todoToggle{
+    min-height: auto !important;
+    font-size: 13px !important;
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+  }
+}
+
 /* 중간 연금품 재고 제목 */
 .midTitle{
   font-size: 14px;
@@ -1728,12 +1742,7 @@ body{ overscroll-behavior-y: contain; }
 /* 모바일에서만: 입력칸/셀 찌그러짐 + 긴 이름 겹침 + 가로 스크롤 안정화 */
 @media (max-width: 768px){
 
-  
-
-  /* (0) 탭 버튼: 모바일 가로폭 과확장 방지 */
-  .tabs{ flex-wrap: wrap; justify-content: center; }
-  .tabs button{ min-width: 140px; flex: 1 1 140px; }
-/* (A) 폼 row: 라벨/셀렉트가 너무 좁아져 세로줄쓰기 되는 문제 방지 */
+  /* (A) 폼 row: 라벨/셀렉트가 너무 좁아져 세로줄쓰기 되는 문제 방지 */
   .row{ flex-wrap: wrap; align-items: stretch; }
   .row > label{ flex: 0 0 100%; }
   .row input, .row select{
@@ -1743,30 +1752,28 @@ body{ overscroll-behavior-y: contain; }
 
   /* (B) 카드 안 표: 가로 스크롤이 반드시 생기도록 */
   .card{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .card table{ min-width: 560px; } /* 4열 이상 테이블에서 이름/입력칸 겹침 방지 */
+  .card table{ min-width: 560px; } /* 기본 */
+  /* 결과 표(#craftTbl)는 컬럼이 많아 560px이면 글자가 '세로줄'처럼 깨짐 → 더 넓게 */
+  #craftTbl{ min-width: 760px; }
 
-  /* (C) 제작품/재료 이름: 긴 텍스트 겹침 방지 (해당 표만 줄바꿈) */
+  /* (C) 제작품/재료 이름: 긴 텍스트 겹침 방지
+     - overflow-wrap:anywhere 는 한 글자씩 줄바꿈(세로쓰기처럼) 유발 → 제거
+     - 대신 '단어 단위'로만 줄바꿈 + 첫 컬럼 최소 폭 확보(스크롤로 해결)
+  */
   #craftTbl td:first-child,
+  #craftTbl th:first-child,
   #craftTblA td:first-child,
-  #needCraftTblA td:first-child{
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+  #craftTblA th:first-child,
+  #needCraftTblA td:first-child,
+  #needCraftTblA th:first-child{
+    white-space: normal;
     word-break: keep-all;
-    overflow-wrap: anywhere;
-    line-height: 1.15;
+    overflow-wrap: normal;
+    line-height: 1.2;
+    min-width: 220px;
   }
 
-  /* (C-1) :has() 기반 '첫 컬럼 nowrap/폭 고정' 규칙을 모바일에서 확실히 무력화 */
-  #panelExpected table:has(input[type="number"]) td:first-child,
-  #panelActual  table:has(input[type="number"]) td:first-child,
-  #panelExpected table:has(input[type="number"]) th:first-child,
-  #panelActual  table:has(input[type="number"]) th:first-child{
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
-  }
-/* (D) 숫자/값 컬럼은 줄바꿈 금지(정렬 유지) */
+  /* (D) 숫자/값 컬럼은 줄바꿈 금지(정렬 유지) */
   #craftTbl td:not(:first-child),
   #craftTblA td:not(:first-child),
   #invTbl td:not(:first-child),
