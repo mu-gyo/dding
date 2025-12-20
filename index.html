@@ -1719,6 +1719,29 @@ body{ overscroll-behavior-y: contain; }
   .card, .section{ padding: 14px; }
 }
 
+<style>
+/* 🔥 모바일: 중간 연금품 '초기화' 버튼만 예외 처리 */
+@media (max-width: 768px) {
+  /* 버튼을 감싸는 래퍼 */
+  #midInvCard .btn,
+  #midInvCard .btnGroup,
+  #midInvCard .btnWrap {
+    flex: 0 0 auto !important;
+  }
+
+  /* 실제 초기화 버튼 */
+  #midInvReset,
+  #midInvResetA,
+  #midInvCard button {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 8px 14px !important;
+  }
+}
+</style>
+
+
+
 </style>
 <!-- =========================
      Mobile layout hotfix patch
@@ -1793,58 +1816,52 @@ body{ overscroll-behavior-y: contain; }
 
 
 <!-- =========================
-     Mobile hotfix v6 (buttons + table overlap + stray horizontal scroll)
+     Mobile layout patch v3
      (CSS-only, no 구조/기능 변경)
      ========================= -->
-<style id="mobile-hotfix-v6">
+<style id="mobile-hotfix-v3">
 @media (max-width: 768px){
 
-  /* 0) prevent page-level horizontal scrollbar (iOS gray bar) */
-  html, body{ overflow-x: hidden; }
-
-  /* 1) mid inventory summary: make badge + reset button exactly same box */
-  #midInvDetails .midRight,
-  #midInvDetailsA .midRight{
-    display:flex;
-    align-items:center;
-    gap:8px;
+  /* 1) 상단 탭(채집 전/후/레시피) 잘림 방지: 줄바꿈 + 과도한 최소폭 제거 */
+  .tabs{ flex-wrap: wrap; justify-content: center; }
+  .tabs button, .tabs .tab{
+    min-width: 140px !important;
+    flex: 1 1 140px;
   }
 
-  #midInvDetails .midBadge,
-  #midInvDetailsA .midBadge,
-  #midInvReset,
-  #midInvResetA{
-    display:inline-flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    height:34px !important;
-    min-height:34px !important;
-    padding:0 12px !important;
-    font-size:13px !important;
-    line-height:1 !important;
-    vertical-align:middle !important;
-    min-width:72px !important;
-    box-sizing:border-box !important;
+  /* 2) 결과/필요재료 표: 지나친 수축 방지(가로 스크롤로 보는 방식 유지) */
+  #craftTbl, #craftTblA, #needCraftTblA,
+  #needFishTbl, #needMatTbl{
+    min-width: 760px;
+  }
+  .tableWrap{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* 3) '초기화' 버튼 폭/높이 정상화(모바일 공통 44px 강제 확대 예외) */
+  .btnTiny, #midInvReset, #midInvResetA{
+    min-height: 34px !important;
+    height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+  }
+  /* 미입력 배지와 small 버튼 폭을 비슷하게 */
+  #midInvDetails .midBadge, #midInvDetailsA .midBadge{
+    min-width: 72px;
+    text-align: center;
+  }
+  #midInvDetails #midInvReset, #midInvDetailsA #midInvResetA{
+    min-width: 72px;
   }
 
-  /* 2) craft result table: prevent first column text from painting over other columns */
-  #craftTbl, #craftTblA{
-    table-layout: fixed;
-    width:100%;
+  /* midInv 버튼이 부모 flex 영향으로 커지지 않도록 고정 */
+  #midInvReset, #midInvResetA{
+    flex: 0 0 auto !important;
+    width: auto !important;
   }
-  #craftTbl th:first-child, #craftTbl td:first-child,
-  #craftTblA th:first-child, #craftTblA td:first-child{
-    overflow:hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: normal !important;
-    word-break: keep-all !important;
-    overflow-wrap: anywhere !important;
-  }
-  /* Keep numeric columns stable */
-  #craftTbl th:not(:first-child), #craftTbl td:not(:first-child),
-  #craftTblA th:not(:first-child), #craftTblA td:not(:first-child){
-    white-space: nowrap !important;
-  }
+
+  /* 4) '계산' / '재고 초기화' 버튼 줄: 두 버튼 폭 균등(있을 때만) */
+  .btnbar{ flex-wrap: wrap; }
+  .btnbar button{ flex: 1 1 0; }
 }
 </style>
 
