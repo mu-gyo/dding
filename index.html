@@ -1865,21 +1865,6 @@ body{ overscroll-behavior-y: contain; }
 }
 </style>
 
-
-<!-- ===== PATCH: enlarge midBadge to match reset button ===== -->
-<style>
-#midInvDetails .midBadge,
-#midInvDetailsA .midBadge{
-  height: 34px;
-  padding: 0 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  font-size: 13px;
-}
-</style>
-
 </head>
 <body>
 <div class="wrap">
@@ -2169,4 +2154,18 @@ body{ overscroll-behavior-y: contain; }
 </script>
 <div class="recipeTip" hidden="" id="recipeTip"></div>
 </div></body>
-</html>
+</html><style>
+/* === mobile-only midBadge sizing (final) === */
+@media (max-width: 768px){
+  #midInvDetails .midBadge,
+  #midInvDetailsA .midBadge{
+    height: 34px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 13px;
+  }
+}
+</style>
