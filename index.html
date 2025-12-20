@@ -1865,6 +1865,36 @@ body{ overscroll-behavior-y: contain; }
 }
 </style>
 
+<style>
+/* 🔥 FINAL FIX: 중간 연금품 '초기화' 버튼만 정상 크기로 되돌리기 */
+@media (max-width: 768px){
+
+  /* 1️⃣ 문제의 공통 규칙(min-height:44px)을 midInv 영역에서만 무효화 */
+  #midInvDetails button,
+  #midInvDetailsA button{
+    min-height: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+    padding: 0 12px !important;
+  }
+
+  /* 2️⃣ flex로 늘어나는 현상 차단 */
+  #midInvDetails .midRight,
+  #midInvDetailsA .midRight{
+    flex: 0 0 auto !important;
+  }
+
+  #midInvReset,
+  #midInvResetA{
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+}
+</style>
+
+
+
 </head>
 <body>
 <div class="wrap">
