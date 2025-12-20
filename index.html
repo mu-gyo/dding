@@ -1719,29 +1719,6 @@ body{ overscroll-behavior-y: contain; }
   .card, .section{ padding: 14px; }
 }
 
-<style>
-/* 🔥 모바일: 중간 연금품 '초기화' 버튼만 예외 처리 */
-@media (max-width: 768px) {
-  /* 버튼을 감싸는 래퍼 */
-  #midInvCard .btn,
-  #midInvCard .btnGroup,
-  #midInvCard .btnWrap {
-    flex: 0 0 auto !important;
-  }
-
-  /* 실제 초기화 버튼 */
-  #midInvReset,
-  #midInvResetA,
-  #midInvCard button {
-    width: auto !important;
-    min-width: 0 !important;
-    padding: 8px 14px !important;
-  }
-}
-</style>
-
-
-
 </style>
 <!-- =========================
      Mobile layout hotfix patch
@@ -1815,85 +1792,23 @@ body{ overscroll-behavior-y: contain; }
 </style>
 
 
-<!-- =========================
-     Mobile layout patch v3
-     (CSS-only, no 구조/기능 변경)
-     ========================= -->
-<style id="mobile-hotfix-v3">
+<!-- ===== Mobile micro-fix v5: midInv '미입력' badge size match ===== -->
+<style id="mobile-midinv-badge-v5">
 @media (max-width: 768px){
-
-  /* 1) 상단 탭(채집 전/후/레시피) 잘림 방지: 줄바꿈 + 과도한 최소폭 제거 */
-  .tabs{ flex-wrap: wrap; justify-content: center; }
-  .tabs button, .tabs .tab{
-    min-width: 140px !important;
-    flex: 1 1 140px;
-  }
-
-  /* 2) 결과/필요재료 표: 지나친 수축 방지(가로 스크롤로 보는 방식 유지) */
-  #craftTbl, #craftTblA, #needCraftTblA,
-  #needFishTbl, #needMatTbl{
-    min-width: 760px;
-  }
-  .tableWrap{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-  /* 3) '초기화' 버튼 폭/높이 정상화(모바일 공통 44px 강제 확대 예외) */
-  .btnTiny, #midInvReset, #midInvResetA{
+  /* midInv summary 오른쪽: 배지(미입력/저장됨)와 초기화 버튼 높이/패딩 통일 */
+  #midInvDetails .midBadge, #midInvDetailsA .midBadge{
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     min-height: 34px !important;
     height: 34px !important;
     padding: 0 12px !important;
     font-size: 14px !important;
     line-height: 1 !important;
-  }
-  /* 미입력 배지와 small 버튼 폭을 비슷하게 */
-  #midInvDetails .midBadge, #midInvDetailsA .midBadge{
-    min-width: 72px;
-    text-align: center;
-  }
-  #midInvDetails #midInvReset, #midInvDetailsA #midInvResetA{
-    min-width: 72px;
-  }
-
-  /* midInv 버튼이 부모 flex 영향으로 커지지 않도록 고정 */
-  #midInvReset, #midInvResetA{
-    flex: 0 0 auto !important;
-    width: auto !important;
-  }
-
-  /* 4) '계산' / '재고 초기화' 버튼 줄: 두 버튼 폭 균등(있을 때만) */
-  .btnbar{ flex-wrap: wrap; }
-  .btnbar button{ flex: 1 1 0; }
-}
-</style>
-
-<style>
-/* 🔥 FINAL FIX: 중간 연금품 '초기화' 버튼만 정상 크기로 되돌리기 */
-@media (max-width: 768px){
-
-  /* 1️⃣ 문제의 공통 규칙(min-height:44px)을 midInv 영역에서만 무효화 */
-  #midInvDetails button,
-  #midInvDetailsA button{
-    min-height: 34px !important;
-    height: 34px !important;
-    font-size: 13px !important;
-    padding: 0 12px !important;
-  }
-
-  /* 2️⃣ flex로 늘어나는 현상 차단 */
-  #midInvDetails .midRight,
-  #midInvDetailsA .midRight{
-    flex: 0 0 auto !important;
-  }
-
-  #midInvReset,
-  #midInvResetA{
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: 0 !important;
+    box-sizing: border-box !important;
   }
 }
 </style>
-
-
 
 </head>
 <body>
