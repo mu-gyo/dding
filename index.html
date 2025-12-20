@@ -1830,6 +1830,12 @@ body{ overscroll-behavior-y: contain; }
     min-width: 72px;
   }
 
+  /* midInv 버튼이 부모 flex 영향으로 커지지 않도록 고정 */
+  #midInvReset, #midInvResetA{
+    flex: 0 0 auto !important;
+    width: auto !important;
+  }
+
   /* 4) '계산' / '재고 초기화' 버튼 줄: 두 버튼 폭 균등(있을 때만) */
   .btnbar{ flex-wrap: wrap; }
   .btnbar button{ flex: 1 1 0; }
