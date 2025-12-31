@@ -992,6 +992,13 @@ function matLabel(name, includeYield=true){
   return `<span class="mat"><img class="icon" src="${url}" alt="" onerror="this.src='${FALLBACK_ICON_SVG}'"/>${escHtml(shown)}</span>`;
 }
 
+
+// ===== A안: Tier-independent objective (SAFE) =====
+function __tierOfName(name){
+  if(name.includes("★★★")) return 3;
+  if(name.includes("★★")) return 2;
+  return 1;
+}
 const PRODUCTS = [
 { name:"영생의 아쿠티스 ★", base:3780 },
   { name:"크라켄의 광란체 ★", base:3835 },
@@ -1520,7 +1527,21 @@ function optimize(){
   // prices with premium
   const prices = PRODUCTS.map(p => p.base * d.premiumMul);
 
-  // enumerate all compositions of blocksTotal into 5 parts
+  
+  // A안 적용: 등급별 독립 최적화 — 현재 패널의 tier만 가격 반영
+  const __currentTier = (function(){
+    // 패널 컨텍스트: 1=★, 2=★★, 3=★★★
+    // tabExpected(채집 전)은 d.tier, tabActual(채집 후)은 tierActual 사용
+    if (typeof d.tier === 'number') return d.tier;
+    if (typeof tierActual === 'number') return tierActual;
+    return null;
+  })();
+  if (__currentTier){
+    for (let i=0;i<prices.length;i++){
+      if (__tierOfName(PRODUCTS[i].name) !== __currentTier) prices[i] = 0;
+    }
+  }
+// enumerate all compositions of blocksTotal into 5 parts
   let best = {rev:-1, blocks:[0,0,0,0,0], y:Array(PRODUCTS.length).fill(0), supply:null};
 
   const m = FISH_ROWS.length;
@@ -2051,7 +2072,19 @@ function optimizeActual(){
   const premiumMul = premiumMulFromLevel(premiumLevel);
   const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
 
-  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
+  
+  // A안 적용: 등급별 독립 최적화 — 현재 패널의 tier만 가격 반영
+  const __currentTierA = (function(){
+    if (typeof tierActual === 'number') return tierActual;
+    if (typeof d !== 'undefined' && typeof d.tier === 'number') return d.tier;
+    return null;
+  })();
+  if (__currentTierA){
+    for (let i=0;i<prices.length;i++){
+      if (__tierOfName(PRODUCTS[i].name) !== __currentTierA) prices[i] = 0;
+    }
+  }
+// ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
   const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
   const res = simplexMax(A, b, c);
@@ -3374,51 +3407,3 @@ function escapeHtml(s){
   });
 })();
 
-
-
-
-/* =======================
-   PATCH: Tier-independent optimization (A안)
-   - ★ / ★★ / ★★★ are optimized separately
-   - No cross-tier price comparison
-   ======================= */
-
-function getTierFromName(name){
-  if (name.includes("★★★")) return 3;
-  if (name.includes("★★")) return 2;
-  return 1;
-}
-
-// wrap original optimize function if exists
-const __origOptimize = typeof optimize === "function" ? optimize : null;
-
-function optimize(inputs){
-  if (!__origOptimize) return null;
-
-  const byTier = {1: [], 2: [], 3: []};
-
-  // assume inputs.products exists
-  inputs.products.forEach(p=>{
-    byTier[getTierFromName(p.name)].push(p);
-  });
-
-  const results = [];
-
-  [1,2,3].forEach(tier=>{
-    if (byTier[tier].length === 0) return;
-
-    const tierInput = {
-      ...inputs,
-      products: byTier[tier],
-      // restrict materials to same tier only
-      fish: Object.fromEntries(
-        Object.entries(inputs.fish||{}).filter(([k])=>getTierFromName(k)===tier)
-      )
-    };
-
-    const r = __origOptimize(tierInput);
-    if (Array.isArray(r)) results.push(...r);
-  });
-
-  return results;
-}
