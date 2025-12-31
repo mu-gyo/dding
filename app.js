@@ -1995,7 +1995,8 @@ function getRecipeForTip(name){
   return TIP_RECIPES[name] || null;
 }
 
-  const items = Object.keys(TIP_RECIPES);
+  const midRecipes = getAllRecipesForMid();
+  const items = Object.keys(midRecipes);
   const A = resources.map(()=> Array(items.length).fill(0));
   const b = resources.map(()=> 0);
 
@@ -2008,7 +2009,7 @@ function getRecipeForTip(name){
 
   // A(소비-생산)
   items.forEach((item, colIdx)=>{
-    const ing = TIP_RECIPES[item] || {};
+    const ing = midRecipes[item] || {};
 
     // 재료 소비: +qty
     for(const [k, qty] of Object.entries(ing)){
@@ -2115,7 +2116,8 @@ function buildActualBalanceLP(pricesFinal){
   // 네 프로젝트에 이미 있는 "중간재+최종품 레시피" 함수 사용
   const recipes = getAllRecipesForMid(); // { itemName: {ingredientName: qty, ...}, ... }
 
-  const items = Object.keys(recipes);
+  const midRecipes = getAllRecipesForMid();
+  const items = Object.keys(midRecipes);
   const A = resources.map(()=> Array(items.length).fill(0));
   const b = resources.map(()=> 0);
 
@@ -2128,7 +2130,7 @@ function buildActualBalanceLP(pricesFinal){
 
   // A 채우기: (소비 +) (생산 -)
   items.forEach((item, colIdx)=>{
-    const ing = recipes[item] || {};
+    const ing = midRecipes[item] || {};
 
     // 재료 소비
     for(const [k, qty] of Object.entries(ing)){
