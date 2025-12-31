@@ -166,56 +166,101 @@ const MID_SECTIONS = [
 
 
 
+// ================================
+// 표시/전개용 레시피 "생산 개수"(배치 생산) 정의
+// - 기본은 1개 생산
+// - 일부 항목은 1회 제작 시 2개 생산
+// ================================
+const RECIPE_YIELD = {
+  "수호의 정수 ★": 2,
+  "파동의 정수 ★": 2,
+  "혼란의 정수 ★": 2,
+  "생명의 정수 ★": 2,
+  "부식의 정수 ★": 2,
+
+  "수호 에센스 ★★": 2,
+  "파동 에센스 ★★": 2,
+  "혼란 에센스 ★★": 2,
+  "생명 에센스 ★★": 2,
+  "부식 에센스 ★★": 2,
+};
+
+function recipeYield(name){
+  const k = String(name || "").trim();
+  const v = Number(RECIPE_YIELD[k] || 1);
+  return Math.max(1, Math.floor(v));
+}
+
+function qtyToCrafts(item, qty){
+  const q = Math.max(0, Math.floor(Number(qty || 0)));
+  if(q <= 0) return 0;
+  const y = recipeYield(item);
+  return Math.ceil(q / y);
+}
+
+
 // calcMatNeed 안에 있던 레시피를 "중간재 전개용"으로 재사용 (복붙이지만 1차 구현은 이게 안전)
 function getAllRecipesForMid(){
   const R1 = {
-    "수호의 정수 ★": { "굴 ★": 1, "점토": 1 },
-    "파동의 정수 ★": { "소라 ★": 1, "모래": 3 },
-    "혼란의 정수 ★": { "문어 ★": 1, "흙": 4 },
-    "생명의 정수 ★": { "미역 ★": 1, "자갈": 2 },
-    "부식의 정수 ★": { "성게 ★": 1, "화강암": 1 },
+    // 1성 정수(1회 제작 시 2개 생산)
+    "수호의 정수 ★": { "굴 ★": 2, "점토": 1 },
+    "파동의 정수 ★": { "소라 ★": 2, "모래": 3 },
+    "혼란의 정수 ★": { "문어 ★": 2, "흙": 4 },
+    "생명의 정수 ★": { "미역 ★": 2, "자갈": 2 },
+    "부식의 정수 ★": { "성게 ★": 2, "화강암": 1 },
 
+    // 1성 핵(1개 생산)
     "물결 수호의 핵 ★": { "수호의 정수 ★": 1, "파동의 정수 ★": 1, "익히지 않은 새우": 1 },
     "파동 오염의 핵 ★": { "파동의 정수 ★": 1, "혼란의 정수 ★": 1, "익히지 않은 도미": 1 },
     "질서 파괴의 핵 ★": { "혼란의 정수 ★": 1, "생명의 정수 ★": 1, "익히지 않은 청어": 1 },
     "활력 붕괴의 핵 ★": { "생명의 정수 ★": 1, "부식의 정수 ★": 1, "금붕어": 1 },
     "침식 방어의 핵 ★": { "부식의 정수 ★": 1, "수호의 정수 ★": 1, "농어": 1 },
 
+    // 1성 최종품
     "영생의 아쿠티스 ★": { "물결 수호의 핵 ★": 1, "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1 },
     "크라켄의 광란체 ★": { "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1, "파동 오염의 핵 ★": 1 },
     "리바이던의 깃털 ★": { "침식 방어의 핵 ★": 1, "파동 오염의 핵 ★": 1, "물결 수호의 핵 ★": 1 }
   };
 
   const R2 = {
-    "수호 에센스 ★★": { "굴 ★★": 1, "해초": 2, "죽은 관 산호 블록": 1 },
-    "파동 에센스 ★★": { "소라 ★★": 1, "해초": 2, "죽은 사방 산호 블록": 1 },
-    "혼란 에센스 ★★": { "문어 ★★": 1, "해초": 2, "죽은 거품 산호 블록": 1 },
-    "생명 에센스 ★★": { "미역 ★★": 1, "해초": 2, "죽은 불 산호 블록": 1 },
-    "부식 에센스 ★★": { "성게 ★★": 1, "해초": 2, "죽은 뇌 산호 블록": 1 },
-    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "먹물 주머니": 1, "청금석 블록": 1 },
-    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "먹물 주머니": 1, "레드스톤 블록": 1 },
-    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "먹물 주머니": 1, "철 주괴": 1 },
-    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "먹물 주머니": 1, "금 주괴": 1 },
-    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "먹물 주머니": 1, "다이아몬드": 1 },
+    // 2성 에센스(1회 제작 시 2개 생산)
+    "수호 에센스 ★★": { "굴 ★★": 2, "해초": 2, "네더랙": 8 },
+    "파동 에센스 ★★": { "소라 ★★": 2, "해초": 2, "마그마 블록": 4 },
+    "혼란 에센스 ★★": { "문어 ★★": 2, "해초": 2, "영혼 흙": 4 },
+    "생명 에센스 ★★": { "미역 ★★": 2, "해초": 2, "진홍빛 자루": 2 },
+    "부식 에센스 ★★": { "성게 ★★": 2, "해초": 2, "뒤틀린 자루": 2 },
+
+    // 2성 결정/코어/최종품(1개 생산)
+    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "켈프": 3, "청금석 블록": 1 },
+    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "켈프": 3, "레드스톤 블록": 1 },
+    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "켈프": 3, "철 주괴": 1 },
+    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "켈프": 3, "금 주괴": 1 },
+    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "켈프": 3, "다이아몬드": 1 },
+
     "해구 파동의 코어 ★★": { "활기 보존의 결정 ★★": 1, "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1 },
     "침묵의 심해 비약 ★★": { "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1 },
-    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 },
+    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 }
   };
 
   const R3 = {
-    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "네더랙": 16 },
-    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "마그마 블록": 8 },
-    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "영혼 흙": 8 },
-    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "진홍빛 자루": 4 },
-    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "뒤틀린 자루": 4 },
-    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "수레국화": 1 },
-    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "민들레": 1 },
-    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "데이지": 1 },
-    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "양귀비": 1 },
-    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "선애기별꽃": 1 },
+    // 3성 엘릭서(1개 생산)
+    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "엔드 돌": 1 },
+    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "엔드 석재 벽돌": 1 },
+    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "후렴과": 4 },
+    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "튀긴 후렴과": 4 },
+    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "퍼퍼 블록": 1 },
+
+    // 3성 영약(1개 생산)
+    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 관 산호 블록": 1 },
+    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 사방 산호 블록": 1 },
+    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 거품 산호 블록": 1 },
+    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 불 산호 블록": 1 },
+    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 뇌 산호 블록": 1 },
+
+    // 3성 최종품
     "아쿠아 펄스 파편 ★★★": { "불멸 재생의 영약 ★★★": 1, "파동 장벽의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1 },
     "나우틸러스의 손 ★★★": { "파동 장벽의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1, "불멸 재생의 영약 ★★★": 1 },
-    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 },
+    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 }
   };
 
   return { ...R1, ...R2, ...R3 };
@@ -258,8 +303,9 @@ function calcNetNeedsForActualWithMidInv(yFinal){
       else addNeed(needMat, item, qty);
       return;
     }
+    const crafts = qtyToCrafts(item, qty);
     for(const [ing, q] of Object.entries(r)){
-      expandNeed(ing, qty * Number(q||0), depth+1);
+      expandNeed(ing, crafts * Number(q||0), depth+1);
     }
   };
 
@@ -318,8 +364,9 @@ function calcNetNeedsForExpectedWithMidInv(qtys){
       else addNeed(needMat, item, qty);
       return;
     }
+    const crafts = qtyToCrafts(item, qty);
     for(const [ing, q] of Object.entries(r)){
-      expandGross(ing, qty * Number(q||0), depth+1);
+      expandGross(ing, crafts * Number(q||0), depth+1);
     }
   };
 
@@ -421,7 +468,7 @@ function renderMidInvGrid(){
       const v = Math.max(0, Math.floor(Number(inv[name] ?? 0)));
       return `
         <div class="midInvRow">
-          <div class="midLabel">${matLabel(name)}</div>
+          <div class="midLabel">${matLabel(name,false)}</div>
           <input type="number" min="0" step="1" inputmode="numeric"
                  value="${v}" data-mid="${name}" aria-label="${name} 재고"/>
         </div>
@@ -534,8 +581,9 @@ function expandToFishOnly(itemName, qty, ALL, out){
     }
     return;
   }
+  const crafts = qtyToCrafts(itemName, qty);
   for(const [child, cqty] of Object.entries(recipe)){
-    expandToFishOnly(child, qty * cqty, ALL, out);
+    expandToFishOnly(child, crafts * cqty, ALL, out);
   }
 }
 
@@ -567,77 +615,69 @@ function calcMatNeed(y) {
     totals[name] = (totals[name] || 0) + qty;
   };
 
-  // --- 레시피 정의 (네가 준 그대로) ---
-  // 1성 정수
+  // --- 레시피 정의 (위키 최신: 일부 2개 생산) ---
   const R1 = {
-    "수호의 정수 ★": { "굴 ★": 1, "점토": 1 },
-    "파동의 정수 ★": { "소라 ★": 1, "모래": 3 },
-    "혼란의 정수 ★": { "문어 ★": 1, "흙": 4 },
-    "생명의 정수 ★": { "미역 ★": 1, "자갈": 2 },
-    "부식의 정수 ★": { "성게 ★": 1, "화강암": 1 },
+    // 1성 정수(1회 제작 시 2개 생산)
+    "수호의 정수 ★": { "굴 ★": 2, "점토": 1 },
+    "파동의 정수 ★": { "소라 ★": 2, "모래": 3 },
+    "혼란의 정수 ★": { "문어 ★": 2, "흙": 4 },
+    "생명의 정수 ★": { "미역 ★": 2, "자갈": 2 },
+    "부식의 정수 ★": { "성게 ★": 2, "화강암": 1 },
 
+    // 1성 핵(1개 생산)
     "물결 수호의 핵 ★": { "수호의 정수 ★": 1, "파동의 정수 ★": 1, "익히지 않은 새우": 1 },
     "파동 오염의 핵 ★": { "파동의 정수 ★": 1, "혼란의 정수 ★": 1, "익히지 않은 도미": 1 },
     "질서 파괴의 핵 ★": { "혼란의 정수 ★": 1, "생명의 정수 ★": 1, "익히지 않은 청어": 1 },
     "활력 붕괴의 핵 ★": { "생명의 정수 ★": 1, "부식의 정수 ★": 1, "금붕어": 1 },
     "침식 방어의 핵 ★": { "부식의 정수 ★": 1, "수호의 정수 ★": 1, "농어": 1 },
 
+    // 1성 최종품
     "영생의 아쿠티스 ★": { "물결 수호의 핵 ★": 1, "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1 },
     "크라켄의 광란체 ★": { "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1, "파동 오염의 핵 ★": 1 },
     "리바이던의 깃털 ★": { "침식 방어의 핵 ★": 1, "파동 오염의 핵 ★": 1, "물결 수호의 핵 ★": 1 }
   };
 
-  // 2성
   const R2 = {
-    "수호 에센스 ★★": { "굴 ★★": 1, "해초": 2, "죽은 관 산호 블록": 1 },
-    "파동 에센스 ★★": { "소라 ★★": 1, "해초": 2, "죽은 사방 산호 블록": 1 },
-    "혼란 에센스 ★★": { "문어 ★★": 1, "해초": 2, "죽은 거품 산호 블록": 1 },
-    "생명 에센스 ★★": { "미역 ★★": 1, "해초": 2, "죽은 불 산호 블록": 1 },
-    "부식 에센스 ★★": { "성게 ★★": 1, "해초": 2, "죽은 뇌 산호 블록": 1 },
-    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "먹물 주머니": 1, "청금석 블록": 1 },
-    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "먹물 주머니": 1, "레드스톤 블록": 1 },
-    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "먹물 주머니": 1, "철 주괴": 1 },
-    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "먹물 주머니": 1, "금 주괴": 1 },
-    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "먹물 주머니": 1, "다이아몬드": 1 },
+    // 2성 에센스(1회 제작 시 2개 생산)
+    "수호 에센스 ★★": { "굴 ★★": 2, "해초": 2, "네더랙": 8 },
+    "파동 에센스 ★★": { "소라 ★★": 2, "해초": 2, "마그마 블록": 4 },
+    "혼란 에센스 ★★": { "문어 ★★": 2, "해초": 2, "영혼 흙": 4 },
+    "생명 에센스 ★★": { "미역 ★★": 2, "해초": 2, "진홍빛 자루": 2 },
+    "부식 에센스 ★★": { "성게 ★★": 2, "해초": 2, "뒤틀린 자루": 2 },
+
+    // 2성 결정/코어/최종품(1개 생산)
+    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "켈프": 3, "청금석 블록": 1 },
+    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "켈프": 3, "레드스톤 블록": 1 },
+    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "켈프": 3, "철 주괴": 1 },
+    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "켈프": 3, "금 주괴": 1 },
+    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "켈프": 3, "다이아몬드": 1 },
+
     "해구 파동의 코어 ★★": { "활기 보존의 결정 ★★": 1, "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1 },
     "침묵의 심해 비약 ★★": { "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1 },
-    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 },
+    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 }
   };
 
-  // 3성
   const R3 = {
-    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "네더랙": 16 },
-    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "마그마 블록": 8 },
-    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "영혼 흙": 8 },
-    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "진홍빛 자루": 4 },
-    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "뒤틀린 자루": 4 },
-    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "수레국화": 1 },
-    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "민들레": 1 },
-    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "데이지": 1 },
-    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "양귀비": 1 },
-    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "발광 먹물 주머니": 1, "발광 열매": 2, "선애기별꽃": 1 },
+    // 3성 엘릭서(1개 생산)
+    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "엔드 돌": 1 },
+    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "엔드 석재 벽돌": 1 },
+    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "후렴과": 4 },
+    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "튀긴 후렴과": 4 },
+    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "퍼퍼 블록": 1 },
+
+    // 3성 영약(1개 생산)
+    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 관 산호 블록": 1 },
+    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 사방 산호 블록": 1 },
+    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 거품 산호 블록": 1 },
+    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 불 산호 블록": 1 },
+    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 뇌 산호 블록": 1 },
+
+    // 3성 최종품
     "아쿠아 펄스 파편 ★★★": { "불멸 재생의 영약 ★★★": 1, "파동 장벽의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1 },
     "나우틸러스의 손 ★★★": { "파동 장벽의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1, "불멸 재생의 영약 ★★★": 1 },
-    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 },
+    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 }
   };
 
-  // 최종 9개와 y 인덱스 매핑
-  const FINAL = [
-    "영생의 아쿠티스 ★",
-    "크라켄의 광란체 ★",
-    "리바이던의 깃털 ★",
-    "해구 파동의 코어 ★★",
-    "침묵의 심해 비약 ★★",
-    "청해룡의 날개 ★★",
-    "아쿠아 펄스 파편 ★★★",
-    "나우틸러스의 손 ★★★",
-    "무저의 척추 ★★★"
-  ];
-
-  // --- 전개(재귀 확장) ---
-  const totals = {};
-
-  // 모든 레시피를 하나로 조회할 수 있게
   const ALL = { ...R1, ...R2, ...R3 };
 
   function expand(itemName, qty) {
@@ -647,9 +687,13 @@ function calcMatNeed(y) {
       add(totals, itemName, qty);
       return;
     }
-    // 중간재: 하위 재료로 분해
+
+    // ✅ 배치 생산(2개 생산) 반영: 필요한 개수(qty) -> 제작 횟수(crafts)
+    const crafts = qtyToCrafts(itemName, qty);
+
+    // 중간재: 하위 재료로 분해 (제작 횟수 기준)
     for (const [child, cqty] of Object.entries(recipe)) {
-      expand(child, qty * cqty);
+      expand(child, crafts * cqty);
     }
   }
 
@@ -808,14 +852,15 @@ const MATERIAL_ICON_URL = {
   "영혼 흙": "https://static.wikia.nocookie.net/minecraft_ko_gamepedia/images/8/86/Soul_Soil_JE1.png",
   "진홍빛 자루": "https://kkukowiki.kr/images/9/91/%EC%A7%84%ED%99%8D%EB%B9%9B%EC%9E%90%EB%A3%A8.gif",
   "뒤틀린 자루": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_vytHwPLMa46iNFxvxPA9eZiLZyDj9jzvTQ&s",
-  "발광 먹물 주머니": "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20/assets/minecraft/textures/item/glow_ink_sac.png",
+  "켈프": "https://i.namu.wiki/i/HFCdZLYpdrPscu43Ck8c7exEG69K51k2Mc-4xcpK2JvkI9hJTwWiL5qrbGhnD-VwMW7MXHQ3v4tnHiUYaGkTArnWPmeaQnh7emi7w4HQ4bQ1HTLo_Ypby3Cv36huJegUZMS43cVMAWEAIUTcokwY0g.webp",
+  "말린 켈프": "https://minecraft.wiki/images/Dried_Kelp_Block_JE1_BE2.png",
+  "튀긴 후렴과": "https://minecraft.wiki/images/Popped_Chorus_Fruit_JE2_BE2.png",
+  "후렴과": "https://minecraft.wiki/images/Chorus_Fruit_JE2_BE2.png",
+  "엔드 석재 벽돌": "https://static.wikia.nocookie.net/minecraft_ko_gamepedia/images/7/72/End_Stone_Bricks_JE2_BE2.png",
+  "퍼퍼 블록": "https://minecraft.wiki/images/Purpur_Block_JE2_BE2.png",
+  "엔드 돌": "https://minecraft.wiki/images/End_Stone_JE3_BE2.png",
+"불우렁쉥이": "https://i.namu.wiki/i/CBEgUc-J1DNSqRXuNRVe-pSAfCPgTGpusBPd6LB4U9EgufWNknGIXJUL5yV4YgO_Lcx563vo3ai_KiVJluhyig.webp",
   "발광 열매": "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20/assets/minecraft/textures/item/glow_berries.png",
-  "수레국화": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FcWOUPK%2FbtsOKBrtCkB%2FAAAAAAAAAAAAAAAAAAAAAP1jGCIE8pDD47n962FOk0xyN3d-8e5uzOwgy3bYsEhW%2Fimg.webp%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3DJYgMehI4WE7k5Mvk2hFuGfAIt8c%253D",
-  "민들레": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F1HODq%2FbtsOMJgWN5V%2FAAAAAAAAAAAAAAAAAAAAALDelE7slV2EYGq9Q75vtWWnovs-4zOHTRmiFgnlexE7%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3DYKytH2qi4j5ZHENPlCUXFi6j5ec%253D",
-  "데이지": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbhcHcT%2FbtsOLstJjag%2FAAAAAAAAAAAAAAAAAAAAAGQpf97TvqkGZcDnUwjlRuZENMidDVwwtvYTWfgHKfit%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3DYf%252Fzo2oPEJG90FDw6kisjPCkQzQ%253D",
-  "양귀비": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F2ECXF%2FbtsOLjqg4ht%2FAAAAAAAAAAAAAAAAAAAAAPdhEtXp9rAJYq6BfI0L53tCwSuBGlxbET92Ib9SMnAh%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3D4RQ6CFYR%252FpdvPwa%252FvnYSNlWx6vg%253D",
-  "선애기별꽃": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fd2rEka%2FbtsOL91vgFw%2FAAAAAAAAAAAAAAAAAAAAAD5OASnVJcphynyYUPEL0g_H3mc7ZBtNQBixJrdI3tCc%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3D6GJeyef5jnTayKs1pFJSSot5Pcg%253D",
-  "불우렁쉥이": "https://i.namu.wiki/i/CBEgUc-J1DNSqRXuNRVe-pSAfCPgTGpusBPd6LB4U9EgufWNknGIXJUL5yV4YgO_Lcx563vo3ai_KiVJluhyig.webp",
 
 // 어패류(등급) 아이콘
 "굴 ★": "icons/fish/oyster.png",
@@ -913,23 +958,38 @@ function escHtml(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function productLabel(name){
+
+// ================================
+// 표시용 이름: 2개 생산 품목은 이름 뒤에 "×2" 표기
+// (요구 수량 "×N" 과 헷갈리지 않게 생산량만 추가)
+// ================================
+function displayNameWithYield(name, includeYield=true){
+  const raw = String(name || "").trim();
+  const y = recipeYield(raw);
+  if(!includeYield) return raw;
+  return (y > 1) ? `${raw} ×${y}` : raw;
+}
+
+
+function productLabel(name, includeYield=true){
+  const shown = displayNameWithYield(name, includeYield);
   const base = stripStars(name);
   const url = PRODUCT_ICON_URL[base];
-  if(!url) return name;
+  if(!url) return escHtml(shown);
 
   return `
     <span class="item-label">
       <img src="${url}" class="item-icon">
-      <span>${name}</span>
+      <span>${escHtml(shown)}</span>
     </span>
   `;
 }
 
 
-function matLabel(name){
-  const url = MATERIAL_ICON_URL[name] || FALLBACK_ICON_SVG;
-  return `<span class="mat"><img class="icon" src="${url}" alt="" onerror="this.src='${FALLBACK_ICON_SVG}'"/>${escHtml(name)}</span>`;
+function matLabel(name, includeYield=true){
+  const shown = displayNameWithYield(name, includeYield);
+  const url = MATERIAL_ICON_URL[name] || MATERIAL_ICON_URL[stripStars(name)] || FALLBACK_ICON_SVG;
+  return `<span class="mat"><img class="icon" src="${url}" alt="" onerror="this.src='${FALLBACK_ICON_SVG}'"/>${escHtml(shown)}</span>`;
 }
 
 const PRODUCTS = [
@@ -1199,7 +1259,7 @@ function buildTables(){
   FISH_ROWS.forEach((name, i)=>{
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${matLabel(name)}</td>
+      <td>${matLabel(name,false)}</td>
       <td><input type="number" min="0" step="1" value="0" style="width:120px;max-width:100%" id="inv_${i}"></td>
     `;
     invBody.appendChild(tr);
@@ -1565,7 +1625,7 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
     const lack = Math.max(0, need - inv);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${matLabel(name)}</td>
+      <td>${matLabel(name,false)}</td>
       <td class="mono ${inv===0?'zero':''}">${inv}</td>
       <td class="mono ${need===0?'zero':''}">${fmtNum(need)}</td>
       <td class="mono ${lack>0?'neg':'zero'}">${fmtNum(lack)}</td>
@@ -1581,7 +1641,7 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
     if(qty <= 1e-9) return;
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${matLabel(name)}</td>
+      <td>${matLabel(name,false)}</td>
       <td class="mono">${fmtNum(qty)}</td>
       <td class="mono">${set64(qty)}</td>
     `;
@@ -1935,7 +1995,7 @@ function getRecipeForTip(name){
   return TIP_RECIPES[name] || null;
 }
 
-  const items = Object.keys(recipes);
+  const items = Object.keys(TIP_RECIPES);
   const A = resources.map(()=> Array(items.length).fill(0));
   const b = resources.map(()=> 0);
 
@@ -1948,7 +2008,7 @@ function getRecipeForTip(name){
 
   // A(소비-생산)
   items.forEach((item, colIdx)=>{
-    const ing = recipes[item] || {};
+    const ing = TIP_RECIPES[item] || {};
 
     // 재료 소비: +qty
     for(const [k, qty] of Object.entries(ing)){
@@ -1971,91 +2031,6 @@ function getRecipeForTip(name){
   return {A, b, c, items, resources, fishSupply};
 }
 
-
-// ===============================
-// TAB2 Tier-split (★/★★/★★★ independent) — applied ONLY to "채집 후 제작" 추천
-// - 부재료(새우/도미/블록/켈프 등)는 무한으로 취급: resources에 없으면 자동 무시
-// ===============================
-function _tierOfName(name){
-  if(typeof name !== "string") return 0;
-  if(name.includes("★★★")) return 3;
-  if(name.includes("★★")) return 2;
-  if(name.includes("★")) return 1;
-  return 0;
-}
-function _matchTier(name, tier){
-  return _tierOfName(name) === tier;
-}
-function buildActualBalanceLP_Tier(pricesFinal, tier){
-  const fishNamesAll = FISH_ROWS.slice();
-  const midNamesAll  = MID_ITEMS.slice();
-
-  const fishNames = fishNamesAll.filter(n=> _matchTier(n, tier));
-  const midNames  = midNamesAll.filter(n=> _matchTier(n, tier));
-
-  const resources = fishNames.concat(midNames);
-
-  const fishSupplyAll = readActualFishSupplyNoMid(); // full (len=FISH_ROWS)
-  const midInv = loadMidInv();                       // all mid inv
-
-  // items (decision vars): recipes keys filtered by tier
-  const itemsAll = Object.keys(recipes);
-  const items = itemsAll.filter(n=> _matchTier(n, tier));
-
-  // A (rows=resources, cols=items)
-  const A = Array.from({length: resources.length}, ()=> Array(items.length).fill(0));
-  const b = Array(resources.length).fill(0);
-
-  // b: fish supply / mid inventory
-  resources.forEach((rName, rIdx)=>{
-    const fishIdx = fishNamesAll.indexOf(rName);
-    if(fishIdx >= 0){
-      b[rIdx] = fishSupplyAll[fishIdx] || 0;
-    }else{
-      b[rIdx] = Math.max(0, Math.floor(Number(midInv[rName] || 0)));
-    }
-  });
-
-  // fill A
-  items.forEach((item, colIdx)=>{
-    const ing = recipes[item] || {};
-
-    // consume ingredients (+)
-    for(const [k, qty] of Object.entries(ing)){
-      const rIdx = resources.indexOf(k);
-      if(rIdx >= 0) A[rIdx][colIdx] += Number(qty || 0);
-      // else: infinite material => ignore
-    }
-
-    // produce self (-1)
-    const selfIdx = resources.indexOf(item);
-    if(selfIdx >= 0) A[selfIdx][colIdx] += -1;
-  });
-
-  // objective c: only final products of this tier have value
-  const c = items.map(()=> 0);
-  PRODUCTS.forEach((p, i)=>{
-    if(!_matchTier(p.name, tier)) return;
-    const idx2 = items.indexOf(p.name);
-    if(idx2 >= 0) c[idx2] = pricesFinal[i];
-  });
-
-  return {A, b, c, items, resources, fishNamesAll, fishNames, fishSupplyAll};
-}
-
-function _calcFishUsedFromTierLP(A, x, fishNamesTier, fishNamesAll){
-  const usedAll = Array(FISH_ROWS.length).fill(0);
-  const fishCountTier = fishNamesTier.length;
-  for(let i=0;i<fishCountTier;i++){
-    let s = 0;
-    for(let j=0;j<x.length;j++) s += (A[i][j] || 0) * (x[j] || 0);
-    const used = Math.max(0, Math.round(s));
-    const globalIdx = fishNamesAll.indexOf(fishNamesTier[i]);
-    if(globalIdx >= 0) usedAll[globalIdx] += used;
-  }
-  return usedAll;
-}
-
 // A*x 의 fish 부분(첫 15행) = 실제 어패류 사용량
 function calcFishUsedFromLP(A, x){
   const fishCount = FISH_ROWS.length;
@@ -2076,50 +2051,37 @@ function optimizeActual(){
   const premiumMul = premiumMulFromLevel(premiumLevel);
   const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
 
-  // ✅ 채집 후(탭2)는 ★/★★/★★★를 "완전 독립"으로 계산해서
-  // 특정 티어가 다른 티어 때문에 덜 만들어지는 현상을 원천 차단한다.
-  // (부재료는 무한 가정이므로 resources에 포함되지 않아 자동으로 영향 없음)
+  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
-  const yFinal = Array(PRODUCTS.length).fill(0);
-  const usedFishAll = Array(FISH_ROWS.length).fill(0);
-
-  // full fish supply for UI
-  const fishSupplyFull = readActualFishSupplyNoMid();
-
-  for(const tier of [1,2,3]){
-    const {A, b, c, items, fishNamesAll, fishNames} = buildActualBalanceLP_Tier(prices, tier);
-
-    // 티어에 해당하는 아이템이 없으면 스킵
-    if(!items || items.length === 0 || !A || A.length === 0){
-      continue;
-    }
-
-    const res = simplexMax(A, b, c);
-    if(res.status !== "optimal"){
-      alert("최적화 실패: 입력 재고를 확인해줘.");
-      return;
-    }
-
-    const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
-
-    // yFinal tier 부분만 반영
-    PRODUCTS.forEach((p, i)=>{
-      if(!_matchTier(p.name, tier)) return;
-      const idx = items.indexOf(p.name);
-      if(idx >= 0) yFinal[i] = (intRes.x[idx] || 0);
-    });
-
-    // fish used accumulate
-    const usedTierAll = _calcFishUsedFromTierLP(A, intRes.x, fishNames, fishNamesAll);
-    for(let i=0;i<usedFishAll.length;i++) usedFishAll[i] += usedTierAll[i] || 0;
+  const res = simplexMax(A, b, c);
+  if(res.status !== "optimal"){
+    alert("최적화 실패: 입력 재고를 확인해줘.");
+    return;
   }
 
-  // store LAST_ACTUAL for debugging (keep structure compatible)
-  LAST_ACTUAL = { A: null, x: null };
+  const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
 
-  renderActualResult(yFinal, prices, fishSupplyFull, usedFishAll);
+  // ✅ 기존 UI는 최종품 9개만 그리므로 yFinal만 추출
+  const yFinal = PRODUCTS.map(p=>{
+    const idx = items.indexOf(p.name);
+    return idx >= 0 ? (intRes.x[idx] || 0) : 0;
+  });
+
+  LAST_ACTUAL = {
+    x: intRes.x,          // 전체 변수(중간재 제작량 포함)
+    y: yFinal,            // 최종품만
+    prices,
+    fishSupply,
+    A
+  };
+
+const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
+renderActualResult(yFinal, prices, fishSupply, usedFish);
+
 }
 
+ 
 
 // ===============================
 // TAB2: Actual optimization with MID inventory balance (NO fish-credit)
