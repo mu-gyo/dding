@@ -1961,28 +1961,6 @@ function getRecipeForTip(name){
     if(selfIdx >= 0) A[selfIdx][colIdx] += -1;
   });
 
-  // --- (추가) 어패류 잔여 최소화: 수익 최대화 해를 구한 뒤에도 어패류가 과하게 남는 경우가 많아
-  // 제약을 하나 더 넣어서 '가능한 한' 소모하도록 유도합니다.
-  // ※ 레시피 구조상 100% 소모가 불가능하면(병목 재료 부족 등) 해가 불가능해질 수 있으므로,
-  //    소량의 슬랙(남겨도 되는 수량)을 허용합니다.
-  const UTILIZE_FISH_MIN_LEFTOVER = true;
-  if (UTILIZE_FISH_MIN_LEFTOVER){
-    const slackRatio = 0.05; // 5%까지는 남겨도 OK (너무 빡빡하면 해가 없을 수 있음)
-    for (let i=0;i<fishNames.length;i++){
-      const sup = Math.max(0, Number(supply[i]||0));
-      if (!sup) continue;
-      const slack = Math.max(1, Math.ceil(sup * slackRatio));
-      const minUse = Math.max(0, Math.floor(sup - slack));
-      if (!minUse) continue;
-      // 기존 제약: A[i]·x <= sup  (최대 소비)
-      // 추가 제약: A[i]·x >= minUse  <=>  (-A[i])·x <= -minUse
-      const row = A[i].map(v => -v);
-      A.push(row);
-      b.push(-minUse);
-    }
-  }
-
-
   // 목적함수 c: 최종품만 가격, 중간재는 0
   const c = items.map(()=> 0);
   PRODUCTS.forEach((p, i)=>{
@@ -1991,6 +1969,91 @@ function getRecipeForTip(name){
   });
 
   return {A, b, c, items, resources, fishSupply};
+}
+
+
+// ===============================
+// TAB2 Tier-split (★/★★/★★★ independent) — applied ONLY to "채집 후 제작" 추천
+// - 부재료(새우/도미/블록/켈프 등)는 무한으로 취급: resources에 없으면 자동 무시
+// ===============================
+function _tierOfName(name){
+  if(typeof name !== "string") return 0;
+  if(name.includes("★★★")) return 3;
+  if(name.includes("★★")) return 2;
+  if(name.includes("★")) return 1;
+  return 0;
+}
+function _matchTier(name, tier){
+  return _tierOfName(name) === tier;
+}
+function buildActualBalanceLP_Tier(pricesFinal, tier){
+  const fishNamesAll = FISH_ROWS.slice();
+  const midNamesAll  = MID_ITEMS.slice();
+
+  const fishNames = fishNamesAll.filter(n=> _matchTier(n, tier));
+  const midNames  = midNamesAll.filter(n=> _matchTier(n, tier));
+
+  const resources = fishNames.concat(midNames);
+
+  const fishSupplyAll = readActualFishSupplyNoMid(); // full (len=FISH_ROWS)
+  const midInv = loadMidInv();                       // all mid inv
+
+  // items (decision vars): recipes keys filtered by tier
+  const itemsAll = Object.keys(recipes);
+  const items = itemsAll.filter(n=> _matchTier(n, tier));
+
+  // A (rows=resources, cols=items)
+  const A = Array.from({length: resources.length}, ()=> Array(items.length).fill(0));
+  const b = Array(resources.length).fill(0);
+
+  // b: fish supply / mid inventory
+  resources.forEach((rName, rIdx)=>{
+    const fishIdx = fishNamesAll.indexOf(rName);
+    if(fishIdx >= 0){
+      b[rIdx] = fishSupplyAll[fishIdx] || 0;
+    }else{
+      b[rIdx] = Math.max(0, Math.floor(Number(midInv[rName] || 0)));
+    }
+  });
+
+  // fill A
+  items.forEach((item, colIdx)=>{
+    const ing = recipes[item] || {};
+
+    // consume ingredients (+)
+    for(const [k, qty] of Object.entries(ing)){
+      const rIdx = resources.indexOf(k);
+      if(rIdx >= 0) A[rIdx][colIdx] += Number(qty || 0);
+      // else: infinite material => ignore
+    }
+
+    // produce self (-1)
+    const selfIdx = resources.indexOf(item);
+    if(selfIdx >= 0) A[selfIdx][colIdx] += -1;
+  });
+
+  // objective c: only final products of this tier have value
+  const c = items.map(()=> 0);
+  PRODUCTS.forEach((p, i)=>{
+    if(!_matchTier(p.name, tier)) return;
+    const idx2 = items.indexOf(p.name);
+    if(idx2 >= 0) c[idx2] = pricesFinal[i];
+  });
+
+  return {A, b, c, items, resources, fishNamesAll, fishNames, fishSupplyAll};
+}
+
+function _calcFishUsedFromTierLP(A, x, fishNamesTier, fishNamesAll){
+  const usedAll = Array(FISH_ROWS.length).fill(0);
+  const fishCountTier = fishNamesTier.length;
+  for(let i=0;i<fishCountTier;i++){
+    let s = 0;
+    for(let j=0;j<x.length;j++) s += (A[i][j] || 0) * (x[j] || 0);
+    const used = Math.max(0, Math.round(s));
+    const globalIdx = fishNamesAll.indexOf(fishNamesTier[i]);
+    if(globalIdx >= 0) usedAll[globalIdx] += used;
+  }
+  return usedAll;
 }
 
 // A*x 의 fish 부분(첫 15행) = 실제 어패류 사용량
@@ -2013,37 +2076,50 @@ function optimizeActual(){
   const premiumMul = premiumMulFromLevel(premiumLevel);
   const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
 
-  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
+  // ✅ 채집 후(탭2)는 ★/★★/★★★를 "완전 독립"으로 계산해서
+  // 특정 티어가 다른 티어 때문에 덜 만들어지는 현상을 원천 차단한다.
+  // (부재료는 무한 가정이므로 resources에 포함되지 않아 자동으로 영향 없음)
 
-  const res = simplexMax(A, b, c);
-  if(res.status !== "optimal"){
-    alert("최적화 실패: 입력 재고를 확인해줘.");
-    return;
+  const yFinal = Array(PRODUCTS.length).fill(0);
+  const usedFishAll = Array(FISH_ROWS.length).fill(0);
+
+  // full fish supply for UI
+  const fishSupplyFull = readActualFishSupplyNoMid();
+
+  for(const tier of [1,2,3]){
+    const {A, b, c, items, fishNamesAll, fishNames} = buildActualBalanceLP_Tier(prices, tier);
+
+    // 티어에 해당하는 아이템이 없으면 스킵
+    if(!items || items.length === 0 || !A || A.length === 0){
+      continue;
+    }
+
+    const res = simplexMax(A, b, c);
+    if(res.status !== "optimal"){
+      alert("최적화 실패: 입력 재고를 확인해줘.");
+      return;
+    }
+
+    const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
+
+    // yFinal tier 부분만 반영
+    PRODUCTS.forEach((p, i)=>{
+      if(!_matchTier(p.name, tier)) return;
+      const idx = items.indexOf(p.name);
+      if(idx >= 0) yFinal[i] = (intRes.x[idx] || 0);
+    });
+
+    // fish used accumulate
+    const usedTierAll = _calcFishUsedFromTierLP(A, intRes.x, fishNames, fishNamesAll);
+    for(let i=0;i<usedFishAll.length;i++) usedFishAll[i] += usedTierAll[i] || 0;
   }
 
-  const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
+  // store LAST_ACTUAL for debugging (keep structure compatible)
+  LAST_ACTUAL = { A: null, x: null };
 
-  // ✅ 기존 UI는 최종품 9개만 그리므로 yFinal만 추출
-  const yFinal = PRODUCTS.map(p=>{
-    const idx = items.indexOf(p.name);
-    return idx >= 0 ? (intRes.x[idx] || 0) : 0;
-  });
-
-  LAST_ACTUAL = {
-    x: intRes.x,          // 전체 변수(중간재 제작량 포함)
-    y: yFinal,            // 최종품만
-    prices,
-    fishSupply,
-    A
-  };
-
-const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
-renderActualResult(yFinal, prices, fishSupply, usedFish);
-
+  renderActualResult(yFinal, prices, fishSupplyFull, usedFishAll);
 }
 
- 
 
 // ===============================
 // TAB2: Actual optimization with MID inventory balance (NO fish-credit)
