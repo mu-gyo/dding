@@ -608,51 +608,140 @@ function getFishCreditFromMidInv(){
 function calcMatNeed(y) {
   const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(9).fill(0);
 
-  // ✅ 레시피/수율 단일 소스: getAllRecipesForMid + recipeYield
-  const REC = (typeof getAllRecipesForMid === "function") ? (getAllRecipesForMid() || {}) : {};
-
   // --- 유틸 ---
-  const totals = {};
-  const add = (name, qty) => {
+  const add = (totals, name, qty) => {
     if (!qty) return;
-    if (isFishItem(name)) return; // 어패류는 "필요 재료"에 넣지 않음
+  if (isFishItem(name)) return;
     totals[name] = (totals[name] || 0) + qty;
   };
 
-  // 필요한 "수량(qty)"를 만들기 위해, 수율(yield)을 고려해 crafts로 올림 → 재료는 crafts 기준으로 계산
-  const expand = (item, qty) => {
-    const q = Math.max(0, Number(qty || 0));
-    if (!q) return;
+  // --- 레시피 정의 (위키 최신: 일부 2개 생산) ---
+  const R1 = {
+    // 1성 정수(1회 제작 시 2개 생산)
+    "수호의 정수 ★": { "굴 ★": 2, "점토": 1 },
+    "파동의 정수 ★": { "소라 ★": 2, "모래": 3 },
+    "혼란의 정수 ★": { "문어 ★": 2, "흙": 4 },
+    "생명의 정수 ★": { "미역 ★": 2, "자갈": 2 },
+    "부식의 정수 ★": { "성게 ★": 2, "화강암": 1 },
 
-    const r = REC[item];
-    if (!r) {
-      add(item, q);
+    // 1성 핵(1개 생산)
+    "물결 수호의 핵 ★": { "수호의 정수 ★": 1, "파동의 정수 ★": 1, "익히지 않은 새우": 1 },
+    "파동 오염의 핵 ★": { "파동의 정수 ★": 1, "혼란의 정수 ★": 1, "익히지 않은 도미": 1 },
+    "질서 파괴의 핵 ★": { "혼란의 정수 ★": 1, "생명의 정수 ★": 1, "익히지 않은 청어": 1 },
+    "활력 붕괴의 핵 ★": { "생명의 정수 ★": 1, "부식의 정수 ★": 1, "금붕어": 1 },
+    "침식 방어의 핵 ★": { "부식의 정수 ★": 1, "수호의 정수 ★": 1, "농어": 1 },
+
+    // 1성 최종품
+    "영생의 아쿠티스 ★": { "물결 수호의 핵 ★": 1, "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1 },
+    "크라켄의 광란체 ★": { "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1, "파동 오염의 핵 ★": 1 },
+    "리바이던의 깃털 ★": { "침식 방어의 핵 ★": 1, "파동 오염의 핵 ★": 1, "물결 수호의 핵 ★": 1 }
+  };
+
+  const R2 = {
+    // 2성 에센스(1회 제작 시 2개 생산)
+    "수호 에센스 ★★": { "굴 ★★": 2, "해초": 2, "네더랙": 8 },
+    "파동 에센스 ★★": { "소라 ★★": 2, "해초": 2, "마그마 블록": 4 },
+    "혼란 에센스 ★★": { "문어 ★★": 2, "해초": 2, "영혼 흙": 4 },
+    "생명 에센스 ★★": { "미역 ★★": 2, "해초": 2, "진홍빛 자루": 2 },
+    "부식 에센스 ★★": { "성게 ★★": 2, "해초": 2, "뒤틀린 자루": 2 },
+
+    // 2성 결정/코어/최종품(1개 생산)
+    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "켈프": 3, "청금석 블록": 1 },
+    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "켈프": 3, "레드스톤 블록": 1 },
+    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "켈프": 3, "철 주괴": 1 },
+    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "켈프": 3, "금 주괴": 1 },
+    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "켈프": 3, "다이아몬드": 1 },
+
+    "해구 파동의 코어 ★★": { "활기 보존의 결정 ★★": 1, "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1 },
+    "침묵의 심해 비약 ★★": { "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1 },
+    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 }
+  };
+
+  const R3 = {
+    // 3성 엘릭서(1개 생산)
+    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "엔드 돌": 1 },
+    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "엔드 석재 벽돌": 1 },
+    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "후렴과": 4 },
+    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "튀긴 후렴과": 4 },
+    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "퍼퍼 블록": 1 },
+
+    // 3성 영약(1개 생산)
+    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 관 산호 블록": 1 },
+    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 사방 산호 블록": 1 },
+    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 거품 산호 블록": 1 },
+    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 불 산호 블록": 1 },
+    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "말린 켈프": 5, "발광 열매": 2, "죽은 뇌 산호 블록": 1 },
+
+    // 3성 최종품
+    "아쿠아 펄스 파편 ★★★": { "불멸 재생의 영약 ★★★": 1, "파동 장벽의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1 },
+    "나우틸러스의 손 ★★★": { "파동 장벽의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1, "불멸 재생의 영약 ★★★": 1 },
+    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 }
+  };
+
+  const ALL = { ...R1, ...R2, ...R3 };
+
+  function expand(itemName, qty) {
+    const recipe = ALL[itemName];
+    if (!recipe) {
+      // 기본 재료
+      add(totals, itemName, qty);
       return;
     }
 
-    const yld = recipeYield(item); // 1 또는 2
-    const crafts = Math.ceil(q / yld);
+    // ✅ 배치 생산(2개 생산) 반영: 필요한 개수(qty) -> 제작 횟수(crafts)
+    const crafts = qtyToCrafts(itemName, qty);
 
-    for (const [ing, needPerCraft] of Object.entries(r || {})) {
-      expand(ing, crafts * Number(needPerCraft || 0));
+    // 중간재: 하위 재료로 분해 (제작 횟수 기준)
+    for (const [child, cqty] of Object.entries(recipe)) {
+      expand(child, crafts * cqty);
     }
-  };
-
-  // y[i] = 완성품 제작 "수량"
-  PRODUCTS.forEach((p, i) => {
-    const qty = Math.max(0, Math.floor(Number(yy[i] || 0)));
-    if (!qty) return;
-    expand(p.name, qty);
-  });
-
-  // 소수점 방지(안전)
-  for (const k of Object.keys(totals)) {
-    totals[k] = Math.max(0, Math.ceil(Number(totals[k] || 0)));
   }
 
-  return totals;
-}
+  // 최종품에서 시작
+  for (let i = 0; i < FINAL.length; i++) {
+    const q = yy[i] || 0;
+    if (q > 0) expand(FINAL[i], q);
+  }
 
+  // --- 표시 순서(레시피 순서대로) ---
+  const order = [
+    // 1티어: 굴/소라/문어/미역/성게 기본 + 그 다음 생선류
+    "굴 ★","점토",
+    "소라 ★","모래",
+    "문어 ★","흙",
+    "미역 ★","자갈",
+    "성게 ★","화강암",
+    "익히지 않은 새우","익히지 않은 도미","익히지 않은 청어","금붕어","농어",
+
+    // 2티어 공통/블록/부재료
+    "굴 ★★","소라 ★★","문어 ★★","미역 ★★","성게 ★★",
+    "해초",
+    "죽은 관 산호 블록","죽은 사방 산호 블록","죽은 거품 산호 블록","죽은 불 산호 블록","죽은 뇌 산호 블록",
+    "먹물 주머니",
+    "청금석 블록","레드스톤 블록","철 주괴","금 주괴","다이아몬드",
+
+    // 3티어 공통/네더/꽃류
+    "굴 ★★★","소라 ★★★","문어 ★★★","미역 ★★★","성게 ★★★",
+    "불우렁쉥이","유리병",
+    "네더랙","마그마 블록","영혼 흙","진홍빛 자루","뒤틀린 자루",
+    "발광 먹물 주머니","발광 열매",
+    "수레국화","민들레","데이지","양귀비","선애기별꽃"
+  ];
+
+  const items = [];
+
+  // order에 있는 것 먼저
+  for (const name of order) {
+    if (totals[name]) items.push({ name, qty: totals[name] });
+  }
+  // 나머지(혹시 신규 재료가 생겼을 때) 뒤에 붙이기
+  for (const [name, qty] of Object.entries(totals)) {
+    if (!order.includes(name)) items.push({ name, qty });
+  }
+
+return totals;
+
+}
 
 // ================================
 // 프리미엄 한정가 배율 (강화 단계 → 배율)
@@ -1336,6 +1425,10 @@ function floorAndGreedyIntegerize(A, supply, prices, xFrac){
   const n = prices.length;
   const m = supply.length;
   const x = xFrac.map(v => Math.max(0, Math.floor(v + 1e-9)));
+
+  // keep original for normalization (leftover-minimization tie-breaker)
+  const supply0 = supply.slice();
+
   // remaining resources
   const rem = supply.slice();
   for(let i=0;i<m;i++){
@@ -1354,28 +1447,49 @@ function floorAndGreedyIntegerize(A, supply, prices, xFrac){
     for(let i=0;i<m;i++) rem[i] -= A[i][j];
   }
 
-  // Greedy: add best price-per-weighted-scarcity item that fits
+  // Greedy: maximize (revenue density) with a tiny bonus to also reduce leftovers.
+  // This helps choose between near-equivalent crafts so more fish types get consumed
+  // without sacrificing revenue in any meaningful way.
   const MAX_ADD = 20000;
   let steps = 0;
+
+  const maxP = prices.reduce((a,b)=>Math.max(a, b||0), 0);
+  const EPS = maxP * 0.01; // 1% of max price (small tie-breaker scale)
+  const BONUS_CAP = maxP * 0.05; // hard cap to avoid distortion
+
   while(steps++ < MAX_ADD){
     let best = -1;
     let bestScore = -1;
 
     for(let j=0;j<n;j++){
       if(!fits(j)) continue;
+
       // scarcity-weighted cost: sum (a_ij / max(rem_i,1))
       let cost = 0;
+      // abundance bonus: prefer consuming resources that are currently left a lot
+      let use = 0;
+
       for(let i=0;i<m;i++){
         const a = A[i][j];
         if(a<=0) continue;
         cost += a / Math.max(1, rem[i]);
+
+        const denom = Math.max(1, supply0[i]);
+        use += a * (rem[i] / denom);
       }
-      const score = prices[j] / Math.max(1e-9, cost);
+
+      // tiny bonus: among similar revenue choices, favor the one that consumes leftover more
+      let bonus = EPS * use;
+      if(bonus > BONUS_CAP) bonus = BONUS_CAP;
+
+      const score = (prices[j] + bonus) / Math.max(1e-9, cost);
+
       if(score > bestScore){
         bestScore = score;
         best = j;
       }
     }
+
     if(best === -1) break;
     x[best] += 1;
     consume(best);
