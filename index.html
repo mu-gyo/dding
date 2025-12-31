@@ -1719,29 +1719,6 @@ body{ overscroll-behavior-y: contain; }
   .card, .section{ padding: 14px; }
 }
 
-<style>
-/* 🔥 모바일: 중간 연금품 '초기화' 버튼만 예외 처리 */
-@media (max-width: 768px) {
-  /* 버튼을 감싸는 래퍼 */
-  #midInvCard .btn,
-  #midInvCard .btnGroup,
-  #midInvCard .btnWrap {
-    flex: 0 0 auto !important;
-  }
-
-  /* 실제 초기화 버튼 */
-  #midInvReset,
-  #midInvResetA,
-  #midInvCard button {
-    width: auto !important;
-    min-width: 0 !important;
-    padding: 8px 14px !important;
-  }
-}
-</style>
-
-
-
 </style>
 <!-- =========================
      Mobile layout hotfix patch
@@ -1851,12 +1828,6 @@ body{ overscroll-behavior-y: contain; }
   }
   #midInvDetails #midInvReset, #midInvDetailsA #midInvResetA{
     min-width: 72px;
-  }
-
-  /* midInv 버튼이 부모 flex 영향으로 커지지 않도록 고정 */
-  #midInvReset, #midInvResetA{
-    flex: 0 0 auto !important;
-    width: auto !important;
   }
 
   /* 4) '계산' / '재고 초기화' 버튼 줄: 두 버튼 폭 균등(있을 때만) */
@@ -2154,18 +2125,4 @@ body{ overscroll-behavior-y: contain; }
 </script>
 <div class="recipeTip" hidden="" id="recipeTip"></div>
 </div></body>
-</html><style>
-/* === mobile-only midBadge sizing (final) === */
-@media (max-width: 768px){
-  #midInvDetails .midBadge,
-  #midInvDetailsA .midBadge{
-    height: 34px;
-    padding: 0 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    font-size: 13px;
-  }
-}
-</style>
+</html>
