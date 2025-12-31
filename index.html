@@ -1836,6 +1836,23 @@ body{ overscroll-behavior-y: contain; }
 }
 </style>
 
+
+<!-- MOBILE ONLY: enlarge '미입력' badge to match reset button -->
+<style>
+@media (max-width: 768px){
+  #midInvDetails .midBadge,
+  #midInvDetailsA .midBadge{
+    height: 34px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 13px;
+  }
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
