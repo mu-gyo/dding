@@ -946,38 +946,26 @@ const PRODUCTS = [
 
 
 // ================================
-// 가격 동률화(등급별): 같은 ★등급 최종품은 동일 가격으로 최적화
-// - 목적: 같은 등급 내 "몇십원 차이" 때문에 한쪽만 몰리는 현상 완화
-// - 방식: 등급(★/★★/★★★)별 평균 판매가(프리미엄 반영 후)를 사용
-// ================================
-function tierFromName(name){
-  if(!name) return 0;
-  if(name.includes("★★★")) return 3;
-  if(name.includes("★★")) return 2;
-  if(name.includes("★")) return 1;
-  return 0;
+// Tier price equalization (MAX within ★/★★/★★★) for optimization only
+// - Prevents tiny price differences from forcing hard priority between same-tier finals.
+// - Does NOT change displayed base prices or actual sale prices; only affects optimizer's objective.
+function __starCount(name){
+  const m = String(name||"").match(/★/g);
+  return m ? m.length : 0;
 }
-function equalizeFinalPricesByTier(prices){
-  // PRODUCTS(최종품 9개)의 순서를 그대로 사용
-  const sums = {};
-  const counts = {};
+function __equalizeTierPricesMax(prices){
+  const maxByTier = {1:-Infinity, 2:-Infinity, 3:-Infinity};
   for(let i=0;i<PRODUCTS.length;i++){
-    const t = tierFromName(PRODUCTS[i].name);
-    if(!t) continue;
-    const v = Number(prices[i] || 0);
-    sums[t] = (sums[t] || 0) + v;
-    counts[t] = (counts[t] || 0) + 1;
+    const t = __starCount(PRODUCTS[i].name);
+    if(t>=1 && t<=3) maxByTier[t] = Math.max(maxByTier[t], Number(prices[i]||0));
   }
-  const avg = {};
-  Object.keys(sums).forEach(k=>{
-    const t = Number(k);
-    avg[t] = Math.round((sums[t] || 0) / Math.max(1, (counts[t] || 0)));
-  });
-  return prices.map((v,i)=>{
-    const t = tierFromName(PRODUCTS[i].name);
-    return t ? avg[t] : v;
-  });
+  for(let i=0;i<PRODUCTS.length;i++){
+    const t = __starCount(PRODUCTS[i].name);
+    if(t>=1 && t<=3 && Number.isFinite(maxByTier[t])) prices[i] = maxByTier[t];
+  }
+  return prices;
 }
+
 
 const FISH_ROWS = [
   "굴 ★","굴 ★★","굴 ★★★",
@@ -1493,10 +1481,11 @@ function optimize(){
   }
 
   // prices with premium
-  const pricesRaw = PRODUCTS.map(p => p.base * d.premiumMul);
-  const prices = equalizeFinalPricesByTier(pricesRaw);
+  const prices = PRODUCTS.map(p => p.base * d.premiumMul);
 
-  // enumerate all compositions of blocksTotal into 5 parts
+  
+  __equalizeTierPricesMax(prices);
+// enumerate all compositions of blocksTotal into 5 parts
   let best = {rev:-1, blocks:[0,0,0,0,0], y:Array(PRODUCTS.length).fill(0), supply:null};
 
   const m = FISH_ROWS.length;
@@ -2025,10 +2014,11 @@ function optimizeActual(){
   // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-  const pricesRaw = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
-  const prices = equalizeFinalPricesByTier(pricesRaw);
+  const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
 
-  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
+  
+  __equalizeTierPricesMax(prices);
+// ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
   const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
   const res = simplexMax(A, b, c);
