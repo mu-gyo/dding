@@ -2186,9 +2186,10 @@ function buildActualBalanceLP(pricesFinal){
       if(rIdx >= 0) A[rIdx][colIdx] += Number(qty || 0);
     }
 
-    // 자신 생산(1개 생김) => 소비-생산 형태라 -1
+    // 자신 생산(배치 생산/yield 반영)
+    // 소비-생산 <= 보유량 형태이므로, 생산량만큼 음수로 넣는다.
     const selfIdx = resources.indexOf(item);
-    if(selfIdx >= 0) A[selfIdx][colIdx] += -1;
+    if(selfIdx >= 0) A[selfIdx][colIdx] += -recipeYield(item);
   });
 
   // 목적함수 c: 최종품만 가격, 중간재는 0
