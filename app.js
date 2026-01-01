@@ -1995,8 +1995,7 @@ function getRecipeForTip(name){
   return TIP_RECIPES[name] || null;
 }
 
-  const midRecipes = getAllRecipesForMid();
-  const items = Object.keys(midRecipes);
+  const items = Object.keys(recipes);
   const A = resources.map(()=> Array(items.length).fill(0));
   const b = resources.map(()=> 0);
 
@@ -2009,7 +2008,7 @@ function getRecipeForTip(name){
 
   // A(소비-생산)
   items.forEach((item, colIdx)=>{
-    const ing = midRecipes[item] || {};
+    const ing = recipes[item] || {};
 
     // 재료 소비: +qty
     for(const [k, qty] of Object.entries(ing)){
@@ -2044,6 +2043,50 @@ function calcFishUsedFromLP(A, x){
   return used;
 }
 
+
+// --- Tab2(채집 후) 잔여 어패류 최대 소모 옵션 ---
+// 목적: "매출 최대" 계산은 유지하되, 결과가 동일한 선에서 남는 어패류를
+//      기본 1차 연금(정수/에센스/엘릭서)로 최대한 소모하여 잔여를 줄임.
+//      (부재료는 무한 가정이며, 이 소모는 '잔여 처리' 용도)
+function burnLeftoverFishToBase(fishSupply, usedFish){
+  // copy
+  const used = usedFish.slice();
+  const burn = {}; // name -> craftCount
+  const base1 = ["수호의 정수 ★","파동의 정수 ★","혼란의 정수 ★","생명의 정수 ★","부식의 정수 ★"];
+  const base2 = ["수호 에센스 ★★","파동 에센스 ★★","혼란 에센스 ★★","생명 에센스 ★★","부식 에센스 ★★"];
+  const base3 = ["수호의 엘릭서 ★★★","파동의 엘릭서 ★★★","혼란의 엘릭서 ★★★","생명의 엘릭서 ★★★","부식의 엘릭서 ★★★"];
+
+  for(let i=0;i<FISH_ROWS.length;i++){
+    const sup = Math.max(0, Math.floor(Number(fishSupply[i]||0)));
+    const u   = Math.max(0, Math.floor(Number(used[i]||0)));
+    let left = sup - u;
+    if(left<=0) continue;
+
+    const group = Math.floor(i/3);      // 0..4 (굴~성게)
+    const tier  = (i%3)+1;              // 1,2,3
+
+    if(tier===1){
+      const craft = Math.floor(left/2); // 1회 제작에 어패류 2개 소모
+      if(craft>0){
+        used[i] += craft*2;
+        burn[base1[group]] = (burn[base1[group]]||0) + craft; // 제작 횟수
+      }
+    }else if(tier===2){
+      const craft = Math.floor(left/2);
+      if(craft>0){
+        used[i] += craft*2;
+        burn[base2[group]] = (burn[base2[group]]||0) + craft;
+      }
+    }else{
+      const craft = left;               // 1회 제작에 어패류 1개 소모
+      if(craft>0){
+        used[i] += craft;
+        burn[base3[group]] = (burn[base3[group]]||0) + craft;
+      }
+    }
+  }
+  return { usedFish: used, burnCrafts: burn };
+}
 function optimizeActual(){
   updateTotalsActual();
 
@@ -2116,8 +2159,7 @@ function buildActualBalanceLP(pricesFinal){
   // 네 프로젝트에 이미 있는 "중간재+최종품 레시피" 함수 사용
   const recipes = getAllRecipesForMid(); // { itemName: {ingredientName: qty, ...}, ... }
 
-  const midRecipes = getAllRecipesForMid();
-  const items = Object.keys(midRecipes);
+  const items = Object.keys(recipes);
   const A = resources.map(()=> Array(items.length).fill(0));
   const b = resources.map(()=> 0);
 
@@ -2130,7 +2172,7 @@ function buildActualBalanceLP(pricesFinal){
 
   // A 채우기: (소비 +) (생산 -)
   items.forEach((item, colIdx)=>{
-    const ing = midRecipes[item] || {};
+    const ing = recipes[item] || {};
 
     // 재료 소비
     for(const [k, qty] of Object.entries(ing)){
