@@ -1,5 +1,32 @@
 
 
+// --- Tier helpers (★=1, ★★=2, ★★★=3) ---
+function getTierFromName(name){
+  if(!name) return 0;
+  if(name.includes("★★★")) return 3;
+  if(name.includes("★★")) return 2;
+  if(name.includes("★")) return 1;
+  return 0;
+}
+
+// Tab2 전용: 같은 등급(★/★★/★★★) 내 가격을 "최고가"로 통일해서
+// 특정 연금품 몰빵 대신, 같은 등급 내 생산량을 최대화하는 방향으로 최적화한다.
+// (표시되는 매출/단가는 실제 가격을 그대로 사용)
+function equalizePricesWithinTierMax(prices){
+  const maxByTier = {1:0,2:0,3:0};
+  // PRODUCTS는 전역 배열 (최종 연금품 목록)
+  for(let i=0;i<PRODUCTS.length;i++){
+    const t = getTierFromName(PRODUCTS[i].name);
+    const v = Number(prices[i] || 0);
+    if(t && v > (maxByTier[t]||0)) maxByTier[t]=v;
+  }
+  return prices.map((v,i)=>{
+    const t = getTierFromName(PRODUCTS[i]?.name);
+    return t ? (maxByTier[t] || Number(v||0)) : Number(v||0);
+  });
+}
+
+
 function setButtonLoading(btn, isLoading, loadingText="계산 중…"){
   if(!btn) return;
 
@@ -2049,9 +2076,11 @@ function optimizeActual(){
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
   const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
+  const pricesObj = equalizePricesWithinTierMax(prices);
 
   // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
+  // 목적함수(c) 생성에만 pricesObj(등급 내 최고가 통일) 사용
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(pricesObj);
 
   const res = simplexMax(A, b, c);
   if(res.status !== "optimal"){
