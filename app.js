@@ -1146,29 +1146,7 @@ function fmtWon(n){
 }
 
 function fmtGold(n){
-  return `${fmtWon(n)} 
-
-// --- 가격을 "등급(★/★★/★★★) 단위"로 통일(탭2 전용에서 사용) ---
-function getTierFromName(name){
-  if (!name) return 1;
-  if (name.includes("★★★")) return 3;
-  if (name.includes("★★")) return 2;
-  return 1;
-}
-function equalizePricesWithinTier_max(prices){
-  // prices: number[] aligned with PRODUCTS
-  const maxByTier = {};
-  for(let i=0;i<PRODUCTS.length;i++){
-    const t = getTierFromName(PRODUCTS[i].name);
-    const v = Number(prices[i]||0);
-    if (!maxByTier[t] || v > maxByTier[t]) maxByTier[t] = v;
-  }
-  return prices.map((v,i)=>{
-    const t = getTierFromName(PRODUCTS[i].name);
-    return maxByTier[t] ?? Number(v||0);
-  });
-}
-G`;
+  return `${fmtWon(n)} G`;
 }
 
 
@@ -1942,16 +1920,70 @@ function readActualFishSupplyNoMid(){
 // resources(행) = fish(15) + mid items 전체
 // items(열)     = recipes의 모든 산출물(중간재 + 최종품 9개 포함)
 // 제약          = 소비 - 생산 <= 보유량  (생산은 자기 자신 -1)
-function buildActualBalanceLP(pricesFinal){
-  const fishNames = FISH_ROWS.slice();
-  const midNames  = MID_ITEMS.slice();
-  const resources = fishNames.concat(midNames);
+function buildActualBalanceLP(pricesFinal, fishSupply, midInv){
+  // Tab2(채집 후 제작) 전용 LP 구성
+  // - 하위(부재료/잡템)는 무한으로 가정
+  // - 제약은 "어패류" + "중간재 재고"만 사용
+  // - 목적함수는 최종 연금품 매출 최대화
+  // - 중간재는 매출 0 (단, 필요 시 제작 가능)
 
-  const fishSupply = readActualFishSupplyNoMid(); // ✅ mid credit 없음
-  const midInv = loadMidInv();                    // ✅ 중간재 재고(그대로)
+  const recipes = getAllRecipesForMid(); // {itemName: {ingName: qty, ...}, ...}
 
-  // "중간재+최종품 레시피" 맵
-const TIP_RECIPES = getAllRecipesForMid();
+  // (A안) 1성 정수/2성 에센스는 1회 제작 시 2개 생산
+  const yieldOf = (name)=>{
+    if(!name) return 1;
+    if(name.includes("정수 ★") && !name.includes("핵")) return 2;
+    if(name.includes("에센스 ★★") && !name.includes("결정") && !name.includes("코어") && !name.includes("비약") && !name.includes("날개")) return 2;
+    return 1;
+  };
+
+  // 가격 매핑(최종 연금품만)
+  const priceByName = {};
+  for(let i=0;i<PRODUCTS.length;i++){
+    priceByName[PRODUCTS[i].name] = Number(pricesFinal[i]||0);
+  }
+
+  // 변수(아이템) 목록: 레시피에 존재하는 모든 제작 가능 아이템
+  const items = Object.keys(recipes);
+
+  // 리소스 목록: 어패류 + 중간재(재고 입력된 것 + 레시피에서 쓰이는 것)
+  const resourcesSet = new Set();
+  Object.keys(fishSupply||{}).forEach(k=>resourcesSet.add(k));
+  Object.keys(midInv||{}).forEach(k=>resourcesSet.add(k));
+  for(const it of items){
+    const r = recipes[it] || {};
+    Object.keys(r).forEach(k=>resourcesSet.add(k));
+  }
+
+  // 하위 재료는 무한 가정이므로, 제약에서 제외
+  const isFish = (n)=> typeof n==="string"
+    && (n.includes("굴")||n.includes("소라")||n.includes("문어")||n.includes("미역")||n.includes("성게"))
+    && n.includes("★");
+  const isMid = (n)=> typeof n==="string"
+    && (n.includes("정수") || n.includes("에센스") || n.includes("핵") || n.includes("결정"))
+    && n.includes("★");
+
+  const resources = Array.from(resourcesSet).filter(r=> isFish(r) || isMid(r));
+
+  const b = resources.map(r=>{
+    if(fishSupply && Object.prototype.hasOwnProperty.call(fishSupply, r)) return Number(fishSupply[r]||0);
+    if(midInv && Object.prototype.hasOwnProperty.call(midInv, r)) return Number(midInv[r]||0);
+    return 0;
+  });
+
+  const A = resources.map(r=>{
+    return items.map(it=>{
+      const ing = recipes[it] || {};
+      const use = Number(ing[r]||0);
+      const prod = (it === r) ? yieldOf(it) : 0;
+      return use - prod;
+    });
+  });
+
+  const c = items.map(it=> Number(priceByName[it]||0));
+  return {A, b, c, items, resources};
+}
+
 
 function getRecipeForTip(name){
   return TIP_RECIPES[name] || null;
@@ -2011,15 +2043,10 @@ function optimizeActual(){
   // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-  const pricesReal = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
-
-  // ✅ 탭2: 같은 등급(★/★★/★★★) 내 가격 차이를 "동급"으로 보고 최적화(몰빵 방지)
-  // - 최적화(제작량 결정)에는 등급별 최고가로 통일한 가격을 사용
-  // - 표기/매출 계산은 실제 가격(pricesReal)을 그대로 사용
-  const pricesOpt = equalizePricesWithinTier_max(pricesReal);
+  const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
 
   // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(pricesOpt);
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
   const res = simplexMax(A, b, c);
   if(res.status !== "optimal"){
@@ -2044,7 +2071,7 @@ function optimizeActual(){
   };
 
 const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
-renderActualResult(yFinal, pricesReal, fishSupply, usedFish);
+renderActualResult(yFinal, prices, fishSupply, usedFish);
 
 }
 
@@ -2071,54 +2098,8 @@ function readActualFishSupplyNoMid(){
 // resources(행) = fish(15) + mid items 전체
 // items(열)     = recipes의 모든 산출물(중간재 + 최종품 9개 포함)
 // 제약          = 소비 - 생산 <= 보유량  (생산은 자기 자신 -1)
-function buildActualBalanceLP(pricesFinal){
-  const fishNames = FISH_ROWS.slice();
-  const midNames  = MID_ITEMS.slice(); // 네 프로젝트에 이미 존재
-  const resources = fishNames.concat(midNames);
 
-  const fishSupply = readActualFishSupplyNoMid(); // ✅ mid credit 없음
-  const midInv = loadMidInv();                    // ✅ 중간재 재고(그대로)
 
-  // 네 프로젝트에 이미 있는 "중간재+최종품 레시피" 함수 사용
-  const recipes = getAllRecipesForMid(); // { itemName: {ingredientName: qty, ...}, ... }
-
-  const items = Object.keys(recipes);
-  const A = resources.map(()=> Array(items.length).fill(0));
-  const b = resources.map(()=> 0);
-
-  // b 채우기
-  for(let i=0;i<fishNames.length;i++) b[i] = Number(fishSupply[i] || 0);
-  for(let j=0;j<midNames.length;j++){
-    const nm = midNames[j];
-    b[fishNames.length + j] = Math.max(0, Math.floor(Number(midInv[nm] || 0)));
-  }
-
-  // A 채우기: (소비 +) (생산 -)
-  items.forEach((item, colIdx)=>{
-    const ing = recipes[item] || {};
-
-    // 재료 소비
-    for(const [k, qty] of Object.entries(ing)){
-      const rIdx = resources.indexOf(k);
-      if(rIdx >= 0) A[rIdx][colIdx] += Number(qty || 0);
-    }
-
-    // 자신 생산(1개 생김) => 소비-생산 형태라 -1
-    const selfIdx = resources.indexOf(item);
-    if(selfIdx >= 0) A[selfIdx][colIdx] += -1;
-  });
-
-  // 목적함수 c: 최종품만 가격, 중간재는 0
-  const c = items.map(()=> 0);
-  PRODUCTS.forEach((p, i)=>{
-    const idx = items.indexOf(p.name);
-    if(idx >= 0) c[idx] = pricesFinal[i];
-  });
-
-  return {A, b, c, items, resources, fishSupply};
-}
-
-// A*x 의 fish 부분(첫 15행) = 실제 어패류 순소비량(양수면 소모, 음수면 생산인데 fish는 생산 없으니 거의 양수)
 function calcFishUsedFromLP(A, x){
   const fishCount = FISH_ROWS.length;
   const used = Array(fishCount).fill(0);
