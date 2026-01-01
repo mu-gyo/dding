@@ -1,32 +1,5 @@
 
 
-// --- Tier helpers (★=1, ★★=2, ★★★=3) ---
-function getTierFromName(name){
-  if(!name) return 0;
-  if(name.includes("★★★")) return 3;
-  if(name.includes("★★")) return 2;
-  if(name.includes("★")) return 1;
-  return 0;
-}
-
-// Tab2 전용: 같은 등급(★/★★/★★★) 내 가격을 "최고가"로 통일해서
-// 특정 연금품 몰빵 대신, 같은 등급 내 생산량을 최대화하는 방향으로 최적화한다.
-// (표시되는 매출/단가는 실제 가격을 그대로 사용)
-function equalizePricesWithinTierMax(prices){
-  const maxByTier = {1:0,2:0,3:0};
-  // PRODUCTS는 전역 배열 (최종 연금품 목록)
-  for(let i=0;i<PRODUCTS.length;i++){
-    const t = getTierFromName(PRODUCTS[i].name);
-    const v = Number(prices[i] || 0);
-    if(t && v > (maxByTier[t]||0)) maxByTier[t]=v;
-  }
-  return prices.map((v,i)=>{
-    const t = getTierFromName(PRODUCTS[i]?.name);
-    return t ? (maxByTier[t] || Number(v||0)) : Number(v||0);
-  });
-}
-
-
 function setButtonLoading(btn, isLoading, loadingText="계산 중…"){
   if(!btn) return;
 
@@ -879,14 +852,15 @@ const MATERIAL_ICON_URL = {
   "영혼 흙": "https://static.wikia.nocookie.net/minecraft_ko_gamepedia/images/8/86/Soul_Soil_JE1.png",
   "진홍빛 자루": "https://kkukowiki.kr/images/9/91/%EC%A7%84%ED%99%8D%EB%B9%9B%EC%9E%90%EB%A3%A8.gif",
   "뒤틀린 자루": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_vytHwPLMa46iNFxvxPA9eZiLZyDj9jzvTQ&s",
-  "발광 먹물 주머니": "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20/assets/minecraft/textures/item/glow_ink_sac.png",
+  "켈프": "https://i.namu.wiki/i/HFCdZLYpdrPscu43Ck8c7exEG69K51k2Mc-4xcpK2JvkI9hJTwWiL5qrbGhnD-VwMW7MXHQ3v4tnHiUYaGkTArnWPmeaQnh7emi7w4HQ4bQ1HTLo_Ypby3Cv36huJegUZMS43cVMAWEAIUTcokwY0g.webp",
+  "말린 켈프": "https://minecraft.wiki/images/Dried_Kelp_Block_JE1_BE2.png",
+  "튀긴 후렴과": "https://minecraft.wiki/images/Popped_Chorus_Fruit_JE2_BE2.png",
+  "후렴과": "https://minecraft.wiki/images/Chorus_Fruit_JE2_BE2.png",
+  "엔드 석재 벽돌": "https://static.wikia.nocookie.net/minecraft_ko_gamepedia/images/7/72/End_Stone_Bricks_JE2_BE2.png",
+  "퍼퍼 블록": "https://minecraft.wiki/images/Purpur_Block_JE2_BE2.png",
+  "엔드 돌": "https://minecraft.wiki/images/End_Stone_JE3_BE2.png",
+"불우렁쉥이": "https://i.namu.wiki/i/CBEgUc-J1DNSqRXuNRVe-pSAfCPgTGpusBPd6LB4U9EgufWNknGIXJUL5yV4YgO_Lcx563vo3ai_KiVJluhyig.webp",
   "발광 열매": "https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20/assets/minecraft/textures/item/glow_berries.png",
-  "수레국화": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FcWOUPK%2FbtsOKBrtCkB%2FAAAAAAAAAAAAAAAAAAAAAP1jGCIE8pDD47n962FOk0xyN3d-8e5uzOwgy3bYsEhW%2Fimg.webp%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3DJYgMehI4WE7k5Mvk2hFuGfAIt8c%253D",
-  "민들레": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F1HODq%2FbtsOMJgWN5V%2FAAAAAAAAAAAAAAAAAAAAALDelE7slV2EYGq9Q75vtWWnovs-4zOHTRmiFgnlexE7%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3DYKytH2qi4j5ZHENPlCUXFi6j5ec%253D",
-  "데이지": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbhcHcT%2FbtsOLstJjag%2FAAAAAAAAAAAAAAAAAAAAAGQpf97TvqkGZcDnUwjlRuZENMidDVwwtvYTWfgHKfit%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3DYf%252Fzo2oPEJG90FDw6kisjPCkQzQ%253D",
-  "양귀비": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F2ECXF%2FbtsOLjqg4ht%2FAAAAAAAAAAAAAAAAAAAAAPdhEtXp9rAJYq6BfI0L53tCwSuBGlxbET92Ib9SMnAh%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3D4RQ6CFYR%252FpdvPwa%252FvnYSNlWx6vg%253D",
-  "선애기별꽃": "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fd2rEka%2FbtsOL91vgFw%2FAAAAAAAAAAAAAAAAAAAAAD5OASnVJcphynyYUPEL0g_H3mc7ZBtNQBixJrdI3tCc%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1767193199%26allow_ip%3D%26allow_referer%3D%26signature%3D6GJeyef5jnTayKs1pFJSSot5Pcg%253D",
-  "불우렁쉥이": "https://i.namu.wiki/i/CBEgUc-J1DNSqRXuNRVe-pSAfCPgTGpusBPd6LB4U9EgufWNknGIXJUL5yV4YgO_Lcx563vo3ai_KiVJluhyig.webp",
 
 // 어패류(등급) 아이콘
 "굴 ★": "icons/fish/oyster.png",
@@ -1236,6 +1210,30 @@ function fmtGold(n){
 }
 
 
+// --- 가격을 등급(★/★★/★★★) 단위로 "최고가"로 통일 (탭1/탭2 공용) ---
+function getTierFromName(name){
+  if (!name) return 1;
+  if (name.includes("★★★")) return 3;
+  if (name.includes("★★")) return 2;
+  return 1;
+}
+function equalizePricesWithinTierMax(prices){
+  // prices: PRODUCTS와 같은 인덱스 정렬
+  const maxByTier = {1:0,2:0,3:0};
+  for(let i=0;i<PRODUCTS.length;i++){
+    const t = getTierFromName(PRODUCTS[i].name);
+    const v = Number(prices[i]||0);
+    if (v > (maxByTier[t]||0)) maxByTier[t] = v;
+  }
+  return prices.map((v,i)=>{
+    const t = getTierFromName(PRODUCTS[i].name);
+    const mx = maxByTier[t];
+    return mx ? mx : Number(v||0);
+  });
+}
+
+
+
 
 
 function fmtSmart(n, maxD = 2){
@@ -1451,6 +1449,10 @@ function floorAndGreedyIntegerize(A, supply, prices, xFrac){
   const n = prices.length;
   const m = supply.length;
   const x = xFrac.map(v => Math.max(0, Math.floor(v + 1e-9)));
+
+  // keep original for normalization (leftover-minimization tie-breaker)
+  const supply0 = supply.slice();
+
   // remaining resources
   const rem = supply.slice();
   for(let i=0;i<m;i++){
@@ -1469,28 +1471,49 @@ function floorAndGreedyIntegerize(A, supply, prices, xFrac){
     for(let i=0;i<m;i++) rem[i] -= A[i][j];
   }
 
-  // Greedy: add best price-per-weighted-scarcity item that fits
+  // Greedy: maximize (revenue density) with a tiny bonus to also reduce leftovers.
+  // This helps choose between near-equivalent crafts so more fish types get consumed
+  // without sacrificing revenue in any meaningful way.
   const MAX_ADD = 20000;
   let steps = 0;
+
+  const maxP = prices.reduce((a,b)=>Math.max(a, b||0), 0);
+  const EPS = maxP * 0.01; // 1% of max price (small tie-breaker scale)
+  const BONUS_CAP = maxP * 0.05; // hard cap to avoid distortion
+
   while(steps++ < MAX_ADD){
     let best = -1;
     let bestScore = -1;
 
     for(let j=0;j<n;j++){
       if(!fits(j)) continue;
+
       // scarcity-weighted cost: sum (a_ij / max(rem_i,1))
       let cost = 0;
+      // abundance bonus: prefer consuming resources that are currently left a lot
+      let use = 0;
+
       for(let i=0;i<m;i++){
         const a = A[i][j];
         if(a<=0) continue;
         cost += a / Math.max(1, rem[i]);
+
+        const denom = Math.max(1, supply0[i]);
+        use += a * (rem[i] / denom);
       }
-      const score = prices[j] / Math.max(1e-9, cost);
+
+      // tiny bonus: among similar revenue choices, favor the one that consumes leftover more
+      let bonus = EPS * use;
+      if(bonus > BONUS_CAP) bonus = BONUS_CAP;
+
+      const score = (prices[j] + bonus) / Math.max(1e-9, cost);
+
       if(score > bestScore){
         bestScore = score;
         best = j;
       }
     }
+
     if(best === -1) break;
     x[best] += 1;
     consume(best);
@@ -1544,9 +1567,9 @@ function optimize(){
   }
 
   // prices with premium
-  const prices = PRODUCTS.map(p => p.base * d.premiumMul);
-
-  // enumerate all compositions of blocksTotal into 5 parts
+  let prices = PRODUCTS.map(p => p.base * d.premiumMul);
+  prices = equalizePricesWithinTierMax(prices);
+// enumerate all compositions of blocksTotal into 5 parts
   let best = {rev:-1, blocks:[0,0,0,0,0], y:Array(PRODUCTS.length).fill(0), supply:null};
 
   const m = FISH_ROWS.length;
@@ -2075,12 +2098,11 @@ function optimizeActual(){
   // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-  const prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
-  const pricesObj = equalizePricesWithinTierMax(prices);
+  let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
+  prices = equalizePricesWithinTierMax(prices);
 
   // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  // 목적함수(c) 생성에만 pricesObj(등급 내 최고가 통일) 사용
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(pricesObj);
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
   const res = simplexMax(A, b, c);
   if(res.status !== "optimal"){
