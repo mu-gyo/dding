@@ -2098,11 +2098,15 @@ function optimizeActual(){
   // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-  let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
-  prices = equalizePricesWithinTierMax(prices);
+
+  // 1️⃣ 실제 가격 (UI 표시 / 실제 매출 계산용)
+  const pricesReal = PRODUCTS.map(p => Math.round(p.base * premiumMul));
+
+  // 2️⃣ 계산용 가격 (같은 등급 내 최고가 기준)
+  const pricesOpt = equalizePricesWithinTierMax(pricesReal.slice());
 
   // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(pricesOpt);
 
   const res = simplexMax(A, b, c);
   if(res.status !== "optimal"){
@@ -2121,14 +2125,15 @@ function optimizeActual(){
   LAST_ACTUAL = {
     x: intRes.x,          // 전체 변수(중간재 제작량 포함)
     y: yFinal,            // 최종품만
-    prices,
+    prices: pricesReal,   // ✅ UI/매출용은 실제 가격
     fishSupply,
     A
   };
 
-const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
-renderActualResult(yFinal, prices, fishSupply, usedFish);
+  const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
 
+  // ✅ UI 표시 + 매출 계산은 실제 가격 기준
+  renderActualResult(yFinal, pricesReal, fishSupply, usedFish);
 }
 
  
@@ -2398,65 +2403,61 @@ FISH_ROWS.forEach((_, i)=>{
     tip.style.top  = p.ny + "px";
   }
 
-  function buildTipHtml(name, meta) {
-    const r = getRecipe(name);
-    if (!r) return null;
+function buildTipHtml(name, meta) {
+  const r = getRecipe(name);
+  if (!r) return null;
 
-    const kind  = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
+  const kind  = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
   const qty   = Math.max(0, Math.floor(Number(meta?.qty ?? 0)));
-const craft = Math.max(0, Math.floor(Number(meta?.craft ?? qty ?? 0)));
-const need  = Math.max(0, Math.floor(Number(meta?.need ?? craft ?? 0)));
+  const craft = Math.max(0, Math.floor(Number(meta?.craft ?? qty ?? 0)));
+  const need  = Math.max(0, Math.floor(Number(meta?.need ?? craft ?? 0)));
+  const inv   = Math.max(0, Math.floor(Number(meta?.inv || 0)));
 
-    const inv   = Math.max(0, Math.floor(Number(meta?.inv || 0)));
+  // 레시피 수량 배수는 “추가 제작” 기준
+  const mul = (kind === "final")
+    ? Math.max(1, Math.floor(Number(qty ?? craft ?? 0)))
+    : Math.max(1, craft);
 
-    // 레시피 수량 배수는 “추가 제작” 기준(A 선택)
-const mul = (kind === "final")
-  ? Math.max(1, Math.floor(Number(qty ?? craft ?? 0))) // rec와 같은 기준
-  : Math.max(1, craft);
+  // ── 타이틀: 산출물이므로 yield(×2) 표시 유지 ──
+  const titleHtml = (kind === "final")
+    ? productLabel(name)
+    : matLabel(name);
 
+  // ── 배지 규칙 (기존 그대로) ──
+  let badges = "";
 
-const titleHtml = (kind === "final") ? productLabel(name) : matLabel(name);
-
-
-// 배지 규칙
-let badges = "";
-
-if (kind === "final") {
-  const rec = Math.max(0, Number(qty || craft || 0));
-
-  badges = rec > 0
-    ? `<span class="tipBadge">추천 제작 ${rec}</span>`
-    : `<span class="tipBadge">레시피</span>`;
-} else {
-  badges = craft > 0
-    ? `<span class="tipBadge">추가 제작 ${craft}</span>`
-    : `<span class="tipBadge">레시피</span>`;
-}
-
-
-
-
-   const lines = Object.entries(r)
-  .map(([mat, per]) => {
-    const total = Math.max(0, Math.floor(Number(per || 0) * mul));
-    return `
-      <div class="tipRow">
-        <div class="tipLeft">${matLabel(mat)}</div>
-        <div class="tipQty">×${total}</div>
-      </div>
-    `;
-  })
-  .join("");
-
-
-    return `
-      <div class="tipTop">
-        <div class="tipTitle">${titleHtml}</div>
-        <div class="tipBadges">${badges}</div>
-      </div>
-      <div class="tipList">${lines}</div>
-    `;
+  if (kind === "final") {
+    const rec = Math.max(0, Number(qty || craft || 0));
+    badges = rec > 0
+      ? `<span class="tipBadge">추천 제작 ${rec}</span>`
+      : `<span class="tipBadge">레시피</span>`;
+  } else {
+    badges = craft > 0
+      ? `<span class="tipBadge">추가 제작 ${craft}</span>`
+      : `<span class="tipBadge">레시피</span>`;
   }
+
+  // ── 재료 목록: 소비 재료 → yield(×2) 숨김 + span 구조 유지 ──
+  const lines = Object.entries(r)
+    .map(([mat, per]) => {
+      const total = Math.max(0, Math.floor(Number(per || 0) * mul));
+      return `
+        <div class="tipRow">
+          <div class="tipLeft"><span>${matLabel(mat, false)}</span></div>
+          <div class="tipQty">×${total}</div>
+        </div>
+      `;
+    })
+    .join("");
+
+  return `
+    <div class="tipTop">
+      <div class="tipTitle">${titleHtml}</div>
+      <div class="tipBadges">${badges}</div>
+    </div>
+    <div class="tipList">${lines}</div>
+  `;
+}
 
   function showTip(clientX, clientY, name, meta) {
     const html = buildTipHtml(name, meta);
