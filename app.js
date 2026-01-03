@@ -17,6 +17,357 @@ function setButtonLoading(btn, isLoading, loadingText="계산 중…"){
   }
 }
 
+// ================================
+// Trade (무역) - 선택 입력
+// - 멤버십(슬롯수)만 선택해도 UI는 자동 조절
+// - 슬롯 정보(요구 수량/퍼센트)가 "하나라도" 입력된 경우에만 무역 적용
+// - 품목은 입력하지 않고, 계산 결과(제작량)에서 자동 추천
+// ================================
+const TRADE_KEY = "DDTYCOON_TRADE_CFG_V1";
+
+function tradeSlotsOpenByMember(member){
+  switch(String(member||"basic")){
+    case "pro": return 3;
+    case "elite": return 4;
+    case "prestige": return 5;
+    default: return 2; // basic
+  }
+}
+
+function loadTradeCfg(){
+  try{
+    const raw = localStorage.getItem(TRADE_KEY);
+    if(!raw) return {member:"basic", slots:[]};
+    const o = JSON.parse(raw);
+    return {
+      member: o.member || "basic",
+      slots: Array.isArray(o.slots) ? o.slots : []
+    };
+  }catch(e){
+    return {member:"basic", slots:[]};
+  }
+}
+
+function saveTradeCfg(cfg){
+  try{ localStorage.setItem(TRADE_KEY, JSON.stringify(cfg||{})); }catch(e){}
+}
+
+function getTradeEls(){
+  return {
+    box: document.getElementById("tradeBox"),
+    member: document.getElementById("tradeMember"),
+    reco: document.getElementById("tradeReco"),
+    btnClear: document.getElementById("btnTradeClear"),
+    req: (i)=>document.getElementById(`tradeReq${i}`),
+    pct: (i)=>document.getElementById(`tradePct${i}`),
+    row: (i)=>document.querySelector(`tr.tradeRow[data-slot="${i}"]`),
+    outBonus: document.getElementById("outTradeBonus"),
+    outTotal: document.getElementById("outRevenueTrade"),
+    bonusA: document.getElementById("tradeBonusA"),
+    totalA: document.getElementById("revSumTradeA"),
+  };
+}
+
+function applyTradeCfgToUI(cfg){
+  const el = getTradeEls();
+  if(!el.member) return;
+  el.member.value = cfg.member || "basic";
+  for(let i=1;i<=5;i++){
+    const s = (cfg.slots||[]).find(x=>Number(x.slot)===i) || {};
+    if(el.req(i)) el.req(i).value = (s.req ?? "");
+    if(el.pct(i)) el.pct(i).value = (s.pct ?? "");
+  }
+  syncTradeRowsVisibility();
+}
+
+function readTradeCfgFromUI(){
+  const el = getTradeEls();
+  const member = el.member?.value || "basic";
+  const slotsOpen = tradeSlotsOpenByMember(member);
+  const slots = [];
+  for(let i=1;i<=5;i++){
+    const req = el.req(i) ? Number(el.req(i).value||0) : 0;
+    const pct = el.pct(i) ? Number(el.pct(i).value||0) : 0;
+    // 저장은 모두 저장(빈칸도), 적용은 활성 슬롯만
+    if(req || pct){
+      slots.push({slot:i, req: req ? Math.max(1, Math.min(30, Math.floor(req))) : "", pct: pct ? Math.max(101, Math.min(120, Math.floor(pct))) : ""});
+    }else{
+      slots.push({slot:i, req:"", pct:""});
+    }
+  }
+  const cfg = {member, slotsOpen, slots};
+  saveTradeCfg(cfg);
+  return cfg;
+}
+
+function syncTradeRowsVisibility(){
+  const el = getTradeEls();
+  if(!el.member) return;
+  const slotsOpen = tradeSlotsOpenByMember(el.member.value);
+  for(let i=1;i<=5;i++){
+    const r = el.row(i);
+    if(!r) continue;
+    if(i<=slotsOpen) r.classList.remove("hidden");
+    else r.classList.add("hidden");
+  }
+}
+
+function getActiveTradeSlots(){
+  const cfg = readTradeCfgFromUI();
+  const slotsOpen = cfg.slotsOpen || tradeSlotsOpenByMember(cfg.member);
+  const active = [];
+  for(let i=1;i<=slotsOpen;i++){
+    const s = (cfg.slots||[]).find(x=>Number(x.slot)===i) || {};
+    const req = Number(s.req||0);
+    const pct = Number(s.pct||0);
+    if(req>=1 && req<=30 && pct>=101 && pct<=120){
+      active.push({slot:i, req, pct});
+    }
+  }
+  return {member: cfg.member, slotsOpen, slots: active, anyActive: active.length>0};
+}
+
+function computeTradePlan(qtyArr, priceArr, activeSlots){
+  // qtyArr: 제작량(정수), priceArr: 최종가(정수), activeSlots: [{slot,req,pct}]
+  const remaining = qtyArr.map(v=>Math.max(0, Math.floor(Number(v||0))));
+  const plan = [];
+  let bonusSum = 0;
+
+  // 슬롯은 pct 높은 순으로 처리
+  const slots = [...activeSlots].sort((a,b)=> (b.pct-a.pct) || (b.req-a.req) || (a.slot-b.slot));
+
+const pickForSlot = (req)=>{
+  // 우선순위: ★★★ > ★★ > ★
+  // 같은 등급 내에서는:
+  // 1) 요구 수량 충족
+  // 2) 잔여 수량이 가장 적은 것 우선 (C안)
+  // 3) (동률 시) 가격 높은 것 우선
+  for(let tier=3;tier>=1;tier--){
+    let bestIdx = -1;
+    let bestQty = Infinity;
+    let bestPrice = -1;
+
+    for(let i=0;i<PRODUCTS.length;i++){
+      if(getTierFromName(PRODUCTS[i].name)!==tier) continue;
+
+      const q = remaining[i];
+      if(q < req) continue; // 요구 수량 미충족은 탈락
+
+      const price = Math.round(Number(priceArr[i] || 0));
+
+      if(
+        q < bestQty ||
+        (q === bestQty && price > bestPrice)
+      ){
+        bestQty = q;
+        bestPrice = price;
+        bestIdx = i;
+      }
+    }
+
+    if(bestIdx >= 0) return bestIdx;
+  }
+  return -1;
+};
+
+
+  for(const s of slots){
+    const idx = pickForSlot(s.req);
+    if(idx<0){
+      plan.push({
+        slot:s.slot, ok:false, req:s.req, pct:s.pct,
+        name:null, tier:null, used:0, bonus:0,
+        reason:`요구 ${s.req}개를 충족하는 품목이 없습니다. (현재 제작량 기준)`
+      });
+      continue;
+    }
+    const name = PRODUCTS[idx].name;
+    const tier = getTierFromName(name);
+    const used = s.req;
+    remaining[idx] -= used;
+
+    const unit = Math.round(Number(priceArr[idx]||0));
+    const bonus = Math.round(used * unit * (s.pct/100 - 1));
+    bonusSum += bonus;
+
+    const reason = `슬롯 ${s.slot}: ${s.pct}% / 요구 ${s.req}개. ` +
+      `가능 품목 중 등급 우선(★★★>★★>★) 적용, "${name}"(보유 ${remaining[idx]+used}개) 선택.`;
+
+    plan.push({slot:s.slot, ok:true, req:s.req, pct:s.pct, name, tier, used, bonus, reason});
+  }
+
+  return {bonusSum, plan};
+}
+
+function renderTradeReco(output, state, baseRevenue, qtyArr, priceArr){
+  const el = getTradeEls();
+  if(!el.reco) return;
+
+  if(!output){
+    el.reco.textContent = "무역 슬롯 정보를 입력하면 여기서 추천을 표시합니다.";
+    return;
+  }
+
+  if(!state.anyActive){
+    el.reco.textContent = "무역 미적용(슬롯 정보 미입력).";
+    return;
+  }
+
+  const {bonusSum, plan} = output;
+
+  // UI 표시용: 슬롯 번호 순서
+  const sortedPlan = [...plan].sort((a,b)=> a.slot - b.slot);
+
+  const lines = [];
+  for(const p of sortedPlan){
+    if(p.ok){
+      lines.push(
+        `<div class="tradeRecoItem">
+          <div class="tradeRecoLeft">
+            <!-- ★★★ 제거 -->
+            <span>${productLabel(p.name)}</span>
+            <span class="muted">${p.used}개 · ${p.pct}%</span>
+            <span class="tradeTip" title="${escapeHtml(p.reason || '')}">ⓘ</span>
+          </div>
+          <div class="mono pos">+${fmtGold(p.bonus)}</div>
+        </div>`
+      );
+    }else{
+      lines.push(
+        `<div class="tradeRecoItem">
+          <div class="tradeRecoLeft">
+            <span class="muted">📦 ${p.slot}</span>
+            <span class="muted">부족 (요구 ${p.req}개)</span>
+            <span class="tradeTip" title="${escapeHtml(p.reason || '')}">ⓘ</span>
+          </div>
+          <div class="mono muted">+0 G</div>
+        </div>`
+      );
+    }
+  }
+
+  el.reco.innerHTML =
+    `<div class="muted" style="margin-bottom:6px">
+      멤버십: ${memberLabel(state.member)} · 슬롯 ${state.slotsOpen}개
+    </div>` +
+    lines.join("") +
+    `<div style="margin-top:8px" class="muted">
+      무역 보너스 합계: <b class="pos">${fmtGold(bonusSum)}</b>
+    </div>`;
+
+  // 요약 표기 갱신은 별도 함수에서
+}
+
+function memberLabel(member){
+  switch(String(member||"basic")){
+    case "pro": return "🔷";
+    case "elite": return "🌟";
+    case "prestige": return "💜";
+    default: return "🍎";
+  }
+}
+
+// 간단 HTML 이스케이프(tooltip/innerHTML 안전)
+function escapeHtml(s){
+  return String(s??"")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#39;");
+}
+
+function updateTradeForContext(context){
+  // context: {kind:"expected"|"actual", baseRevenue, qtyArr, priceArr}
+  const el = getTradeEls();
+  const state = getActiveTradeSlots();
+
+  if(!context || !context.qtyArr || !context.priceArr){
+    renderTradeReco(null, state, 0, [], []);
+    // totals to base
+    if(el.outBonus) el.outBonus.textContent = fmtGold(0);
+    if(el.outTotal) el.outTotal.textContent = fmtGold(0);
+    if(el.bonusA) el.bonusA.textContent = fmtGold(0);
+    if(el.totalA) el.totalA.textContent = fmtGold(0);
+    return;
+  }
+
+  if(!state.anyActive){
+    // 무역 미적용
+    renderTradeReco({bonusSum:0, plan:[]}, {...state, anyActive:false}, context.baseRevenue, context.qtyArr, context.priceArr);
+
+    const total = context.baseRevenue;
+    if(context.kind==="expected"){
+      if(el.outBonus) el.outBonus.textContent = fmtGold(0);
+      if(el.outTotal) el.outTotal.textContent = fmtGold(total);
+    }else{
+      if(el.bonusA) el.bonusA.textContent = fmtGold(0);
+      if(el.totalA) el.totalA.textContent = fmtGold(total);
+    }
+    return;
+  }
+
+// ✅ 무역 계산용 수량 = 제작 수량 + 완성품 재고
+const qtyForTrade = context.qtyArr.map((v, i) => {
+  return Math.max(
+    0,
+    Math.floor(v || 0) + getMidInvQty(PRODUCTS[i].name)
+  );
+});
+
+
+const output = computeTradePlan(
+  qtyForTrade,
+  context.priceArr,
+  state.slots
+);
+
+const total = context.baseRevenue + output.bonusSum;
+
+renderTradeReco(output, state, context.baseRevenue, context.qtyArr, context.priceArr);
+
+if(context.kind==="expected"){
+  if(el.outBonus) el.outBonus.textContent = fmtGold(output.bonusSum);
+  if(el.outTotal) el.outTotal.textContent = fmtGold(total);
+}else{
+  if(el.bonusA) el.bonusA.textContent = fmtGold(output.bonusSum);
+  if(el.totalA) el.totalA.textContent = fmtGold(total);
+}
+}
+
+
+function getActiveTabKey(){
+  if(tabActual && tabActual.classList.contains("active")) return "actual";
+  if(tabRecipe && tabRecipe.classList.contains("active")) return "recipe";
+  return "expected";
+}
+
+function updateTradeForActiveTab(){
+  const key = getActiveTabKey();
+
+  // ✅ 레시피 탭에서는 무역 카드 자체를 숨김 (tradeBox 위치와 무관하게 동작)
+  const tb = document.getElementById("tradeBox");
+  if(tb){
+    tb.style.display = (key === "recipe") ? "none" : "";
+  }
+
+if(key === "actual"){
+  if(window.__lastActualTradeCtx) updateTradeForContext(window.__lastActualTradeCtx);
+
+ 
+
+}else if(key === "expected"){
+  if(window.__lastExpectedTradeCtx) updateTradeForContext(window.__lastExpectedTradeCtx);
+}else{
+  // recipe: 추천 숨기기 대신 메시지
+  const el = getTradeEls();
+  if(el.reco) el.reco.textContent = "레시피 탭에서는 무역 추천이 표시되지 않습니다.";
+}
+
+}
+
+
+
 
 // ================================
 // 64개 단위 세트 표기
@@ -463,14 +814,14 @@ function renderMidInvGrid(){
 
   const inv = loadMidInv();
 
-  const html = (MID_SECTIONS || []).map(sec => {
+  const buildMidSectionHtml = (sec)=>{
     const rows = (sec.items || []).map(name => {
       const v = Math.max(0, Math.floor(Number(inv[name] ?? 0)));
       return `
         <div class="midInvRow">
           <div class="midLabel">${matLabel(name,false)}</div>
-          <input type="number" min="0" step="1" inputmode="numeric"
-                 value="${v}" data-mid="${name}" aria-label="${name} 재고"/>
+          <input type="number" min="0" step="1"
+                 value="${v}" data-mid="${name}"/>
         </div>
       `;
     }).join("");
@@ -481,13 +832,45 @@ function renderMidInvGrid(){
         <div class="midSecGrid">${rows}</div>
       </div>
     `;
+  };
+
+  const midHtml = (MID_SECTIONS || []).map(buildMidSectionHtml).join("");
+
+  // ✅ 핵심: 완성품은 PRODUCTS에서 직접 뽑음
+  const finalItems = PRODUCTS.map(p => p.name);
+
+  const finalRows = finalItems.map(name => {
+    const v = Math.max(0, Math.floor(Number(inv[name] ?? 0)));
+    const label =
+      (typeof productLabel === "function")
+        ? productLabel(name,false)
+        : matLabel(name,false);
+
+    return `
+      <div class="midInvRow">
+        <div class="midLabel">${label}</div>
+        <input type="number" min="0" step="1"
+               value="${v}" data-mid="${name}"/>
+      </div>
+    `;
   }).join("");
+
+  const html =
+    midHtml +
+    `
+    <div class="midSec">
+      <div class="midSecTitle">완성품</div>
+      <div class="midSecGrid">
+        ${finalRows}
+      </div>
+    </div>
+    `;
 
   hosts.forEach(h => h.innerHTML = html);
 
   // 이벤트 바인딩
   hosts.forEach(host=>{
-    host.querySelectorAll('input[data-mid]').forEach((inp)=>{
+    host.querySelectorAll('input[data-mid]').forEach(inp=>{
       const name = inp.getAttribute("data-mid");
 
       const commit = ()=>{
@@ -496,31 +879,26 @@ function renderMidInvGrid(){
 
         setMidInvQty(name, v);
 
-        // 다른 패널 동기화
-        document.querySelectorAll(`input[data-mid="${CSS.escape(name)}"]`).forEach(x=>{
+        // 다른 패널과 동기화
+        document.querySelectorAll(
+          `input[data-mid="${CSS.escape(name)}"]`
+        ).forEach(x=>{
           if(x !== inp) x.value = String(v);
         });
 
         try{ recalcFromCurrent(); }catch(e){}
         try{ updateTotalsActual(); }catch(e){}
         updateMidInvHint();
-        updateMidInvBadge(); // ✅ 추가
+        updateMidInvBadge();
       };
 
       inp.addEventListener("change", commit);
       inp.addEventListener("blur", commit);
-      inp.addEventListener("keydown", (e)=>{
-        if(e.key === "Enter"){
-          e.preventDefault();
-          commit();
-          inp.blur();
-        }
-      });
     });
   });
 
   updateMidInvHint();
-  updateMidInvBadge(); // ✅ 추가
+  updateMidInvBadge();
 }
 
 function bindMidInvResetButtons(){
@@ -1649,6 +2027,14 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
   document.getElementById("revSum").textContent = fmtGold(revenueSum);
   document.getElementById("outRevenue").textContent = fmtGold(revenueSum);
 
+  // --- Trade context (expected) ---
+  try{
+    const qtyArr = PRODUCTS.map((_, idx)=> Math.max(0, Number(document.getElementById(`qty_${idx}`).value)||0));
+    const priceArr = PRODUCTS.map(p=> Math.round(p.base * d.premiumMul));
+    window.__lastExpectedTradeCtx = {kind:"expected", baseRevenue: revenueSum, qtyArr, priceArr};
+    updateTradeForActiveTab();
+  }catch(e){}
+
   
   // ✅ 표기용 필요량: 중간재 재고는 이미 완성된 것으로 보고(=필요량에서 차감)
   try{
@@ -1812,42 +2198,91 @@ function renderActualResult(y, prices, supply, usedFish){
   // craft table
   const tb = document.querySelector("#craftTblA tbody");
   tb.innerHTML = "";
+
+  // ✅ 표시용(실제가): base * premiumMul (등급 통일 전)
+  const premiumLevel = Number(document.getElementById("premiumLevel")?.value || 0);
+  const premiumMul = premiumMulFromLevel(premiumLevel);
+  const viewPrices = PRODUCTS.map(p => Math.round(Number(p.base || 0) * premiumMul));
+
   let sum = 0;
+
   PRODUCTS.forEach((p, i)=>{
     const qty = Math.max(0, Math.floor(y[i]||0));
-    const rev = qty * prices[i];
-    sum += rev;
+const invQty = getMidInvQty(p.name);
+const sellQty = qty + invQty;
+
+    const unitView = viewPrices[i];          // ✅ 표기용 단가
+const rev = sellQty * unitView;
+sum += rev;
+
+
     const tr = document.createElement("tr");
     const ck = getCraftCheck(i);
-   tr.innerHTML =
+
+    tr.innerHTML =
 `<td><span class="tipName"
       data-tipname="${p.name}"
       data-tipkind="final"
       data-tipqty="${qty}"
     >${productLabel(p.name)}</span></td>
- <td class="right">${fmtGold(prices[i])}</td>
- <td class="right">${qty}</td>
- <td class="right">${fmtGold(rev)}</td>` +
-  `<td class="center checkCell">
-     <label class="checkbox">
-       <input class="chk" type="checkbox" ${ck?"checked":""} data-idx="${i}">
-     </label>
-   </td>`;
+<td class="right">${fmtGold(unitView)}</td>
+<td class="right">${sellQty}</td>
+
+<td class="right">${fmtGold(rev)}</td>` +
+`<td class="center checkCell">
+   <label class="checkbox">
+     <input class="chk" type="checkbox" ${ck?"checked":""} data-idx="${i}">
+   </label>
+ </td>`;
 
     tb.appendChild(tr);
   });
-  document.getElementById("revSumA").textContent = fmtGold(sum);
-  const badge = document.getElementById("revBadgeA");
-  if(badge) badge.textContent = fmtGold(sum);
 
-const {needFish, needMat} = calcNetNeedsForActualWithMidInv(y);
-renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
-renderNeedMatTableTo("#needMatTblA tbody", needMat);
+  document.getElementById("revSumA").textContent = fmtGold(sum);
+  // === FORCE_SYNC_EXPECTED_FROM_TRADE ===
+  try{
+    const top = document.getElementById("revBadgeA");
+    const tradeTotal = document.getElementById("revSumTradeA");
+    const baseTotal  = document.getElementById("revSumA");
+    if(top){
+      if(tradeTotal && tradeTotal.textContent && tradeTotal.textContent.trim() !== "0 G"){
+        top.textContent = tradeTotal.textContent;
+      }else if(baseTotal){
+        top.textContent = baseTotal.textContent;
+      }
+    }
+  }catch(e){}
+
+
+  // --- Trade context (actual) ---
+  try{
+    const qtyArr = PRODUCTS.map((_, idx)=> Math.max(0, Math.floor(Number(y[idx]||0))));
+
+    // ✅ 무역 보너스도 "표시용(실제가)" 기준으로 계산되게 넘김
+    const priceArr = viewPrices.map(v => Math.round(Number(v||0)));
+
+    window.__lastActualTradeCtx = {kind:"actual", baseRevenue: sum, qtyArr, priceArr};
+    updateTradeForActiveTab();
+  }catch(e){}
+
+const badge = document.getElementById("revBadgeA");
+const tradeTotal = document.getElementById("revSumTradeA");
+
+if(badge){
+  if(tradeTotal && tradeTotal.textContent){
+    badge.textContent = tradeTotal.textContent; // 무역 포함
+  }else{
+    badge.textContent = fmtGold(sum); // 무역 미적용 fallback
+  }
+}
+
+
+  const {needFish, needMat} = calcNetNeedsForActualWithMidInv(y);
+  renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
+  renderNeedMatTableTo("#needMatTblA tbody", needMat);
 
   const craftPlan = calcNetCraftPlanFromActual(y);
   renderNeedCraftTableTo("#needCraftTblA tbody", craftPlan);
-
-
 }
 
 
@@ -1993,21 +2428,33 @@ function renderNeedCraftTableTo(sel, rows){
 
   (rows || []).forEach(r=>{
     const tr = document.createElement("tr");
-    const craftCls = r.craft > 0 ? "neg" : "muted";
-    const totalNeed = Math.max(0, Math.floor(Number(r.craft || 0)) + Math.floor(Number(r.inv || 0)));
+
+    // r.need  : 총 필요(개수)
+    // r.inv   : 재고(개수)
+    // r.craft : 추가 제작(개수 기준으로 들어옴)  ← 기존 구조 유지
+    const needQty  = Math.max(0, Math.floor(Number(r.need  || 0)));
+    const invQty   = Math.max(0, Math.floor(Number(r.inv   || 0)));
+    const craftQty = Math.max(0, Math.floor(Number(r.craft || 0))); // 부족분 개수
+
+    // ✅ 표시/툴팁용 "제작 횟수"로 변환 (x2/xN 반영)
+    const craftCount = (typeof qtyToCrafts === "function")
+      ? qtyToCrafts(r.name, craftQty)
+      : craftQty;
+
+    const craftCls = craftCount > 0 ? "neg" : "muted";
+
+    // ✅ 총 필요 컬럼은 "개수" 기준으로 유지
+    // (기존엔 craft+inv로 계산했는데, craft를 '횟수'로 바꾸면 깨지므로 need를 그대로 씀)
+    const totalNeed = needQty || Math.max(0, craftQty + invQty);
+
     tr.innerHTML =
-      `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${r.craft}">${matLabel(r.name)}</span></td>` +
-      `<td class="right ${craftCls}">${r.craft}</td>` +
-      `<td class="right">${r.inv}</td>` +
+      `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${craftCount}">${matLabel(r.name)}</span></td>` +
+      `<td class="right ${craftCls}">${craftCount}</td>` +
+      `<td class="right">${invQty}</td>` +
       `<td class="right">${totalNeed}</td>`;
+
     tb.appendChild(tr);
   });
-
-  if(!rows || rows.length === 0){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td class="muted" colspan="4">필요한 하위 제작템이 없습니다.</td>`;
-    tb.appendChild(tr);
-  }
 }
 
 // ===============================
@@ -2098,15 +2545,11 @@ function optimizeActual(){
   // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-
-  // 1️⃣ 실제 가격 (UI 표시 / 실제 매출 계산용)
-  const pricesReal = PRODUCTS.map(p => Math.round(p.base * premiumMul));
-
-  // 2️⃣ 계산용 가격 (같은 등급 내 최고가 기준)
-  const pricesOpt = equalizePricesWithinTierMax(pricesReal.slice());
+  let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
+  prices = equalizePricesWithinTierMax(prices);
 
   // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(pricesOpt);
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
   const res = simplexMax(A, b, c);
   if(res.status !== "optimal"){
@@ -2125,15 +2568,14 @@ function optimizeActual(){
   LAST_ACTUAL = {
     x: intRes.x,          // 전체 변수(중간재 제작량 포함)
     y: yFinal,            // 최종품만
-    prices: pricesReal,   // ✅ UI/매출용은 실제 가격
+    prices,
     fishSupply,
     A
   };
 
-  const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
+const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
+renderActualResult(yFinal, prices, fishSupply, usedFish);
 
-  // ✅ UI 표시 + 매출 계산은 실제 가격 기준
-  renderActualResult(yFinal, pricesReal, fishSupply, usedFish);
 }
 
  
@@ -2306,12 +2748,52 @@ function showPanel(which){
     const inp = document.getElementById("recipeSearch");
     if(inp) inp.focus({preventScroll:true});
   }
+  try{ updateTradeForActiveTab(); }catch(e){}
 }
 tabExpected?.addEventListener("click", ()=>showPanel("expected"));
 tabActual?.addEventListener("click", ()=>showPanel("actual"));
 tabRecipe?.addEventListener("click", ()=>showPanel("recipe"));
 
 
+
+// --- Trade UI init ---
+(function initTradeUI(){
+  const el = getTradeEls();
+  if(!el.member) return;
+
+  // restore saved
+  applyTradeCfgToUI(loadTradeCfg());
+
+  // events
+  el.member.addEventListener("change", ()=>{
+    syncTradeRowsVisibility();
+    readTradeCfgFromUI();
+    updateTradeForActiveTab();
+  });
+
+  for(let i=1;i<=5;i++){
+    el.req(i)?.addEventListener("input", ()=>{
+      readTradeCfgFromUI();
+      updateTradeForActiveTab();
+    });
+    el.pct(i)?.addEventListener("input", ()=>{
+      readTradeCfgFromUI();
+      updateTradeForActiveTab();
+    });
+  }
+
+  el.btnClear?.addEventListener("click", ()=>{
+    for(let i=1;i<=5;i++){
+      if(el.req(i)) el.req(i).value = "";
+      if(el.pct(i)) el.pct(i).value = "";
+    }
+    readTradeCfgFromUI();
+    updateTradeForActiveTab();
+  });
+
+  // initial message
+  updateTradeForActiveTab();
+})();
 document.getElementById("btnZero").addEventListener("click", ()=>{
   FISH_ROWS.forEach((_, i)=> document.getElementById(`inv_${i}`).value = 0);
   buildInvActual();
@@ -2423,7 +2905,7 @@ function buildTipHtml(name, meta) {
     ? productLabel(name)
     : matLabel(name);
 
-  // ── 배지 규칙 (기존 그대로) ──
+  // ── 배지 규칙 ──
   let badges = "";
 
   if (kind === "final") {
@@ -2437,7 +2919,7 @@ function buildTipHtml(name, meta) {
       : `<span class="tipBadge">레시피</span>`;
   }
 
-  // ── 재료 목록: 소비 재료 → yield(×2) 숨김 + span 구조 유지 ──
+  // ── 재료 목록: 소비 재료 → yield(×2) 숨김 ──
   const lines = Object.entries(r)
     .map(([mat, per]) => {
       const total = Math.max(0, Math.floor(Number(per || 0) * mul));
@@ -2458,6 +2940,8 @@ function buildTipHtml(name, meta) {
     <div class="tipList">${lines}</div>
   `;
 }
+
+
 
   function showTip(clientX, clientY, name, meta) {
     const html = buildTipHtml(name, meta);
@@ -3426,3 +3910,139 @@ function escapeHtml(s){
   });
 })();
 
+
+
+
+/* ===== Inventory UI render (mid/final, ★→★★→★★★) ===== */
+(function(){
+  if(typeof PRODUCTS === "undefined") return;
+
+  const invMid = document.getElementById("invMidList");
+  const invFin = document.getElementById("invFinalList");
+  if(!invMid || !invFin) return;
+
+  window.inventory = window.inventory || {};
+  function saveInventory(){
+    try{ localStorage.setItem("inventory_all", JSON.stringify(inventory)); }catch(e){}
+  }
+  function loadInventory(){
+    try{
+      const v = JSON.parse(localStorage.getItem("inventory_all")||"{}");
+      if(v && typeof v==="object") inventory = v;
+    }catch(e){}
+  }
+  loadInventory();
+
+  function isFinalProduct(name){
+    return (typeof FINAL_PRODUCTS!=="undefined") && FINAL_PRODUCTS.includes(name);
+  }
+
+  function renderInventory(){
+    invMid.innerHTML = "";
+    invFin.innerHTML = "";
+
+    const list = PRODUCTS.slice().sort((a,b)=>{
+      if(a.star !== b.star) return a.star - b.star; // ★ → ★★ → ★★★
+      return 0;
+    });
+
+    list.forEach(p=>{
+      const row = document.createElement("div");
+      row.className = "invRow";
+      row.innerHTML = `<span>${p.name}</span>
+        <input type="number" min="0" value="${inventory[p.name]||0}">`;
+      const input = row.querySelector("input");
+      input.addEventListener("input", e=>{
+        inventory[p.name] = Math.max(0, Number(e.target.value||0));
+        saveInventory();
+      });
+      if(isFinalProduct(p.name)) invFin.appendChild(row);
+      else invMid.appendChild(row);
+    });
+  }
+
+  renderInventory();
+})();
+
+
+// ================================
+// Deterministic placement: move trade card into TAB2 once
+// ================================
+document.addEventListener("DOMContentLoaded", function(){
+  const tradeBox = document.getElementById("tradeBox");
+  const tab2 = document.getElementById("tab2");
+  const needMatCard = document.getElementById("needMatCard");
+  if(!tradeBox || !tab2 || !needMatCard) return;
+
+  // Move tradeBox right above needMatCard inside tab2
+  const parent = needMatCard.parentNode;
+  if(parent && tradeBox.parentNode !== parent){
+    parent.insertBefore(tradeBox, needMatCard);
+  }
+});
+
+
+
+/* ===== TOOLTIP REBIND PATCH (recipe tooltip fix) ===== */
+function rebindRecipeTooltips(){
+  document.querySelectorAll('[data-tip]').forEach(el=>{
+    el.onmouseenter = null;
+    el.onmouseleave = null;
+    el.addEventListener('mouseenter', () => {
+      if (typeof showTip === 'function') showTip(el);
+    });
+    el.addEventListener('mouseleave', () => {
+      if (typeof hideTip === 'function') hideTip();
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(rebindRecipeTooltips, 0);
+});
+
+
+// === Tab2 Premium note (display only) ===
+(function(){
+  function renderPremiumNote(){
+    const src = document.getElementById("premiumLevel"); // Tab1 input
+    const note = document.getElementById("premiumNoteA");
+    if(!src || !note) return;
+    const lvl = Number(src.value || 0);
+    note.innerHTML =
+      `• 프리미엄 한정가 <b>${lvl}강</b> 적용됨<br>` +
+      `• 프리미엄 단계 변경은 <b>탭1</b>에서 입력하세요.`;
+  }
+  document.addEventListener("input", (e)=>{
+    if(e.target && e.target.id === "premiumLevel") renderPremiumNote();
+  });
+  renderPremiumNote();
+})();
+
+
+
+function renderTradeSummaryActual(){
+  const box = document.getElementById("tradeSummaryActual");
+  if(!box) return;
+
+  const state = getActiveTradeSlots();
+
+  if(!state.anyActive){
+    box.style.display = "block";
+    box.textContent = "무역 미적용 (탭1에서 슬롯 설정 없음)";
+    return;
+  }
+
+  const lines = state.slots.map(s =>
+    `슬롯 ${s.slot}: 요구 ${s.req}개 · ${s.pct}%`
+  );
+
+  box.style.display = "block";
+  box.innerHTML =
+    `<b>무역 적용 중</b><br>` +
+    `멤버십: ${memberLabel(state.member)} · 슬롯 ${state.slotsOpen}개<br>` +
+    lines.join("<br>");
+}
+
+
+try{ renderTradeSummaryActual(); }catch(e){};

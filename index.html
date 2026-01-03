@@ -89,7 +89,10 @@
     .tabs{display:flex;gap:10px;margin:14px 0 18px;justify-content:center;}
 .actualGrid{align-items:start;}
 .actualGrid .card{max-width:980px;margin:0 auto;}
-.actualGrid .card[style*='grid-column:1 / -1']{max-width:1100px;}
+.actualGrid .card[style*='grid-column:1 / -1']{
+  max-width:1180px;
+}
+
 .row{justify-content:center;}
 
     .tab{border:1px solid var(--line);background:var(--btn);padding:10px 12px;border-radius:999px;cursor:pointer;box-shadow:var(--shadow);font-weight:700;color:var(--muted);}
@@ -98,7 +101,10 @@
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
   
     .actualGrid{grid-template-columns:1fr;justify-items:center;gap:18px;}
-    .actualGrid .card{width:min(1100px, 100%);}
+.actualGrid .card{
+  width:100%;
+  max-width:1180px; /* wrap이랑 동일 */
+}
     .badgeRow{display:flex;justify-content:center;margin:10px 0 6px;}
     .badge{display:flex;gap:10px;align-items:baseline;padding:10px 14px;border:1px solid var(--line);background:var(--panel2);border-radius:14px;box-shadow:var(--shadow);}
     .badge b{font-size:18px;}
@@ -301,6 +307,30 @@
   cursor: pointer;
 }
 
+/* TAB3 카드 폭을 탭1/탭2와 통일 */
+#panelRecipe .card{
+  width: 100%;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* ===== Trade ===== */
+#tradeTbl input{ width:100%; }
+.tradeRow.hidden{ display:none; }
+.tradeRecoItem{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 0; border-top:1px solid rgba(0,0,0,.06); }
+.tradeRecoItem:first-child{ border-top:none; }
+.tradeRecoLeft{ display:flex; align-items:center; gap:8px; }
+.tradeRecoTier{ font-weight:700; }
+.tradeTip{ cursor:help; opacity:.8; }
+
+
+/* === FIX: hide trade box on recipe tab only === */
+#panelRecipe:not([style*="display: none"]) ~ #tradeBox,
+#panelRecipe:not([style*="display: none"]) #tradeBox {
+  display: none !important;
+}
 
 </style>
 <link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
@@ -1253,7 +1283,7 @@ box-shadow:
 /* TAB3(레시피) 카드/리스트는 전체 폭 사용 */
 #panelRecipe .card{
   grid-column: 1 / -1;
-  max-width: 980px;   /* 팝업처럼 넓게 느껴지는 값 */
+  max-width: 1180px;   /* 팝업처럼 넓게 느껴지는 값 */
   width: 100%;
   margin: 0 auto;
 }
@@ -1853,6 +1883,33 @@ body{ overscroll-behavior-y: contain; }
 }
 </style>
 
+
+<style>
+/* === Inventory UI (scoped) === */
+#invCard .subtle{font-size:12px;opacity:.7;margin-top:-6px}
+#invCard .invSection{margin-top:12px}
+#invCard .invSection h3{font-size:14px;margin:6px 0;font-weight:600;opacity:.85}
+#invCard .invList{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px 10px}
+#invCard .invRow{display:flex;justify-content:space-between;align-items:center}
+#invCard .invRow input{width:64px;text-align:right}
+
+
+/* 툴팁 hover 영역 보장 */
+.tradeTip{
+  display: inline-block;
+  padding: 2px 4px;
+  cursor: help;
+  pointer-events: auto;
+}
+
+/* 무역 카드 아래 여백 (다음 카드와 간격) */
+#tradeBox{
+  margin-bottom: 20px;
+}
+
+
+</style>
+
 </head>
 <body>
 <div class="wrap">
@@ -1866,6 +1923,49 @@ body{ overscroll-behavior-y: contain; }
 <button class="tab" id="tabActual">⚙️ 채집 후 (제작 효율)</button>
 <button class="tab" id="tabRecipe">📘 연금 레시피</button>
 </div>
+
+<div class="card" id="tradeBox" style="margin-top:12px">
+  <h2 style="margin:0 0 8px">🚢 무역 (선택)</h2>
+  <div class="row">
+    <label>멤버십</label>
+    <select id="tradeMember">
+      <option value="basic">🍎 기본</option>
+      <option value="pro">🔷 프로</option>
+      <option value="elite">🌟 엘리트</option>
+      <option value="prestige">💜 프레스티지</option>
+    </select>
+  </div>
+
+  <div class="note" style="margin-top:8px">
+    • 슬롯 정보(요구 수량/퍼센트)를 <b>하나라도 입력</b>
+<span id="revBadgeTradeNote" class="muted" style="margin-left:6px;font-size:12px">(무역 포함)</span>하면 무역 보너스를 계산합니다. (미입력 시 무역 미적용)<br/>
+    • 품목은 입력하지 않습니다. 계산 결과를 바탕으로 <b>자동 추천</b>합니다.
+  </div>
+
+  <div style="margin-top:10px">
+    <table id="tradeTbl" style="width:100%">
+      <thead>
+        <tr><th style="width:80px">슬롯</th><th>요구 수량 (1~30)</th><th>퍼센트 (101~120)</th></tr>
+      </thead>
+      <tbody>
+        <tr class="tradeRow" data-slot="1"><td class="muted">📦 1</td><td><input id="tradeReq1" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct1" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="2"><td class="muted">📦 2</td><td><input id="tradeReq2" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct2" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="3"><td class="muted">📦 3</td><td><input id="tradeReq3" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct3" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="4"><td class="muted">📦 4</td><td><input id="tradeReq4" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct4" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="5"><td class="muted">📦 5</td><td><input id="tradeReq5" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct5" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+      </tbody>
+    </table>
+    <div class="btnbar" style="margin-top:8px">
+      <button id="btnTradeClear">🗑️ 무역 입력 초기화</button>
+    </div>
+  </div>
+
+  <div style="margin-top:10px">
+    <h2 style="margin:0 0 6px">추천</h2>
+    <div id="tradeReco" class="note" style="margin:0">무역 슬롯 정보를 입력하면 여기서 추천을 표시합니다.</div>
+  </div>
+</div>
+
 <div id="panelExpected">
 <div class="grid">
 <div class="card">
@@ -1935,6 +2035,8 @@ body{ overscroll-behavior-y: contain; }
 <div class="row"><label>2성 확률</label><div class="mono" id="outP2">-</div></div>
 <div class="row"><label>3성 확률</label><div class="mono" id="outP3">-</div></div>
 <div class="row"><label>총 매출</label><div class="mono" id="outRevenue">-</div></div>
+<div class="row"><label>무역 보너스</label><div class="mono" id="outTradeBonus">0 G</div></div>
+<div class="row"><label>총 매출(무역 포함)</label><div class="mono" id="outRevenueTrade">-</div></div>
 </div>
 </div>
 <h2 style="margin-top:14px">스태미나 분배 (결과)</h2>
@@ -1961,10 +2063,10 @@ body{ overscroll-behavior-y: contain; }
 <tbody></tbody>
 </table>
 <!-- ✅ 중간 연금품 재고(탭 공통, 접힘) -->
-<div class="card midCard" id="midInvCard">
+<div class="card midCard" id="midInvCard" >
 <details id="midInvDetails">
 <summary>
-<span class="midTitle">중간 연금품 재고 (선택)</span>
+<span class="midTitle">연금품 재고 (선택)</span>
 <div class="midRight">
 <span class="midBadge" id="midInvBadge">미입력</span>
 <button class="btnTiny" id="midInvReset" type="button">초기화</button>
@@ -2004,32 +2106,21 @@ body{ overscroll-behavior-y: contain; }
 </div> <!-- /#panelExpected -->
 <div id="panelActual" style="display:none">
 <div class="grid actualGrid">
-<div class="card">
-<h2>채집 후 “실제 제작” 최적화</h2>
-<div class="note noteNoLine">
-  • 오늘 채집량 + 기존 재고로 최대 매출 제작 추천<br/>
-  • “중간 연금품 재고”는 한 번 입력하면 브라우저에 저장되어 다음에도 자동으로 불러옵니다.<br/>
+<div class="card" style="grid-column:1 / -1">
+<h2 style="margin-top:0px">🥽 어패류 재고 (채집 후)</h2>
+<div class="note" style="margin-bottom:8px">
+  • 기존 재고 + 오늘 채집 기준
 </div>
-<div class="divider"></div>
-<!-- 🔹 정보 줄: 총 매출 -->
-<div class="revLine">
-<span class="muted">🪙 예상 총 매출</span>
-<b id="revBadgeA">0 G</b>
-</div>
-<!-- 🔹 액션 줄: 버튼만 -->
-<div class="row actionRow">
-<button class="btn primary" id="btnSolveActual">📊 계산</button>
-</div>
-<h2 style="margin-top:27px">어패류 재고 (채집 후)</h2>
+
 <table id="invActualTbl">
 <thead><tr><th>어패류(등급)</th><th>기존 재고</th><th>오늘 채집(실측)</th><th>총 재고</th></tr></thead>
 <tbody></tbody>
 </table>
 <!-- ✅ 중간 연금품 재고(탭 공통, 접힘) -->
-<div class="card midCard" id="midInvCardA">
+<div class="card midCard" id="midInvCardA" style="grid-column:1 / -1">
 <details id="midInvDetailsA">
 <summary>
-<span class="midTitle">중간 연금품 재고 (선택)</span>
+<span class="midTitle">연금품 재고 (선택)</span>
 <div class="midRight">
 <span class="midBadge" id="midInvBadgeA">미입력</span>
 <button class="btnTiny" id="midInvResetA" type="button">초기화</button>
@@ -2041,6 +2132,27 @@ body{ overscroll-behavior-y: contain; }
     </div>
 </details>
 </div>
+</div>
+<div class="card" style="grid-column:1 / -1">
+<h2>📐 채집 후 “실제 제작” 최적화</h2>
+<div class="note noteNoLine">
+  • 오늘 채집량 + 기존 재고로 최대 매출 제작 추천<br/>
+  • “중간 연금품 재고”는 한 번 입력하면 브라우저에 저장되어 다음에도 자동으로 불러옵니다.<br/>
+</div>
+<div class="divider"></div>
+<!-- 🔹 정보 줄: 총 매출 -->
+<div class="revLine">
+<span class="muted">🪙 예상 총 매출</span>
+<b id="revBadgeA">
+  <span id="revSumTradeA">0 G</span>
+</b>
+</div>
+<!-- 🔹 액션 줄: 버튼만 -->
+<div class="note" id="premiumNoteA"></div>
+<div class="row actionRow">
+<button class="btn primary" id="btnSolveActual">📊 계산</button>
+</div>
+
 <h2 style="margin-top:14px">추천 제작량</h2>
 <table id="craftTblA">
 <thead>
@@ -2053,10 +2165,21 @@ body{ overscroll-behavior-y: contain; }
 <td class="pos sum-value" id="revSumA">0 G</td>
 <td></td>
 </tr>
+<tr class="sum-row">
+<td class="muted" colspan="3">무역 보너스</td>
+<td class="pos sum-value" id="tradeBonusA">0 G</td>
+<td></td>
+</tr>
+<tr class="sum-row">
+<td class="muted" colspan="3">합계(무역 포함)</td>
+<td class="pos sum-value" id="revSumTradeA">0 G</td>
+<td></td>
+</tr>
 </tfoot>
 </table>
 </div>
-<div class="card" style="grid-column:1 / -1">
+
+<div class="card" id="needMatCard" style="grid-column:1 / -1">
 <h2>필요 재료 (채집 후 기준)</h2>
 <div class="split">
 <div>
@@ -2140,6 +2263,10 @@ body{ overscroll-behavior-y: contain; }
     });
   })();
 </script>
-<div class="recipeTip" hidden="" id="recipeTip"></div>
-</div></body>
+
+
+  <!-- Tooltip container (필수) -->
+  <div id="recipeTip" class="recipeTip" hidden></div>
+
+</body>
 </html>
