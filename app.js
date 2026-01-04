@@ -1306,7 +1306,7 @@ const MATERIAL_ICON_URL = {
   "진홍빛 자루": "https://kkukowiki.kr/images/9/91/%EC%A7%84%ED%99%8D%EB%B9%9B%EC%9E%90%EB%A3%A8.gif",
   "뒤틀린 자루": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_vytHwPLMa46iNFxvxPA9eZiLZyDj9jzvTQ&s",
   "켈프": "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/09/Kelp_%28item%29_JE1_BE2.png",
-  "말린 켈프": "https://minecraft.wiki/images/Dried_Kelp_Block_JE1_BE2.png",
+  "말린 켈프": "https://static.wikia.nocookie.net/minecraft_gamepedia/images/1/1a/Dried_Kelp_JE1_BE2.png",
   "튀긴 후렴과": "https://minecraft.wiki/images/Popped_Chorus_Fruit_JE2_BE2.png",
   "후렴과": "https://minecraft.wiki/images/Chorus_Fruit_JE2_BE2.png",
   "엔드 석재 벽돌": "https://static.wikia.nocookie.net/minecraft_ko_gamepedia/images/7/72/End_Stone_Bricks_JE2_BE2.png",
