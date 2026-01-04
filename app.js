@@ -1305,7 +1305,7 @@ const MATERIAL_ICON_URL = {
   "영혼 흙": "https://static.wikia.nocookie.net/minecraft_ko_gamepedia/images/8/86/Soul_Soil_JE1.png",
   "진홍빛 자루": "https://kkukowiki.kr/images/9/91/%EC%A7%84%ED%99%8D%EB%B9%9B%EC%9E%90%EB%A3%A8.gif",
   "뒤틀린 자루": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_vytHwPLMa46iNFxvxPA9eZiLZyDj9jzvTQ&s",
-  "켈프": "https://i.namu.wiki/i/HFCdZLYpdrPscu43Ck8c7exEG69K51k2Mc-4xcpK2JvkI9hJTwWiL5qrbGhnD-VwMW7MXHQ3v4tnHiUYaGkTArnWPmeaQnh7emi7w4HQ4bQ1HTLo_Ypby3Cv36huJegUZMS43cVMAWEAIUTcokwY0g.webp",
+  "켈프": "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/09/Kelp_%28item%29_JE1_BE2.png",
   "말린 켈프": "https://minecraft.wiki/images/Dried_Kelp_Block_JE1_BE2.png",
   "튀긴 후렴과": "https://minecraft.wiki/images/Popped_Chorus_Fruit_JE2_BE2.png",
   "후렴과": "https://minecraft.wiki/images/Chorus_Fruit_JE2_BE2.png",
