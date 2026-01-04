@@ -128,75 +128,150 @@ function getActiveTradeSlots(){
 }
 
 function computeTradePlan(qtyArr, priceArr, activeSlots){
-  // qtyArr: 제작량(정수), priceArr: 최종가(정수), activeSlots: [{slot,req,pct}]
-  const remaining = qtyArr.map(v=>Math.max(0, Math.floor(Number(v||0))));
-  const plan = [];
-  let bonusSum = 0;
+  // qtyArr: 제작량(+재고 반영된 수량), priceArr: 최종가(정수), activeSlots: [{slot,req,pct}]
+  const N = PRODUCTS.length;
 
-  // 슬롯은 pct 높은 순으로 처리
-  const slots = [...activeSlots].sort((a,b)=> (b.pct-a.pct) || (b.req-a.req) || (a.slot-b.slot));
+  // 초기 잔여 수량
+  const remaining0 = qtyArr.map(v => Math.max(0, Math.floor(Number(v || 0))));
 
-const pickForSlot = (req)=>{
-  // 우선순위: ★★★ > ★★ > ★
-  // 같은 등급 내에서는:
-  // 1) 요구 수량 충족
-  // 2) 잔여 수량이 가장 적은 것 우선 (C안)
-  // 3) (동률 시) 가격 높은 것 우선
-  for(let tier=3;tier>=1;tier--){
-    let bestIdx = -1;
-    let bestQty = Infinity;
-    let bestPrice = -1;
+  // 슬롯 정렬: req 큰 순 → pct 큰 순 → slot 번호
+  const slots = [...activeSlots].sort(
+    (a,b)=> (b.req-a.req) || (b.pct-a.pct) || (a.slot-b.slot)
+  );
 
-    for(let i=0;i<PRODUCTS.length;i++){
-      if(getTierFromName(PRODUCTS[i].name)!==tier) continue;
+  const unitPrice = priceArr.map(v => Math.round(Number(v || 0)));
 
-      const q = remaining[i];
-      if(q < req) continue; // 요구 수량 미충족은 탈락
-
-      const price = Math.round(Number(priceArr[i] || 0));
-
-      if(
-        q < bestQty ||
-        (q === bestQty && price > bestPrice)
-      ){
-        bestQty = q;
-        bestPrice = price;
-        bestIdx = i;
-      }
-    }
-
-    if(bestIdx >= 0) return bestIdx;
-  }
-  return -1;
-};
-
-
-  for(const s of slots){
-    const idx = pickForSlot(s.req);
-    if(idx<0){
-      plan.push({
-        slot:s.slot, ok:false, req:s.req, pct:s.pct,
-        name:null, tier:null, used:0, bonus:0,
-        reason:`요구 ${s.req}개를 충족하는 품목이 없습니다. (현재 제작량 기준)`
+  // 슬롯별 후보(아이템 idx + bonus 미리 계산)
+  const candidates = slots.map(s=>{
+    const list = [];
+    for(let i=0;i<N;i++){
+      const unit = unitPrice[i];
+      const bonus = Math.round(s.req * unit * (s.pct/100 - 1));
+      list.push({
+        i,
+        name: PRODUCTS[i].name,
+        tier: getTierFromName(PRODUCTS[i].name),
+        bonus
       });
-      continue;
     }
-    const name = PRODUCTS[idx].name;
-    const tier = getTierFromName(name);
-    const used = s.req;
-    remaining[idx] -= used;
+    // 슬롯 내부는 보너스 큰 순 우선
+    list.sort((a,b)=>
+      (b.bonus-a.bonus) ||
+      (b.tier-a.tier) ||
+      (a.i-b.i)
+    );
+    return list;
+  });
 
-    const unit = Math.round(Number(priceArr[idx]||0));
-    const bonus = Math.round(used * unit * (s.pct/100 - 1));
-    bonusSum += bonus;
+  // 메모이제이션
+  const memo = new Map();
 
-    const reason = `슬롯 ${s.slot}: ${s.pct}% / 요구 ${s.req}개. ` +
-      `가능 품목 중 등급 우선(★★★>★★>★) 적용, "${name}"(보유 ${remaining[idx]+used}개) 선택.`;
-
-    plan.push({slot:s.slot, ok:true, req:s.req, pct:s.pct, name, tier, used, bonus, reason});
+  // 남은 슬롯에서 얻을 수 있는 이론상 최대 bonus 상한 (가지치기용)
+  const maxBonusPerSlot = candidates.map(c => c[0]?.bonus || 0);
+  const suffixUpper = Array(maxBonusPerSlot.length+1).fill(0);
+  for(let k=maxBonusPerSlot.length-1;k>=0;k--){
+    suffixUpper[k] = suffixUpper[k+1] + maxBonusPerSlot[k];
   }
 
-  return {bonusSum, plan};
+  // remaining 벡터를 key로 만들 때 캡(불필요한 상태 폭증 방지)
+  const maxReqSum = slots.reduce((s,x)=> s + x.req, 0);
+  const keyOf = (k, rem)=>{
+    const capped = rem.map(v => Math.min(v, maxReqSum));
+    return k + "|" + capped.join(",");
+  };
+
+  function dp(k, remaining){
+    const key = keyOf(k, remaining);
+    if(memo.has(key)) return memo.get(key);
+
+    // 끝까지 왔으면 보너스 0
+    if(k >= slots.length){
+      const res = { bonus: 0, plan: [] };
+      memo.set(key, res);
+      return res;
+    }
+
+    // 가지치기: 이론상 최대치로도 현재 최선 못 넘으면 컷
+    let best = { bonus: -Infinity, plan: [] };
+    const upper = suffixUpper[k];
+    // (메모 단계에서는 글로벌 best를 안 쓰므로, 여기선 단순 DP)
+
+    const s = slots[k];
+
+    let anyOk = false;
+
+    for(const c of candidates[k]){
+      const idx = c.i;
+      if(remaining[idx] < s.req) continue;
+      anyOk = true;
+
+      // 수량 소비
+      remaining[idx] -= s.req;
+
+      const next = dp(k+1, remaining);
+
+      const totalBonus = c.bonus + next.bonus;
+      if(totalBonus > best.bonus){
+        best = {
+          bonus: totalBonus,
+          plan: [
+            {
+              slot: s.slot,
+              ok: true,
+              req: s.req,
+              pct: s.pct,
+              name: c.name,
+              tier: c.tier,
+              used: s.req,
+              bonus: c.bonus,
+              reason:
+                `슬롯 ${s.slot}: ${s.pct}% / 요구 ${s.req}개. ` +
+                `총 무역 보너스 최대 기준으로 "${c.name}" 선택.`
+            },
+            ...next.plan
+          ]
+        };
+      }
+
+      // 되돌리기
+      remaining[idx] += s.req;
+    }
+
+    // 이 슬롯을 채울 수 있는 품목이 하나도 없을 때
+    if(!anyOk){
+      const next = dp(k+1, remaining);
+      best = {
+        bonus: next.bonus,
+        plan: [
+          {
+            slot: s.slot,
+            ok: false,
+            req: s.req,
+            pct: s.pct,
+            name: null,
+            tier: null,
+            used: 0,
+            bonus: 0,
+            reason: `요구 ${s.req}개를 충족하는 품목이 없습니다. (현재 수량 기준)`
+          },
+          ...next.plan
+        ]
+      };
+    }
+
+    memo.set(key, best);
+    return best;
+  }
+
+  const result = dp(0, remaining0.slice());
+
+  // UI 표시용: 슬롯 번호 순 정렬
+  result.plan.sort((a,b)=> a.slot - b.slot);
+
+  return {
+    bonusSum: Math.max(0, result.bonus),
+    plan: result.plan
+  };
 }
 
 function renderTradeReco(output, state, baseRevenue, qtyArr, priceArr){
@@ -2005,8 +2080,12 @@ function recalcFromCurrent(){
 const finalPrice = Math.round(p.base * d.premiumMul);
 document.getElementById(`final_${idx}`).textContent = fmtGold(finalPrice);
 
-const qty = Math.max(0, Number(document.getElementById(`qty_${idx}`).value) || 0);
-const rev = finalPrice * qty;   // finalPrice가 정수니까 rev도 정수
+const craftQty = Math.max(0, Number(document.getElementById(`qty_${idx}`).value) || 0);
+const invQty   = getMidInvQty(p.name);
+const qty      = craftQty + invQty;
+
+const rev = finalPrice * qty;
+
 revenueSum += rev;
 document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
 
@@ -3177,7 +3256,7 @@ function initRecipeUI(){
         // tooltip 호버/핀 동작을 그대로 사용하기 위해 data-tipname 부여
         return `
           <div class="recipeIng" data-tipname="${escapeHtml(mat)}" data-tipkind="mid">
-            ${typeof matLabel === "function" ? matLabel(mat) : escapeHtml(mat)}
+            ${escapeHtml(mat)}
             <span class="qty">×${qn}</span>
           </div>
         `;
@@ -4046,3 +4125,122 @@ function renderTradeSummaryActual(){
 
 
 try{ renderTradeSummaryActual(); }catch(e){};
+
+
+
+// =====================================
+// Time Alarm Toast (beige + sound)
+// =====================================
+(function initTimeAlarmToast(){
+
+  // 하루 1회 표시용
+  const SHOWN_KEY = "DDTY_TIME_ALARM_SHOWN_V1";
+
+  function getShown(){
+    try { return JSON.parse(localStorage.getItem(SHOWN_KEY) || "{}"); }
+    catch(e){ return {}; }
+  }
+  function markShown(key){
+    const s = getShown();
+    s[key] = true;
+    localStorage.setItem(SHOWN_KEY, JSON.stringify(s));
+  }
+
+  // ---------- Toast Root ----------
+  function ensureToastRoot(){
+    let root = document.getElementById("toastRoot");
+    if(root) return root;
+
+    root = document.createElement("div");
+    root.id = "toastRoot";
+    root.style.cssText =
+      "position:fixed;right:16px;bottom:64px;z-index:9999;" +
+      "display:flex;flex-direction:column;gap:9px;pointer-events:none;";
+    document.body.appendChild(root);
+    return root;
+  }
+
+  // ---------- Animation (once) ----------
+  if(!document.getElementById("toastNudgeStyle")){
+    const style = document.createElement("style");
+    style.id = "toastNudgeStyle";
+    style.textContent = `
+      @keyframes toastNudge {
+        0%   { transform: translateY(12px); }
+        40%  { transform: translateY(-4px); }
+        70%  { transform: translateY(2px); }
+        100% { transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ---------- Sound ----------
+  function playToastSound(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = 880;
+      g.gain.value = 0.09;
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+      o.stop(ctx.currentTime + 0.45);
+    }catch(e){}
+  }
+
+  // ---------- Toast ----------
+  function showToast(msg){
+    const root = ensureToastRoot();
+    const t = document.createElement("div");
+    t.textContent = `🔔 ${msg}`;
+    t.style.cssText =
+      "background:#fff6ea;color:#5a4632;" +
+      "border:1px solid #e6d3b8;" +
+      "padding:14px 18px;border-radius:13px;" +
+      "font-size:15px;font-weight:600;" +
+      "max-width:300px;" +
+      "box-shadow:0 9px 24px rgba(0,0,0,.20);" +
+      "opacity:0;animation:toastNudge .45s ease-out forwards;";
+
+    root.appendChild(t);
+    requestAnimationFrame(()=>{ t.style.opacity = "1"; });
+    playToastSound();
+
+    setTimeout(()=>{
+      t.style.opacity = "0";
+      setTimeout(()=>t.remove(),300);
+    }, 8000);
+  }
+
+  // ---------- Time Check ----------
+  function checkAlarms(){
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const d = now.toISOString().slice(0,10);
+    const shown = getShown();
+
+    // 21:55 낚시 대회
+    if(h === 21 && m === 55){
+      const k = d + "_2155";
+      if(!shown[k]){
+        showToast("낚시 대회 5분 전입니다");
+        markShown(k);
+      }
+    }
+
+    // 23:55 무역 / 접속 보상
+    if(h === 23 && m === 55){
+      const k = d + "_2355";
+      if(!shown[k]){
+        showToast("무역 / 접속 보상 초기화 5분 전입니다");
+        markShown(k);
+      }
+    }
+  }
+
+  setInterval(checkAlarms, 30 * 1000);
+})();
