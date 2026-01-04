@@ -3389,7 +3389,6 @@ function escapeHtml(s){
       items: [
         { id: "vote",  label: "👍추천", link: "https://minelist.kr/servers/16527-ddingtycoon.kr/votes/new" },
         { id: "login", label: "🎁접속 보상" },
-        { id: "trade", label: "🚢무역" },
       ],
     },
     {
@@ -3400,6 +3399,7 @@ function escapeHtml(s){
         { id: "stam",  label: "⚡스태미나" },
         { id: "req",   label: "📝의뢰" },
     { id: "ocean", label: "🌊오션오더" },
+        { id: "trade", label: "🚢무역" },
       ],
     },
   ];
@@ -4232,11 +4232,11 @@ try{ renderTradeSummaryActual(); }catch(e){};
       }
     }
 
-    // 23:55 무역 / 접속 보상
+    // 23:55 접속 보상
     if(h === 23 && m === 55){
       const k = d + "_2355";
       if(!shown[k]){
-        showToast("무역 / 접속 보상 초기화 5분 전입니다");
+        showToast("접속 보상 초기화 5분 전입니다");
         markShown(k);
       }
     }
