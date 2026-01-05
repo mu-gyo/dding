@@ -4088,8 +4088,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!src || !note) return;
     const lvl = Number(src.value || 0);
     note.innerHTML =
-      `• 프리미엄 한정가 <b>${lvl}강</b> 적용됨<br>` +
-      `• 프리미엄 단계 변경은 <b>탭1</b>에서 입력하세요.`;
+      `• 프리미엄 한정가 <b>${lvl}강</b><br>` +
+      `• 프리미엄 단계 변경은 <b>탭1</b>에서 입력하세요. 입력 후 <b>계산 버튼 재클릭</b> 필수.`;
   }
   document.addEventListener("input", (e)=>{
     if(e.target && e.target.id === "premiumLevel") renderPremiumNote();
