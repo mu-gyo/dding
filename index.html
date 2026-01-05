@@ -332,6 +332,38 @@
   display: none !important;
 }
 
+
+/* Quantity styling (units dimmed) */
+
+
+
+
+/* Quantity styling (units dimmed) - override */
+
+
+
+/* Unit style unified (A) */
+
+
+
+/* === Unit typography (final) === */
+.qty-num {
+  font-size: 14px;
+  color: #2b2b2b;
+  font-weight: 600;
+}
+.qty-unit {
+  font-size: 13px;
+  color: #8a8275;
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+/* Table normalization to prevent phantom space */
+table { table-layout: fixed; }
+thead tr { height: auto; }
+th, td { vertical-align: middle; }
+
 </style>
 <link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet"/>
@@ -524,7 +556,7 @@ button .spinner{
 .tabs button{
   min-width:180px;
 }
-input[type="number"], input[type="text"], select{
+input[type="number" data-setea="ea"], input[type="text"], select{
   width:100%;
   padding:10px 12px;
   border-radius:14px;
@@ -701,25 +733,25 @@ table tfoot tr.sum-row .sum-value{
 
 
 /* ✅ number input이 있는 '연금품 제작량 표'만 타겟 */
-#panelExpected table:has(input[type="number"]),
-#panelActual  table:has(input[type="number"]) {
+#panelExpected table:has(input[type="number" data-setea="ea"]),
+#panelActual  table:has(input[type="number" data-setea="ea"]) {
   table-layout: fixed;              /* 열 폭 안정 */
   border-collapse: separate;
   border-spacing: 0;
 }
 
 /* 행 높이/패딩을 단정하게 */
-#panelExpected table:has(input[type="number"]) th,
-#panelExpected table:has(input[type="number"]) td,
-#panelActual  table:has(input[type="number"]) th,
-#panelActual  table:has(input[type="number"]) td {
+#panelExpected table:has(input[type="number" data-setea="ea"]) th,
+#panelExpected table:has(input[type="number" data-setea="ea"]) td,
+#panelActual  table:has(input[type="number" data-setea="ea"]) th,
+#panelActual  table:has(input[type="number" data-setea="ea"]) td {
   padding: 12px 14px;
   vertical-align: middle;
 }
 
 /* 헤더는 약간 더 '바' 느낌 */
-#panelExpected table:has(input[type="number"]) thead th,
-#panelActual  table:has(input[type="number"]) thead th {
+#panelExpected table:has(input[type="number" data-setea="ea"]) thead th,
+#panelActual  table:has(input[type="number" data-setea="ea"]) thead th {
   font-weight: 700;
   color: rgba(0,0,0,0.55);
   background: #f2ece3;
@@ -727,45 +759,45 @@ table tfoot tr.sum-row .sum-value{
 }
 
 /* 바디 행 구분선 깔끔하게 */
-#panelExpected table:has(input[type="number"]) tbody td,
-#panelActual  table:has(input[type="number"]) tbody td {
+#panelExpected table:has(input[type="number" data-setea="ea"]) tbody td,
+#panelActual  table:has(input[type="number" data-setea="ea"]) tbody td {
   border-bottom: 1px solid rgba(0,0,0,0.10);
 }
 
 /* 행 hover는 은은하게 (너무 티나면 촌스러움) */
-#panelExpected table:has(input[type="number"]) tbody tr:hover td,
-#panelActual  table:has(input[type="number"]) tbody tr:hover td {
+#panelExpected table:has(input[type="number" data-setea="ea"]) tbody tr:hover td,
+#panelActual  table:has(input[type="number" data-setea="ea"]) tbody tr:hover td {
   background: rgba(0,0,0,0.02);
 }
 
 /* 첫 컬럼(연금품)은 왼쪽, 나머지 숫자들은 오른쪽 */
-#panelExpected table:has(input[type="number"]) td:first-child,
-#panelActual  table:has(input[type="number"]) td:first-child{
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:first-child,
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:first-child{
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-#panelExpected table:has(input[type="number"]) td:nth-child(2),
-#panelExpected table:has(input[type="number"]) td:nth-child(3),
-#panelExpected table:has(input[type="number"]) td:nth-child(5),
-#panelActual  table:has(input[type="number"]) td:nth-child(2),
-#panelActual  table:has(input[type="number"]) td:nth-child(3),
-#panelActual  table:has(input[type="number"]) td:nth-child(5){
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(2),
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(3),
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(5),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(2),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(3),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(5){
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 /* 제작량 컬럼(td에 number input이 있는 곳)은 중앙/오른쪽 중 선택 가능 */
-#panelExpected table:has(input[type="number"]) td:has(input[type="number"]),
-#panelActual  table:has(input[type="number"]) td:has(input[type="number"]){
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:has(input[type="number" data-setea="ea"]),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:has(input[type="number" data-setea="ea"]){
   text-align: center;               /* ✔ 지금 UI엔 가운데가 더 균형 좋음 */
   width: 140px;                     /* 제작량 열 폭 */
 }
 
-#panelExpected table:has(input[type="number"]) input[type="number"],
-#panelActual  table:has(input[type="number"]) input[type="number"]{
+#panelExpected table:has(input[type="number" data-setea="ea"]) input[type="number" data-setea="ea"],
+#panelActual  table:has(input[type="number" data-setea="ea"]) input[type="number" data-setea="ea"]{
   width: 86px !important;          /* 96보다 살짝 여유 주면 고급짐 */
   height: 34px;
   padding: 0 12px;
@@ -780,27 +812,27 @@ table tfoot tr.sum-row .sum-value{
 }
 
 /* 포커스 전(기본) 상태에서만 살짝 강조 */
-#panelExpected table:has(input[type="number"]) input[type="number"]:not(:focus):not(:focus-visible),
-#panelActual  table:has(input[type="number"]) input[type="number"]:not(:focus):not(:focus-visible){
+#panelExpected table:has(input[type="number" data-setea="ea"]) input[type="number" data-setea="ea"]:not(:focus):not(:focus-visible),
+#panelActual  table:has(input[type="number" data-setea="ea"]) input[type="number" data-setea="ea"]:not(:focus):not(:focus-visible){
   background: rgba(255,255,255,0.95);
 }
-#panelExpected table:has(input[type="number"]) tfoot td,
-#panelActual  table:has(input[type="number"]) tfoot td{
+#panelExpected table:has(input[type="number" data-setea="ea"]) tfoot td,
+#panelActual  table:has(input[type="number" data-setea="ea"]) tfoot td{
   background: #f7f1e8;
   border-top: 1px solid rgba(0,0,0,0.12);
   font-weight: 700;
 }
 /* ✅ 연금품 제작량 표: 첫 컬럼 넓게, 나머지 컬럼 폭 고정 */
-#panelExpected table:has(input[type="number"]),
-#panelActual  table:has(input[type="number"]){
+#panelExpected table:has(input[type="number" data-setea="ea"]),
+#panelActual  table:has(input[type="number" data-setea="ea"]){
   table-layout: fixed;   /* 열폭을 우리가 컨트롤 */
 }
 
 /* 1열(연금품) 넓게 */
-#panelExpected table:has(input[type="number"]) th:first-child,
-#panelExpected table:has(input[type="number"]) td:first-child,
-#panelActual  table:has(input[type="number"]) th:first-child,
-#panelActual  table:has(input[type="number"]) td:first-child{
+#panelExpected table:has(input[type="number" data-setea="ea"]) th:first-child,
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:first-child,
+#panelActual  table:has(input[type="number" data-setea="ea"]) th:first-child,
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:first-child{
   width: 44%;                 /* 40~55% 사이로 조절 */
   white-space: nowrap !important;
   overflow: visible !important;
@@ -809,33 +841,33 @@ table tfoot tr.sum-row .sum-value{
 }
 
 /* 2~3열(기본가/최종가) 폭 고정 */
-#panelExpected table:has(input[type="number"]) th:nth-child(2),
-#panelExpected table:has(input[type="number"]) td:nth-child(2),
-#panelExpected table:has(input[type="number"]) th:nth-child(3),
-#panelExpected table:has(input[type="number"]) td:nth-child(3),
-#panelActual  table:has(input[type="number"]) th:nth-child(2),
-#panelActual  table:has(input[type="number"]) td:nth-child(2),
-#panelActual  table:has(input[type="number"]) th:nth-child(3),
-#panelActual  table:has(input[type="number"]) td:nth-child(3){
+#panelExpected table:has(input[type="number" data-setea="ea"]) th:nth-child(2),
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(2),
+#panelExpected table:has(input[type="number" data-setea="ea"]) th:nth-child(3),
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(3),
+#panelActual  table:has(input[type="number" data-setea="ea"]) th:nth-child(2),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(2),
+#panelActual  table:has(input[type="number" data-setea="ea"]) th:nth-child(3),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(3){
   width: 110px;               /* 숫자 칸 폭 */
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 /* 4열(제작량) */
-#panelExpected table:has(input[type="number"]) th:nth-child(4),
-#panelExpected table:has(input[type="number"]) td:nth-child(4),
-#panelActual  table:has(input[type="number"]) th:nth-child(4),
-#panelActual  table:has(input[type="number"]) td:nth-child(4){
+#panelExpected table:has(input[type="number" data-setea="ea"]) th:nth-child(4),
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(4),
+#panelActual  table:has(input[type="number" data-setea="ea"]) th:nth-child(4),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(4){
   width: 140px;
   text-align: center;
 }
 
 /* 5열(매출) */
-#panelExpected table:has(input[type="number"]) th:nth-child(5),
-#panelExpected table:has(input[type="number"]) td:nth-child(5),
-#panelActual  table:has(input[type="number"]) th:nth-child(5),
-#panelActual  table:has(input[type="number"]) td:nth-child(5){
+#panelExpected table:has(input[type="number" data-setea="ea"]) th:nth-child(5),
+#panelExpected table:has(input[type="number" data-setea="ea"]) td:nth-child(5),
+#panelActual  table:has(input[type="number" data-setea="ea"]) th:nth-child(5),
+#panelActual  table:has(input[type="number" data-setea="ea"]) td:nth-child(5){
   width: 120px;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -843,10 +875,10 @@ table tfoot tr.sum-row .sum-value{
 
 
 /* ===== SOFT BEIGE FOCUS RING (FINAL) ===== */
-#panelExpected table input[type="number"]:focus,
-#panelActual  table input[type="number"]:focus,
-#panelExpected table input[type="number"]:focus-visible,
-#panelActual  table input[type="number"]:focus-visible{
+#panelExpected table input[type="number" data-setea="ea"]:focus,
+#panelActual  table input[type="number" data-setea="ea"]:focus,
+#panelExpected table input[type="number" data-setea="ea"]:focus-visible,
+#panelActual  table input[type="number" data-setea="ea"]:focus-visible{
   outline: none !important;
 
   /* 베이지 테두리 */
@@ -1183,7 +1215,7 @@ box-shadow:
 }
 
 /* 입력칸: 기존 테이블 숫자 input 톤과 맞추기 */
-.midInvRow input[type="number"]{
+.midInvRow input[type="number" data-setea="ea"]{
   width: 86px;
   height: 34px;
   padding: 0 12px;
@@ -1749,6 +1781,11 @@ body{ overscroll-behavior-y: contain; }
   .card, .section{ padding: 14px; }
 }
 
+
+/* Quantity styling (units dimmed) */
+
+
+
 </style>
 <!-- =========================
      Mobile layout hotfix patch
@@ -1792,7 +1829,7 @@ body{ overscroll-behavior-y: contain; }
   }
 
   /* (E) 테이블 안 입력칸 폭 뒤죽박죽 방지 */
-  table input[type="number"], table input[type="text"]{
+  table input[type="number" data-setea="ea"], table input[type="text"]{
     box-sizing: border-box;
     min-width: 72px;
     width: 100%;
@@ -1817,6 +1854,11 @@ body{ overscroll-behavior-y: contain; }
     white-space: nowrap;
   }
 }
+
+
+
+/* Quantity styling (units dimmed) */
+
 
 
 </style>
@@ -1864,6 +1906,11 @@ body{ overscroll-behavior-y: contain; }
   .btnbar{ flex-wrap: wrap; }
   .btnbar button{ flex: 1 1 0; }
 }
+
+/* Quantity styling (units dimmed) */
+
+
+
 </style>
 
 
@@ -1881,6 +1928,11 @@ body{ overscroll-behavior-y: contain; }
     font-size: 13px;
   }
 }
+
+/* Quantity styling (units dimmed) */
+
+
+
 </style>
 
 
@@ -1907,6 +1959,36 @@ body{ overscroll-behavior-y: contain; }
   margin-bottom: 20px;
 }
 
+
+
+/* Quantity styling (units dimmed) */
+
+
+
+
+/* === COMPACT NUMBER INPUTS (SCOPED, SAFE) === */
+/* Exclude top control inputs (stamina / stages). */
+#panelExpected table input[type="number"],
+#panelActual table input[type="number"],
+#midInvDetails input[type="number"],
+#midInvDetailsA input[type="number"],
+#tradeTbl input[type="number"]{
+  width: 72px !important;
+  max-width: 72px !important;
+  min-width: 72px !important;
+  flex: 0 0 72px !important;
+}
+
+
+/* === NUMBER INPUT ALIGN RIGHT (SCOPED) === */
+#panelExpected table input[type="number"],
+#panelActual table input[type="number"],
+#midInvDetails input[type="number"],
+#midInvDetailsA input[type="number"],
+#tradeTbl input[type="number"]{
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
 
 </style>
 
@@ -1948,11 +2030,11 @@ body{ overscroll-behavior-y: contain; }
         <tr><th style="width:80px">슬롯</th><th>요구 수량 (1~30)</th><th>퍼센트 (101~120)</th></tr>
       </thead>
       <tbody>
-        <tr class="tradeRow" data-slot="1"><td class="muted">📦 1</td><td><input id="tradeReq1" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct1" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="2"><td class="muted">📦 2</td><td><input id="tradeReq2" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct2" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="3"><td class="muted">📦 3</td><td><input id="tradeReq3" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct3" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="4"><td class="muted">📦 4</td><td><input id="tradeReq4" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct4" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="5"><td class="muted">📦 5</td><td><input id="tradeReq5" type="number" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct5" type="number" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+        <tr class="tradeRow" data-slot="1"><td class="muted">📦 1</td><td><input id="tradeReq1" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct1" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="2"><td class="muted">📦 2</td><td><input id="tradeReq2" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct2" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="3"><td class="muted">📦 3</td><td><input id="tradeReq3" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct3" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="4"><td class="muted">📦 4</td><td><input id="tradeReq4" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct4" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+<tr class="tradeRow" data-slot="5"><td class="muted">📦 5</td><td><input id="tradeReq5" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct5" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
       </tbody>
     </table>
     <div class="btnbar" style="margin-top:8px">
@@ -1972,11 +2054,11 @@ body{ overscroll-behavior-y: contain; }
 <h2>입력</h2>
 <div class="row">
 <label>총 스태미나</label>
-<input id="totalStamina" min="0" step="1" type="number" value="3000"/>
+<input id="totalStamina" min="0" step="1" type="number" data-setea="ea" value="3000"/>
 </div>
 <div class="row uiHide">
 <label>채집 1회 스태미나</label>
-<input id="staminaPerCast" min="1" step="1" type="number" value="15"/>
+<input id="staminaPerCast" min="1" step="1" type="number" data-setea="ea" value="15"/>
 </div>
 <div class="row">
 <label>도구 강화 단계</label>
@@ -1989,26 +2071,26 @@ body{ overscroll-behavior-y: contain; }
 </div>
 <div class="row">
 <label>프리미엄 한정가 단계 (0~8)</label>
-<input id="premiumLevel" max="6" min="0" step="1" type="number" value="0"/>
+<input id="premiumLevel" max="6" min="0" step="1" type="number" data-setea="ea" value="0"/>
 </div>
 <div class="row">
 <label>심해 채집꾼 단계 (0~5)</label>
-<input id="stormLevel" max="5" min="0" step="1" type="number" value="0"/>
+<input id="stormLevel" max="5" min="0" step="1" type="number" data-setea="ea" value="0"/>
 </div>
 <div class="row">
 <label>별별별 단계 (0~6)</label>
-<input id="starLevel" max="6" min="0" step="1" type="number" value="0"/>
+<input id="starLevel" max="6" min="0" step="1" type="number" data-setea="ea" value="0"/>
 </div>
 <h2 class="uiTitleHide" style="margin-top:1px">2) 기본 확률</h2>
 <!-- after -->
 <div class="row uiHide">
-<label>1성 확률</label><input id="p1" max="1" min="0" step="0.01" type="number" value="0.6"/>
+<label>1성 확률</label><input id="p1" max="1" min="0" step="0.01" type="number" data-setea="ea" value="0.6"/>
 </div>
 <div class="row uiHide">
-<label>2성 확률</label><input id="p2" max="1" min="0" step="0.01" type="number" value="0.3"/>
+<label>2성 확률</label><input id="p2" max="1" min="0" step="0.01" type="number" data-setea="ea" value="0.3"/>
 </div>
 <div class="row uiHide">
-<label>3성 확률</label><input id="p3" max="1" min="0" step="0.01" type="number" value="0.1"/>
+<label>3성 확률</label><input id="p3" max="1" min="0" step="0.01" type="number" data-setea="ea" value="0.1"/>
 </div>
 <div class="btnbar">
 <button id="btnOpt">📊 계산</button>
@@ -2093,7 +2175,7 @@ body{ overscroll-behavior-y: contain; }
 <div>
 <h2 style="margin:0 0 8px">부재료 필요량</h2>
 <table id="needMatTbl">
-<thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
+<thead><tr><th>부재료</th><th class="right">세트(64)</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>
@@ -2192,7 +2274,7 @@ body{ overscroll-behavior-y: contain; }
 <div>
 <h2 style="margin:0 0 8px">부재료 필요량</h2>
 <table id="needMatTblA">
-<thead><tr><th>부재료</th><th>필요</th><th>세트(64)</th></tr></thead>
+<thead><tr><th>부재료</th><th class="right">세트(64)</th></tr></thead>
 <tbody></tbody>
 </table>
 </div>

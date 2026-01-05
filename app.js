@@ -447,16 +447,16 @@ if(key === "actual"){
 // ================================
 // 64개 단위 세트 표기
 // - n이 0이면 "0개"
-// - 64 이상이면 "x세트 + y개" (y=0이면 "+ y개" 생략)
+// - 64 이상이면 "x세트 y개" (y=0이면 "+ y개" 생략)
 // ================================
 function fmtSet64(n) {
   const v = Math.max(0, Math.floor(Number(n || 0)));
   const set = Math.floor(v / 64);
   const rem = v % 64;
-
-  if (set <= 0) return `${v}개`;
-  if (rem <= 0) return `${set}세트`;
-  return `${set}세트 + ${rem}개`;
+  if (set <= 0) return `<span class="qty-num">${v}</span><span class="qty-unit">개</span>`;
+  if (rem <= 0) return `<span class="qty-num">${set}</span><span class="qty-unit">세트</span>`;
+  return `<span class="qty-num">${set}</span><span class="qty-unit">세트</span> ` +
+         `<span class="qty-num">${rem}</span><span class="qty-unit">개</span>`;
 }
 
 
@@ -1710,7 +1710,7 @@ function set64(x){
   const rem = x % 64;
   if(sets===0) return `${rem}개`;
   if(rem===0) return `${sets}세트`;
-  return `${sets}세트 + ${rem}개`;
+  return `${sets}세트 ${rem}개`;
 }
 
 /** -------- UI build -------- */
@@ -2132,20 +2132,20 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
 
   // render need fish
   const fishTBody = document.querySelector("#needFishTbl tbody");
-  fishTBody.innerHTML = "";
-  FISH_ROWS.forEach((name)=>{
-    const need = needFish.get(name) || 0;
-    const inv  = invFish.get(name) || 0;
-    const lack = Math.max(0, need - inv);
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${matLabel(name,false)}</td>
-      <td class="mono ${inv===0?'zero':''}">${inv}</td>
-      <td class="mono ${need===0?'zero':''}">${fmtNum(need)}</td>
-      <td class="mono ${lack>0?'neg':'zero'}">${fmtNum(lack)}</td>
-    `;
-    fishTBody.appendChild(tr);
-  });
+    fishTBody.innerHTML = "";
+    FISH_ROWS.forEach((name)=>{
+      const need = Math.max(0, Math.floor(Number(needFish.get(name)||0)));
+      const inv = Math.max(0, Math.floor(Number(invFish.get(name)||0)));
+      const lack = Math.max(0, need - inv);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${matLabel(name,false)}</td>
+        <td class="mono ${inv===0?'zero':''}">${fmtSet64(inv)}</td>
+        <td class="mono ${need===0?'zero':''}">${fmtSet64(need)}</td>
+        <td class="mono ${lack>0?'neg':'zero'}">${fmtSet64(lack)}</td>
+      `;
+      fishTBody.appendChild(tr);
+    });
 
   // render materials
   const matTBody = document.querySelector("#needMatTbl tbody");
@@ -2156,8 +2156,7 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${matLabel(name,false)}</td>
-      <td class="mono">${fmtNum(qty)}</td>
-      <td class="mono">${set64(qty)}</td>
+      <td class="mono right">${fmtSet64(qty)}</td>
     `;
     matTBody.appendChild(tr);
   });
@@ -2384,9 +2383,9 @@ function renderNeedFishTableTo(sel, needFish, supply){
     // 컬럼: 재고 / 소모 / 잔여
     tr.innerHTML =
       `<td>${matLabel(label)}</td>` +
-      `<td class="right">${have}</td>` +
-      `<td class="right">${used}</td>` +
-      `<td class="right ${remCls}">${remain}</td>`;
+      `<td class="right">${fmtSet64(have)}</td>` +
+      `<td class="right">${fmtSet64(used)}</td>` +
+      `<td class="right ${remCls}">${fmtSet64(remain)}</td>`;
     tb.appendChild(tr);
   });
 }
@@ -2408,7 +2407,7 @@ function renderNeedMatTableTo(sel, needMat){
       if(v <= 0) return; // 0은 숨기고 싶지 않으면 이 줄 지워도 됨
       const set = fmtSet64(v);
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${matLabel(k)}</td><td class="right">${v}</td><td class="right">${set}</td>`;
+      tr.innerHTML = `<td>${matLabel(k)}</td><td class="right">${set}</td>`;
       tb.appendChild(tr);
     });
 }
@@ -2528,9 +2527,9 @@ function renderNeedCraftTableTo(sel, rows){
 
     tr.innerHTML =
       `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${craftCount}">${matLabel(r.name)}</span></td>` +
-      `<td class="right ${craftCls}">${craftCount}</td>` +
-      `<td class="right">${invQty}</td>` +
-      `<td class="right">${totalNeed}</td>`;
+      `<td class="right ${craftCls}">${craftCount}<span class="qty-unit">회</span></td>` +
+      `<td class="right">${fmtSet64(invQty)}</td>` +
+      `<td class="right">${fmtSet64(totalNeed)}</td>`;
 
     tb.appendChild(tr);
   });
@@ -2990,11 +2989,11 @@ function buildTipHtml(name, meta) {
   if (kind === "final") {
     const rec = Math.max(0, Number(qty || craft || 0));
     badges = rec > 0
-      ? `<span class="tipBadge">추천 제작 ${rec}</span>`
+      ? `<span class="tipBadge">추천 제작 ${rec}회</span>`
       : `<span class="tipBadge">레시피</span>`;
   } else {
     badges = craft > 0
-      ? `<span class="tipBadge">추가 제작 ${craft}</span>`
+      ? `<span class="tipBadge">추가 제작 ${craft}회</span>`
       : `<span class="tipBadge">레시피</span>`;
   }
 
@@ -3005,7 +3004,7 @@ function buildTipHtml(name, meta) {
       return `
         <div class="tipRow">
           <div class="tipLeft"><span>${matLabel(mat, false)}</span></div>
-          <div class="tipQty">×${total}</div>
+          <div class="tipQty">×${fmtSet64(total)}</div>
         </div>
       `;
     })
