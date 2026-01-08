@@ -4492,119 +4492,59 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 
 
-/* ===============================
-   PERSISTENCE PATCH
-   - Fish inventories (inv/base/harv)
-   - Upgrade stages
-   =============================== */
-
-const LS_KEY_FISH_INV = "DDTY_FISH_INV_V1";
-const LS_KEY_STAGE_CFG = "DDTY_STAGE_CFG_V1";
-
-function saveFishInv(){
-  if(typeof FISH_ROWS === "undefined") return;
-  const data = {};
-  FISH_ROWS.forEach((_, i)=>{
-    data[i] = {
-      inv:  Number(document.getElementById(`inv_${i}`)?.value  || 0),
-      base: Number(document.getElementById(`base_${i}`)?.value || 0),
-      harv: Number(document.getElementById(`harv_${i}`)?.value || 0),
-    };
-  });
-  localStorage.setItem(LS_KEY_FISH_INV, JSON.stringify(data));
-}
-
-function loadFishInv(){
-  try{
-    const raw = localStorage.getItem(LS_KEY_FISH_INV);
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    if(typeof FISH_ROWS === "undefined") return;
-    FISH_ROWS.forEach((_, i)=>{
-      const row = data[i];
-      if(!row) return;
-      const inv  = document.getElementById(`inv_${i}`);
-      const base = document.getElementById(`base_${i}`);
-      const harv = document.getElementById(`harv_${i}`);
-      if(inv)  inv.value  = row.inv  ?? 0;
-      if(base) base.value = row.base ?? 0;
-      if(harv) harv.value = row.harv ?? 0;
-    });
-  }catch(e){}
-}
-
-function bindFishInvPersistence(){
-  if(typeof FISH_ROWS === "undefined") return;
-  FISH_ROWS.forEach((_, i)=>{
-    ["inv","base","harv"].forEach(k=>{
-      const el = document.getElementById(`${k}_${i}`);
-      if(el){
-        el.addEventListener("input", saveFishInv);
-        el.addEventListener("change", saveFishInv);
-      }
-    });
-  });
-}
-
-function saveStages(){
-  const data = {};
-  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) data[id] = el.value;
-  });
-  localStorage.setItem(LS_KEY_STAGE_CFG, JSON.stringify(data));
-}
-
-function loadStages(){
-  try{
-    const raw = localStorage.getItem(LS_KEY_STAGE_CFG);
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    Object.entries(data).forEach(([id,val])=>{
-      const el = document.getElementById(id);
-      if(el) el.value = val;
-    });
-  }catch(e){}
-}
-
-function bindStagePersistence(){
-  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener("change", saveStages);
-  });
-}
-
-window.addEventListener("DOMContentLoaded", ()=>{
-  loadFishInv();
-  loadStages();
-  bindFishInvPersistence();
-  bindStagePersistence();
-  if(typeof updateTotalsActual === "function"){
-    updateTotalsActual();
-  }
-});
-
-
-
 /* =====================================================
-   FIX: Disable mid-inventory fish credit in TAB2 (actual)
-   - Minimal & safe: credit returns 0 during actual calc
+   GUARD: Extra-craft availability must respect ACTUAL fish inventory
+   - Does NOT modify core calculation logic
+   - Forces extra craft count to 0 when actual fish is insufficient
    ===================================================== */
 
+function __getActualFishInv(){
+  const inv = {};
+  if(typeof FISH_ROWS === "undefined") return inv;
+  FISH_ROWS.forEach((name, i)=>{
+    const b = Number(document.getElementById(`base_${i}`)?.value || 0);
+    const h = Number(document.getElementById(`harv_${i}`)?.value || 0);
+    inv[name] = Math.floor(b + h);
+  });
+  return inv;
+}
+
+function __hasEnoughActualFishForRecipe(itemName, crafts){
+  if(typeof recipes === "undefined") return false;
+  const r = recipes[itemName];
+  if(!r) return false;
+
+  const inv = __getActualFishInv();
+  for(const [ing, q] of Object.entries(r)){
+    const need = Number(q || 0) * crafts;
+    if((inv[ing] || 0) < need) return false;
+  }
+  return true;
+}
+
+// Patch renderers that expose extra craft counts
 (function(){
-  // If the credit function exists, wrap it.
-  if (typeof window.getFishCreditFromMidInv === "function") {
-    const _orig = window.getFishCreditFromMidInv;
-    window.getFishCreditFromMidInv = function(){
-      // Heuristic: if actual inventory inputs exist, we are in TAB2 context
-      // -> DO NOT apply fish credit
-      if (document.querySelector('[id^="base_"]') && document.querySelector('[id^="harv_"]')) {
-        return 0;
-      }
-      // Otherwise (expected/planning), keep original behavior
-      try { return _orig.apply(this, arguments); }
-      catch(e){ return 0; }
+  const guard = (itemName, crafts)=>{
+    if(!itemName || crafts <= 0) return 0;
+    return __hasEnoughActualFishForRecipe(itemName, crafts) ? crafts : 0;
+  };
+
+  // If a known renderer exists, wrap it defensively
+  if(typeof window.renderSubNeeds === "function"){
+    const _orig = window.renderSubNeeds;
+    window.renderSubNeeds = function(){
+      const res = _orig.apply(this, arguments);
+      // After render, hide rows with insufficient actual fish
+      try{
+        document.querySelectorAll("[data-subcraft-item]").forEach(row=>{
+          const item = row.getAttribute("data-subcraft-item");
+          const crafts = Number(row.getAttribute("data-subcraft-crafts") || 0);
+          if(!guard(item, crafts)){
+            row.style.display = "none";
+          }
+        });
+      }catch(e){}
+      return res;
     };
-    try{ console.log("[FIX] TAB2 fish credit disabled"); }catch(e){}
   }
 })();
