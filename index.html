@@ -377,7 +377,9 @@ th, td { vertical-align: middle; }
   --muted:#6D6457;
   --accent:#B98747;
   --accent2:#8E6A37;
-  --shadow:0 10px 30px rgba(0,0,0,.08);
+    --focus-border: rgba(185,135,71,.70);
+  --focus-ring: rgba(185,135,71,.22);
+--shadow:0 10px 30px rgba(0,0,0,.08);
   --radius:18px;
 }
 *{box-sizing:border-box}
@@ -564,7 +566,7 @@ input[type="number" data-setea="ea"], input[type="text"], select{
   background:rgba(255,255,255,.8);
   outline:none;
 }
-input:focus, select:focus{border-color:rgba(185,135,71,.7); box-shadow:0 0 0 4px rgba(185,135,71,.18)}
+input:focus, select:focus, input:focus-visible, select:focus-visible{border-color:var(--focus-border); box-shadow:0 0 0 4px var(--focus-ring)}
 table{
   width:100%;
   border-collapse:separate;
@@ -882,10 +884,10 @@ table tfoot tr.sum-row .sum-value{
   outline: none !important;
 
   /* 베이지 테두리 */
-border-color: rgba(206, 184, 155, 0.75) !important;
-box-shadow:
-  inset 0 1px 0 rgba(255,255,255,0.9),
-  0 0 0 2px rgba(206, 184, 155, 0.16) !important;
+border-color: var(--focus-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.9),
+    0 0 0 4px var(--focus-ring) !important;
 
 }
 
@@ -903,12 +905,12 @@ box-shadow:
   outline: none !important;
 
   /* 은은한 베이지 테두리 */
-  border-color: rgba(206, 184, 155, 0.9) !important;
+  border-color: var(--focus-border) !important;
 
   /* 안쪽 하이라이트 + 부드러운 외곽 링 */
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.85),
-    0 0 0 2px rgba(206, 184, 155, 0.20) !important;
+        0 0 0 4px var(--focus-ring) !important;
 }
 
 
@@ -1992,12 +1994,231 @@ body{ overscroll-behavior-y: contain; }
 
 </style>
 
+
+<style>
+/* =================================================
+   THEME SWITCH
+   ================================================= */
+.themeSwitch{
+  width:56px;height:30px;border-radius:999px;
+  background:var(--line);padding:3px;cursor:pointer;
+  box-shadow:var(--shadow);display:flex;align-items:center;
+}
+.themeKnob{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--surface);
+  box-shadow:0 4px 10px rgba(0,0,0,.18);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  transition:transform .25s ease, background .25s ease;
+}
+.themeKnob .icon{position:absolute;font-size:14px;opacity:0;transition:opacity .15s ease;}
+.themeKnob .sun{opacity:1;}
+
+/* =================================================
+   EMOTIONAL LAVENDER BLUE THEME
+   ================================================= */
+:root[data-theme="blue"]{
+    --focus-border: rgba(143,139,255,.75) !important;
+  --focus-ring: rgba(143,139,255,.28) !important;
+--bg:#EEF0FF !important;
+  --surface:#F6F7FF !important;
+  --surface2:#FFFFFF !important;
+
+  --text-main:#2B2F55 !important;
+  --text-sub:#6E7398 !important;
+  --text-soft:#8A8FB5 !important;
+
+  --line:rgba(143,139,255,.28) !important;
+  --accent:#8F8BFF !important;
+  --shadow:0 14px 36px rgba(143,139,255,.25) !important;
+}
+
+body{ background:var(--bg) !important; }
+
+/* =================================================
+   TEXT SYSTEM
+   ================================================= */
+:root[data-theme="blue"] body,
+:root[data-theme="blue"] td,
+:root[data-theme="blue"] th,
+:root[data-theme="blue"] label{
+  color:var(--text-main) !important;
+}
+:root[data-theme="blue"] .desc,
+:root[data-theme="blue"] .hint,
+:root[data-theme="blue"] .note{
+  color:var(--text-sub) !important;
+}
+
+/* =================================================
+   CARDS / SECTIONS
+   ================================================= */
+:root[data-theme="blue"] .card,
+:root[data-theme="blue"] .section,
+:root[data-theme="blue"] .box{
+  background:var(--surface) !important;
+  border:1px solid rgba(143,139,255,.22) !important;
+  box-shadow:var(--shadow) !important;
+}
+
+/* =================================================
+   TABLE / INVENTORY
+   ================================================= */
+:root[data-theme="blue"] .tableWrap,
+:root[data-theme="blue"] .invSection,
+:root[data-theme="blue"] .invList{
+  background:var(--surface) !important;
+  border-radius:14px;
+  box-shadow:var(--shadow) !important;
+}
+
+:root[data-theme="blue"] thead th{
+  background:rgba(143,139,255,.14) !important;
+  border-bottom:1px solid rgba(143,139,255,.35) !important;
+}
+
+:root[data-theme="blue"] tbody td{
+  border-bottom:1px solid rgba(143,139,255,.18) !important;
+}
+
+:root[data-theme="blue"] tbody tr:hover td{
+  background:rgba(143,139,255,.10) !important;
+}
+
+:root[data-theme="blue"] table input{
+  background:#fff !important;
+  border:1px solid rgba(143,139,255,.45) !important;
+  color:var(--text-main) !important;
+}
+
+/* =================================================
+   SUMMARY / TOTAL / DETAILS
+   ================================================= */
+:root[data-theme="blue"] .summary,
+:root[data-theme="blue"] .summaryRow,
+:root[data-theme="blue"] .sumRow,
+:root[data-theme="blue"] .totalRow,
+:root[data-theme="blue"] details,
+:root[data-theme="blue"] details > summary{
+  background:var(--surface) !important;
+  border:1px solid rgba(143,139,255,.22) !important;
+  color:var(--text-main) !important;
+}
+
+:root[data-theme="blue"] .sum,
+:root[data-theme="blue"] .total,
+:root[data-theme="blue"] .gold,
+:root[data-theme="blue"] .price{
+  color:#3E4377 !important;
+  font-weight:600;
+}
+
+/* =================================================
+   TABS
+   ================================================= */
+:root[data-theme="blue"] .tabs button{
+  background:rgba(143,139,255,.18) !important;
+  border:1px solid rgba(143,139,255,.35) !important;
+  color:var(--text-main) !important;
+}
+:root[data-theme="blue"] .tabs button.active{
+  background:#8F8BFF !important;
+  color:#fff !important;
+  box-shadow:0 8px 22px rgba(143,139,255,.45) !important;
+}
+
+/* =================================================
+   BUTTONS
+   ================================================= */
+/* normal buttons */
+:root[data-theme="blue"] .btn:not(.calc),
+:root[data-theme="blue"] button:not(.calc){
+  background:rgba(143,139,255,.14) !important;
+  border:1px solid rgba(143,139,255,.35) !important;
+  color:var(--text-main) !important;
+}
+
+/* calculate CTA */
+:root[data-theme="blue"] .btn.calc,
+:root[data-theme="blue"] button.calc,
+:root[data-theme="blue"] .btnCalculate{
+  background:linear-gradient(180deg,#9C99FF,#7F7BFF) !important;
+  color:#fff !important;
+  border:none !important;
+  border-radius:14px;
+  padding:12px 22px;
+  font-weight:700;
+  box-shadow:0 10px 26px rgba(143,139,255,.45);
+}
+:root[data-theme="blue"] .btn.calc:hover,
+:root[data-theme="blue"] button.calc:hover,
+:root[data-theme="blue"] .btnCalculate:hover{
+  filter:brightness(1.05);
+  transform:translateY(-1px);
+}
+
+/* =================================================
+   SWITCH STATE
+   ================================================= */
+:root[data-theme="blue"] .themeSwitch{ background:var(--accent); }
+:root[data-theme="blue"] .themeKnob{ transform:translateX(26px); background:#fff; }
+:root[data-theme="blue"] .themeKnob .sun{opacity:0;}
+:root[data-theme="blue"] .themeKnob .moon{opacity:1;}
+</style>
+
+
+<style>
+/* =================================================
+   OPTION 2 PATCH: WARM GRAY INFORMATION TEXT
+   ================================================= */
+
+/* main information text (items, numbers) */
+:root[data-theme="blue"] td,
+:root[data-theme="blue"] th,
+:root[data-theme="blue"] label{
+  color:#2f2f2f !important;
+}
+
+/* item / product names */
+:root[data-theme="blue"] td:first-child,
+:root[data-theme="blue"] .itemName,
+:root[data-theme="blue"] .prodName{
+  color:#2f2f2f !important;
+}
+
+/* secondary / description text */
+:root[data-theme="blue"] .desc,
+:root[data-theme="blue"] .note,
+:root[data-theme="blue"] .hint,
+:root[data-theme="blue"] .muted{
+  color:#6f6f6f !important;
+}
+
+/* totals slightly emphasized */
+:root[data-theme="blue"] .sum,
+:root[data-theme="blue"] .total,
+:root[data-theme="blue"] tfoot td:last-child{
+  color:#3e3e3e !important;
+  font-weight:600;
+}
+</style>
+
 </head>
 <body>
 <div class="wrap">
 <h1></h1>
 <div class="sub">
 <span class="pill">🐣 메이드 바이 조무교⠀</span>
+<span style="margin-left:8px;vertical-align:middle;">
+  <div class="themeSwitch" id="themeSwitch" title="테마 전환" style="display:inline-flex;">
+    <div class="themeKnob">
+      <span class="icon sun">☀️</span>
+      <span class="icon moon">💜</span>
+    </div>
+  </div>
+</span>
+
 <br/>
 </div>
 <div class="tabs">
@@ -2064,7 +2285,7 @@ body{ overscroll-behavior-y: contain; }
 <select id="toolLevel">
 <option value="3">3~5강 (3개 드랍)</option>
 <option value="6">6~8강 (4개 드랍)</option>
-<option value="9" selected>9~11강 (5개 드랍)</option>
+<option selected="" value="9">9~11강 (5개 드랍)</option>
 <option value="12">12~13강 (6개 드랍)</option>
 <option value="14">14강 (7개 드랍)</option>
 <option value="15">15강 (10개 드랍)</option>
@@ -2351,5 +2572,351 @@ body{ overscroll-behavior-y: contain; }
   <!-- Tooltip container (필수) -->
   <div id="recipeTip" class="recipeTip" hidden></div>
 
+
+<!-- === BLUE THEME SUM ROW OVERRIDE (SAFE PATCH) === -->
+<style id="blue-theme-sum-row">
+/* BLUE theme only */
+[data-theme="blue"] table tfoot tr.sum-row{
+  background: #eef0ff !important;
+}
+
+[data-theme="blue"] table tfoot tr.sum-row td{
+  border-top-color: rgba(143,139,255,0.45) !important;
+}
+</style>
+
+
+<!-- === BLUE THEME FIX (data-theme based) === -->
+<style id="blue-color-unify-fix">
+/* Sum / trade amounts unified (blue theme only) */
+[data-theme="blue"] #outRevenueTrade,
+[data-theme="blue"] #revSumTradeA,
+[data-theme="blue"] #outTradeBonus,
+[data-theme="blue"] #tradeBonusA,
+[data-theme="blue"] .sum-row .sum-value,
+[data-theme="blue"] .tradeRecoItem .pos{
+  color:#3b5fd9;
+  font-weight:700;
+}
+
+/* Inventory text neutralize (blue theme only) */
+[data-theme="blue"] .midInvRow .midLabel,
+[data-theme="blue"] .midInvRow .midLabel span,
+[data-theme="blue"] .midInvRow .item-label,
+[data-theme="blue"] .midInvRow .item-label span{
+  color:#2b2b2b;
+}
+</style>
+
+
+<!-- === FINAL BLUE THEME MONEY COLOR UNIFY === -->
+<style id="final-blue-money">
+/* BLUE theme only */
+[data-theme="blue"] .pos,
+[data-theme="blue"] .neg,
+[data-theme="blue"] #outTradeBonus,
+[data-theme="blue"] #outRevenueTrade,
+[data-theme="blue"] #revSum,
+[data-theme="blue"] #revSumTradeA,
+[data-theme="blue"] .sum-row .sum-value,
+[data-theme="blue"] .summary .value{
+  color:#6f86ff !important;
+  font-weight:600;
+}
+
+/* inventory text neutral (blue theme) */
+[data-theme="blue"] .midInvGrid,
+[data-theme="blue"] .midInvGrid *{
+  color: var(--text) !important;
+}
+
+/* === PATCH: revBadgeA theme variable binding === */
+#panelActual #revBadgeA{
+  color: var(--accent);
+}
+
+
+/* ===============================
+   FIX: 예상 총 매출 색상 고정 (테마 기준)
+   =============================== */
+#panelActual #revBadgeA{
+  color: var(--accent) !important;
+}
+
+/* pos 클래스가 붙어도 색상 고정 */
+#panelActual #revBadgeA.pos{
+  color: var(--accent) !important;
+}
+
+
+
+/* =========================================================
+   RECIPE TAB COLOR NORMALIZE (NO EMPHASIS)
+   기준: 사용자 제공 base index.html
+   ========================================================= */
+
+/* 1️⃣ 레시피 툴팁 안 작은 버튼(뱃지) – 블루 테마 톤 */
+.recipeDialog .btnTiny,
+.recipeDialog .pill,
+.recipeDialog .midBadge{
+  background: rgba(120,130,255,.10) !important;
+  border-color: rgba(120,130,255,.35) !important;
+  color: #3f46b8 !important;
+}
+
+/* 2️⃣ 레시피 탭 과한 파란 텍스트 제거 */
+#panelRecipe,
+#panelRecipe .recipeCard,
+#panelRecipe .recipeGroupTitle,
+#panelRecipe .recipeKind,
+#panelRecipe .recipeIng{
+  color: var(--text) !important;
+}
+
+/* 수량(x2, x1 등)도 기본 톤 */
+#panelRecipe .qty,
+#panelRecipe .qty-num,
+#panelRecipe .qty-unit{
+  color: var(--muted) !important;
+}
+
+/* 3️⃣ 레시피 검색창 hover / focus 테두리 */
+.recipeSearchRow input[type="text"]:hover{
+  border-color: rgba(120,130,255,.45) !important;
+}
+.recipeSearchRow input[type="text"]:focus{
+  border-color: rgba(120,130,255,.65) !important;
+  box-shadow: 0 0 0 3px rgba(120,130,255,.18) !important;
+}
+
+/* 4️⃣ 레시피 카드 배경 톤 살짝 정리 (강조 X) */
+#panelRecipe .recipeCard{
+  background: rgba(255,255,255,.72) !important;
+  border-color: rgba(0,0,0,.08) !important;
+}
+
+</style>
+
+
+<!-- =================================================
+     THEME BRIDGE (append-only, safe)
+     Activates existing BLUE design when data-theme="blue"
+     ================================================= -->
+<style>
+/* ===== BLUE THEME OVERRIDES (NO LAYOUT TOUCH) ===== */
+
+/* INPUTS */
+html[data-theme="blue"] input,
+html[data-theme="blue"] select,
+html[data-theme="blue"] textarea{
+  border-color: rgba(90,110,255,.45);
+}
+
+html[data-theme="blue"] input:hover,
+html[data-theme="blue"] select:hover,
+html[data-theme="blue"] textarea:hover{
+  border-color: rgba(90,110,255,.65);
+}
+
+html[data-theme="blue"] input:focus,
+html[data-theme="blue"] select:focus,
+html[data-theme="blue"] textarea:focus{
+  border-color: rgba(90,110,255,.9);
+  box-shadow: 0 0 0 4px rgba(90,110,255,.25);
+}
+
+/* MID INVENTORY (연금품 재고) - force BLUE focus ring (match trade inputs) */
+html[data-theme="blue"] #midInvDetails input:hover,
+html[data-theme="blue"] #midInvDetailsA input:hover{
+  border-color: rgba(90,110,255,.65) !important;
+}
+html[data-theme="blue"] #midInvDetails input:focus,
+html[data-theme="blue"] #midInvDetails input:focus-visible,
+html[data-theme="blue"] #midInvDetailsA input:focus,
+html[data-theme="blue"] #midInvDetailsA input:focus-visible{
+  outline: none !important;
+  border-color: rgba(90,110,255,.9) !important;
+  box-shadow: 0 0 0 4px rgba(90,110,255,.25) !important;
+}
+
+
+/* BUTTONS */
+html[data-theme="blue"] button:hover,
+html[data-theme="blue"] .btn:hover{
+  background-color: rgba(90,110,255,.08);
+  border-color: rgba(90,110,255,.45);
+}
+
+html[data-theme="blue"] button:active,
+html[data-theme="blue"] .btn:active{
+  background-color: rgba(90,110,255,.14);
+  border-color: rgba(90,110,255,.65);
+}
+
+/* RECIPE PILLS */
+html[data-theme="blue"] .recipeIng,
+html[data-theme="blue"] .pill,
+html[data-theme="blue"] .midBadge{
+  background: rgba(90,110,255,.10);
+  border-color: rgba(90,110,255,.35);
+}
+
+/* RECIPE DIALOG */
+html[data-theme="blue"] .recipeDialogInner{
+  background: linear-gradient(
+    180deg,
+    rgba(245,247,255,.96),
+    rgba(235,240,255,.92)
+  );
+}
+
+/* TABLE ROW HOVER */
+html[data-theme="blue"] table tbody tr:hover td{
+  background: rgba(90,110,255,.04);
+}
+
+/* === MID INVENTORY focus ring (BEIGE ONLY, keep BLUE intact) === */
+:root:not([data-theme="blue"]) #midInvDetails input[type="number"]:focus,
+:root:not([data-theme="blue"]) #midInvDetails input[type="number"]:focus-visible,
+:root:not([data-theme="blue"]) #midInvDetailsA input[type="number"]:focus,
+:root:not([data-theme="blue"]) #midInvDetailsA input[type="number"]:focus-visible {
+  outline: none !important;
+  border-color: var(--focus-border) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.85),
+    0 0 0 4px var(--focus-ring) !important;
+}
+
+</style>
+
+
+<style>
+/* ===============================
+   PATCH (FINAL DIRECTION):
+   - Keep BLUE theme as-is
+   - Beige theme: recipe search uses beige focus vars
+   =============================== */
+
+/* Recipe search: always use theme focus variables (no hard-coded blue) */
+#panelRecipe .recipeSearchRow input[type="text"]:hover,
+#panelRecipe .recipeSearchRow input[type="text"]:focus,
+#panelRecipe .recipeSearchRow input[type="text"]:focus-visible{
+  border-color: var(--focus-border) !important;
+  box-shadow: 0 0 0 4px var(--focus-ring) !important;
+  outline: none !important;
+}
+
+/* Unit text (세트/개): darker for blue theme readability */
+.qty-unit{
+  color:#3f4652 !important;
+}
+</style>
+
+
+<style>
+/* ===============================
+   BLUE THEME FIX (TARGETED)
+   - Recipe tooltip border only
+   - Do NOT touch beige theme
+   - Do NOT change recipe button colors
+   =============================== */
+
+/* Tooltip container border */
+[data-theme="blue"] .recipeTip,
+[data-theme="blue"] .recipeTip.pinned,
+[data-theme="blue"] .recipeTip:hover{
+  border-color: var(--line) !important;
+}
+
+/* Tooltip inner card border (some states use inner wrapper) */
+[data-theme="blue"] .recipeTip .card,
+[data-theme="blue"] .recipeTip .tipCard,
+[data-theme="blue"] .recipeDialog{
+  border-color: var(--line) !important;
+}
+</style>
+
+
+<style>
+/* ===============================
+   TAB2 오늘 채집량 세트/개 텍스트
+   - 블루 테마 색상 통일
+   =============================== */
+
+/* 기본(베이지 포함) */
+#panelActual td span{
+  font-size:13px;
+  line-height:1.2;
+  color:var(--muted);
+}
+
+/* 블루 테마에서만 텍스트 색상 통일 */
+[data-theme="blue"] #panelActual td span{
+  color:#3f4652 !important; /* 블루 테마 보조 텍스트 톤 */
+}
+
+#panelActual td span + input,
+#panelActual td input + span{
+  margin-left:4px;
+}
+</style>
+
+
+<style>
+/* ===============================
+   BEIGE THEME: neutralize pos/neg coloring
+   =============================== */
+
+/* 1) Disable semantic coloring in beige theme */
+[data-theme="beige"] .pos,
+[data-theme="beige"] .neg,
+[data-theme="beige"] .zero{
+  color: inherit !important;
+}
+
+/* 2) Re-apply revenue color explicitly (brown) */
+[data-theme="beige"] .mono,
+[data-theme="beige"] [id^="rev"],
+[data-theme="beige"] [id^="outRevenue"],
+[data-theme="beige"] [id^="sum"],
+[data-theme="beige"] .money{
+  color: var(--accent2) !important;
+}
+</style>
+
 </body>
 </html>
+
+<style>
+
+/* =========================================================
+   BLUE THEME ONLY: mid inventory card border fix
+   - 베이지 테마는 절대 건드리지 않음
+   - 중간재 카드(수호의 정수 등) 테두리만 블루 톤으로 통일
+   ========================================================= */
+
+:root[data-theme="blue"] .midInvRow{
+  border-color: rgba(143,139,255,.35) !important;
+}
+
+:root[data-theme="blue"] .midInvRow:hover,
+:root[data-theme="blue"] .midInvRow:focus-within{
+  border-color: rgba(143,139,255,.35) !important;
+  box-shadow: none !important;
+}
+
+/* 연금품 재고 summary 헤더도 블루 테마에서만 */
+:root[data-theme="blue"] #midInvDetails > summary,
+:root[data-theme="blue"] #midInvDetailsA > summary{
+  border-color: rgba(143,139,255,.35) !important;
+}
+
+:root[data-theme="blue"] #midInvDetails > summary:hover,
+:root[data-theme="blue"] #midInvDetailsA > summary:hover,
+:root[data-theme="blue"] #midInvDetails:focus-within > summary,
+:root[data-theme="blue"] #midInvDetailsA:focus-within > summary{
+  border-color: rgba(143,139,255,.35) !important;
+  box-shadow: none !important;
+}
+
+</style>

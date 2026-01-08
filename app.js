@@ -4270,3 +4270,316 @@ try{ renderTradeSummaryActual(); }catch(e){};
 
   setInterval(checkAlarms, 30 * 1000);
 })();
+
+
+// === Theme toggle compatibility (safe) ===
+(function(){
+  const sw = document.querySelector('.themeSwitch');
+  if(!sw) return;
+  const root = document.documentElement;
+  const saved = localStorage.getItem('theme');
+  if(saved){
+    root.dataset.theme = saved;
+  }
+  sw.addEventListener('click', ()=>{
+    const cur = root.dataset.theme === 'blue' ? '' : 'blue';
+    if(cur) root.dataset.theme = cur;
+    else delete root.dataset.theme;
+    localStorage.setItem('theme', cur);
+  });
+})();
+
+
+
+// ================================
+// Fish inventory: set / unit (SAFE, scoped)
+// - Does NOT touch trade or other tables
+// - Keeps underlying value as total units
+// ================================
+const FISH_SET_SIZE = 64;
+
+// Enhance fish inventory table rows AFTER render
+function enhanceFishInvRows(){
+  const rows = document.querySelectorAll("#invTbl tbody tr");
+  rows.forEach(tr=>{
+    if(tr.dataset.enhanced) return;
+
+    const inp = tr.querySelector("input[type='number']");
+    if(!inp) return;
+
+    // read existing total
+    const total = Math.max(0, Number(inp.value||0));
+    const set = Math.floor(total / FISH_SET_SIZE);
+    const unit = total % FISH_SET_SIZE;
+
+    // build wrapper
+    const wrap = document.createElement("div");
+    wrap.className = "fishSetUnitWrap";
+    wrap.style.display = "flex";
+    wrap.style.gap = "8px";
+    wrap.style.justifyContent = "flex-end";
+
+    const setInp = document.createElement("input");
+    setInp.type = "number";
+    setInp.min = "0";
+    setInp.className = inp.className;
+    setInp.value = set;
+
+    const unitInp = document.createElement("input");
+    unitInp.type = "number";
+    unitInp.min = "0";
+    unitInp.max = String(FISH_SET_SIZE-1);
+    unitInp.className = inp.className;
+    unitInp.value = unit;
+
+    // sync to hidden original input
+    function sync(){
+      const s = Math.max(0, Number(setInp.value||0));
+      const u = Math.max(0, Number(unitInp.value||0));
+      const tot = s * FISH_SET_SIZE + u;
+      inp.value = tot;
+      inp.dispatchEvent(new Event("input", {bubbles:true}));
+    }
+    setInp.addEventListener("input", sync);
+    unitInp.addEventListener("input", sync);
+
+    // hide original, insert wrapper
+    inp.type = "hidden";
+    wrap.appendChild(setInp);
+    wrap.appendChild(unitInp);
+    inp.parentElement.appendChild(wrap);
+
+    tr.dataset.enhanced = "1";
+  });
+}
+
+// Observe fish inventory table only
+document.addEventListener("DOMContentLoaded", ()=>{
+  const tbody = document.querySelector("#invTbl tbody");
+  if(!tbody) return;
+
+  const mo = new MutationObserver(()=>enhanceFishInvRows());
+  mo.observe(tbody, {childList:true, subtree:true});
+  setTimeout(enhanceFishInvRows, 0);
+});
+
+
+
+// === AUTO SYNC: Tab1 inv -> Tab2 base (on input) ===
+(function bindInvAutoSync(){
+  if(typeof FISH_ROWS === "undefined") return;
+  FISH_ROWS.forEach((_, i)=>{
+    const el = document.getElementById(`inv_${i}`);
+    if(!el) return;
+    if(el.dataset.autoSyncBound) return;
+    el.dataset.autoSyncBound = "1";
+    el.addEventListener("input", ()=>{
+      if(typeof syncExpectedToBase === "function"){
+        syncExpectedToBase();
+      }
+    });
+  });
+})();
+
+
+// === TAB2 today harvest set/ea enhancer (POST-BUILD, SAFE) ===
+(function(){
+  function enhance(){
+    if(typeof FISH_ROWS === "undefined") return;
+    FISH_ROWS.forEach((_, i)=>{
+      const harv = document.getElementById(`harv_${i}`);
+      if(!harv || harv.dataset.seteaEnhanced) return;
+      harv.dataset.seteaEnhanced = "1";
+
+      const td = harv.parentElement;
+      if(!td) return;
+
+      harv.style.display = "none";
+
+      const wrap = document.createElement("span");
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "4px";
+
+      const setI = document.createElement("input");
+      setI.type = "number"; setI.min = "0"; setI.step = "1"; setI.value = "0";
+      setI.style.width = "56px";
+
+      const setL = document.createElement("span");
+      setL.textContent = "세트";
+
+      const eaI = document.createElement("input");
+      eaI.type = "number"; eaI.min = "0"; eaI.step = "1"; eaI.value = "0";
+      eaI.style.width = "56px";
+
+      const eaL = document.createElement("span");
+      eaL.textContent = "개";
+
+      const sync = ()=>{
+        harv.value = (Number(setI.value||0)*64) + Number(eaI.value||0);
+        if(typeof updateTotalsActual === "function") updateTotalsActual();
+      };
+      setI.addEventListener("input", sync);
+      eaI.addEventListener("input", sync);
+
+      td.appendChild(wrap);
+      wrap.appendChild(setI);
+      wrap.appendChild(setL);
+      wrap.appendChild(eaI);
+      wrap.appendChild(eaL);
+    });
+  }
+
+  // hook after buildInvActual
+  if(typeof buildInvActual === "function"){
+    const _orig = buildInvActual;
+    buildInvActual = function(){
+      const r = _orig.apply(this, arguments);
+      enhance();
+      return r;
+    };
+  }
+
+  // fallback after load
+  window.addEventListener("DOMContentLoaded", ()=>{
+    setTimeout(enhance, 0);
+  });
+})();
+
+
+// === TAB1 inventory set/ea label enhancer (UI ONLY) ===
+(function(){
+  function enhanceTab1(){
+    if(typeof FISH_ROWS === "undefined") return;
+    FISH_ROWS.forEach((_, i)=>{
+      const base = document.getElementById(`inv_${i}`);
+      if(!base) return;
+
+      const td = base.parentElement;
+      if(!td || td.dataset.seteaLabeled) return;
+      td.dataset.seteaLabeled = "1";
+
+      const inputs = td.querySelectorAll("input[type='number']");
+      if(inputs.length < 2) return;
+
+      const setI = inputs[0];
+      const eaI  = inputs[1];
+
+      const wrap = document.createElement("span");
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "4px";
+
+      setI.before(wrap);
+      wrap.appendChild(setI);
+      wrap.insertAdjacentHTML("beforeend", "<span class='qty-unit'>세트</span>");
+      wrap.appendChild(eaI);
+      wrap.insertAdjacentHTML("beforeend", "<span class='qty-unit'>개</span>");
+    });
+  }
+
+  if(typeof buildTables === "function"){
+    const _b = buildTables;
+    buildTables = function(){
+      const r = _b.apply(this, arguments);
+      enhanceTab1();
+      return r;
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", ()=> setTimeout(enhanceTab1, 0));
+})();
+
+
+
+/* ===============================
+   PERSISTENCE PATCH
+   - Fish inventories (inv/base/harv)
+   - Upgrade stages
+   =============================== */
+
+const LS_KEY_FISH_INV = "DDTY_FISH_INV_V1";
+const LS_KEY_STAGE_CFG = "DDTY_STAGE_CFG_V1";
+
+function saveFishInv(){
+  if(typeof FISH_ROWS === "undefined") return;
+  const data = {};
+  FISH_ROWS.forEach((_, i)=>{
+    data[i] = {
+      inv:  Number(document.getElementById(`inv_${i}`)?.value  || 0),
+      base: Number(document.getElementById(`base_${i}`)?.value || 0),
+      harv: Number(document.getElementById(`harv_${i}`)?.value || 0),
+    };
+  });
+  localStorage.setItem(LS_KEY_FISH_INV, JSON.stringify(data));
+}
+
+function loadFishInv(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_FISH_INV);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(typeof FISH_ROWS === "undefined") return;
+    FISH_ROWS.forEach((_, i)=>{
+      const row = data[i];
+      if(!row) return;
+      const inv  = document.getElementById(`inv_${i}`);
+      const base = document.getElementById(`base_${i}`);
+      const harv = document.getElementById(`harv_${i}`);
+      if(inv)  inv.value  = row.inv  ?? 0;
+      if(base) base.value = row.base ?? 0;
+      if(harv) harv.value = row.harv ?? 0;
+    });
+  }catch(e){}
+}
+
+function bindFishInvPersistence(){
+  if(typeof FISH_ROWS === "undefined") return;
+  FISH_ROWS.forEach((_, i)=>{
+    ["inv","base","harv"].forEach(k=>{
+      const el = document.getElementById(`${k}_${i}`);
+      if(el){
+        el.addEventListener("input", saveFishInv);
+        el.addEventListener("change", saveFishInv);
+      }
+    });
+  });
+}
+
+function saveStages(){
+  const data = {};
+  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) data[id] = el.value;
+  });
+  localStorage.setItem(LS_KEY_STAGE_CFG, JSON.stringify(data));
+}
+
+function loadStages(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_STAGE_CFG);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.entries(data).forEach(([id,val])=>{
+      const el = document.getElementById(id);
+      if(el) el.value = val;
+    });
+  }catch(e){}
+}
+
+function bindStagePersistence(){
+  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener("change", saveStages);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", ()=>{
+  loadFishInv();
+  loadStages();
+  bindFishInvPersistence();
+  bindStagePersistence();
+  if(typeof updateTotalsActual === "function"){
+    updateTotalsActual();
+  }
+});
