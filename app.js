@@ -4583,3 +4583,34 @@ window.addEventListener("DOMContentLoaded", ()=>{
     updateTotalsActual();
   }
 });
+
+
+
+/* =====================================================
+   FORCE: Use ACTUAL inventory everywhere for craft checks
+   - Overrides getExpectedInv to return actual (base+harv)
+   - This affects tooltip / extra craft / availability displays
+   ===================================================== */
+
+function __getActualInvArray(){
+  const arr = [];
+  if(typeof FISH_ROWS === "undefined") return arr;
+  FISH_ROWS.forEach((_, i)=>{
+    const b = Number(document.getElementById(`base_${i}`)?.value || 0);
+    const h = Number(document.getElementById(`harv_${i}`)?.value || 0);
+    arr.push(Math.max(0, Math.floor(b + h)));
+  });
+  return arr;
+}
+
+(function(){
+  // Override expected inventory getter to actual inventory.
+  if(typeof window.getExpectedInv === "function"){
+    window.getExpectedInv = __getActualInvArray;
+    try{ console.log("[FORCE] getExpectedInv overridden -> actual (base+harv)"); }catch(e){}
+  }
+
+  // If there is a tooltip builder relying on a local getExpectedInv (non-window),
+  // also expose globally-named helper for callers.
+  window.__getActualInvArray = __getActualInvArray;
+})();
