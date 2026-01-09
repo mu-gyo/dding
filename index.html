@@ -2884,6 +2884,42 @@ html[data-theme="blue"] table tbody tr:hover td{
 }
 </style>
 
+
+<!-- === Global Loading Overlay === -->
+<div id="globalLoadingOverlay" style="
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.28);
+  z-index: 9999;
+">
+  <div style="
+    background: rgba(255,255,255,0.95);
+    padding: 26px 34px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 800;
+  ">
+    <div class="globalSpinner" style="
+      width: 22px;
+      height: 22px;
+      border: 3px solid rgba(0,0,0,.18);
+      border-top-color: rgba(0,0,0,.65);
+      border-radius: 50%;
+      animation: globalSpin 0.9s linear infinite;
+    "></div>
+    <div>계산 중…</div>
+  </div>
+</div>
+<style>
+@keyframes globalSpin { to { transform: rotate(360deg); } }
+</style>
+
 </body>
 </html>
 

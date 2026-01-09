@@ -1,4 +1,15 @@
 
+// === Global Loading Overlay helpers (TAB1/TAB2 공용) ===
+function showGlobalLoadingOverlay(){
+  const el = document.getElementById("globalLoadingOverlay");
+  if(el) el.style.display = "flex";
+}
+function hideGlobalLoadingOverlay(){
+  const el = document.getElementById("globalLoadingOverlay");
+  if(el) el.style.display = "none";
+}
+
+
 
 function setButtonLoading(btn, isLoading, loadingText="계산 중…"){
   if(!btn) return;
@@ -3125,16 +3136,24 @@ document.getElementById("btnOpt").addEventListener("click", () => {
 
 document.getElementById("btnSolveActual").addEventListener("click", () => {
   const btn = document.getElementById("btnSolveActual");
+  // 기존 버튼 스피너도 유지
   setButtonLoading(btn, true, "계산 중…");
+  // ✅ 중앙 오버레이 즉시 표시
+  showGlobalLoadingOverlay();
 
+  // ✅ 반드시 먼저 paint 되게 한 틱 양보 후 계산 시작
   requestAnimationFrame(() => {
-    try {
-      optimizeActual(); // ✅ 기존 함수 그대로 호출
-    } finally {
-      setButtonLoading(btn, false);
-    }
+    setTimeout(() => {
+      try {
+        optimizeActual(); // 기존 계산 로직 그대로
+      } finally {
+        hideGlobalLoadingOverlay();
+        setButtonLoading(btn, false);
+      }
+    }, 0);
   });
 });
+
 
 
 document.getElementById("craftTblA").addEventListener("change",(e)=>{
