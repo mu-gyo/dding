@@ -3403,6 +3403,13 @@ function buildTipHtml(name, meta) {
     }
 
     tip.hidden = false;
+    // [THEME] recipe tooltip theme sync
+    try{
+      const root = document.documentElement;
+      const isBlue = root && root.dataset && root.dataset.theme === "blue";
+      tip.classList.toggle("themeBlue", !!isBlue);
+    }catch(e){}
+
     setPosNearCursor(clientX, clientY);
   }
 

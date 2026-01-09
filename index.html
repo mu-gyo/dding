@@ -2921,6 +2921,100 @@ html[data-theme="blue"] table tbody tr:hover td{
 </style>
 
 </body>
+
+<style id="blue-theme-recipe-tooltip-final">
+/* =================================================
+   BLUE THEME: Recipe Tooltip FINAL
+   - 베이지 제거
+   - pinned/normal 그림자 복구
+   - 텍스트 파란색 과도함 제거 + 굵기 완화
+   ================================================= */
+
+/* 기본 블루 툴팁 */
+.recipeTip.themeBlue{
+  background: var(--surface) !important;
+  color: rgba(20,24,45,.88) !important;
+
+  border: 1px solid rgba(143,139,255,.28) !important;
+  box-shadow: 0 14px 36px rgba(143,139,255,.22) !important;
+}
+
+/* 고정(pinned) 상태 */
+.recipeTip.themeBlue.pinned{
+  box-shadow: 0 22px 54px rgba(143,139,255,.34) !important;
+  border-color: rgba(143,139,255,.48) !important;
+}
+
+/* 제목 */
+.recipeTip.themeBlue .tipTitle{
+  color: rgba(25,28,60,.92) !important;
+  font-weight: 600 !important; /* 700 → 600 */
+}
+
+/* 배지: 파란 pill 과장 제거 */
+.recipeTip.themeBlue .tipBadge{
+  background: rgba(143,139,255,.10) !important;
+  border: 1px solid rgba(143,139,255,.28) !important;
+  color: rgba(55,60,150,.85) !important;
+  font-weight: 500 !important;
+}
+
+/* 재료 행 */
+.recipeTip.themeBlue .tipRow{
+  border-top-color: rgba(143,139,255,.18) !important;
+}
+
+/* 수량 */
+.recipeTip.themeBlue .tipQty{
+  color: rgba(30,34,70,.82) !important;
+  font-weight: 400 !important;
+}
+
+/* 보조 텍스트 */
+.recipeTip.themeBlue .muted,
+.recipeTip.themeBlue .note,
+.recipeTip.themeBlue .hint{
+  color: rgba(60,65,120,.65) !important;
+  font-weight: 400 !important;
+}
+</style>
+
+
+<style id="blue-theme-recipe-tab3-ing-fix">
+/* =================================================
+   BLUE THEME: TAB3 연금 레시피 베이지 잔재 제거
+   - x2 / x1 (recipeIng) pill 배경/텍스트 색 수정
+   - 카드/검색창은 이미 정리된 상태 유지
+   ================================================= */
+
+/* 재료 pill 전체 */
+:root[data-theme="blue"] .recipeIng{
+  background: rgba(255,255,255,.85) !important;
+  border: 1px solid rgba(0,0,0,.10) !important;
+  color: rgba(32,36,70,.85) !important;
+}
+
+/* 수량(x2, x1) 텍스트 */
+:root[data-theme="blue"] .recipeIng .qty{
+  color: rgba(32,36,70,.75) !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+/* 별(★) 텍스트 과도한 강조 제거 */
+:root[data-theme="blue"] .recipeIng b,
+:root[data-theme="blue"] .recipeIng strong{
+  color: rgba(32,36,70,.9) !important;
+  font-weight: 600 !important;
+}
+
+/* hover 시에도 베이지로 안 돌아가게 */
+:root[data-theme="blue"] .recipeIng:hover{
+  background: rgba(255,255,255,.95) !important;
+  border-color: rgba(120,130,255,.35) !important;
+}
+</style>
+
 </html>
 
 <style>
