@@ -2761,9 +2761,178 @@ function calcFishUsedFromLP(A, x){
   return used;
 }
 
+
+// ================================
+// TAB2: 미니-ILP(브루트포스) 기반 실제 제작 최적화
+// - 같은 등급 내 가격은 이미 equalizePricesWithinTierMax로 통일된다는 전제
+// - 그리디가 동점에서 한 품목에 몰빵되는 문제를 해결하기 위해
+//   등급(★/★★/★★★)별 3개 완성품 조합을 전수(소형) 탐색해서 최대 매출(=최대 개수)을 찾는다.
+// - feasibility 판정/자원 소모는 레시피 기반 "엄격 제작" 시뮬로 검증(부분 제작 금지).
+// ================================
+function _tab2_stateFromUI_noCredit(){
+  // 탭2 실제 어패류 재고: base+harv만
+  const fishArr = FISH_ROWS.map((_, i)=> Number(document.getElementById(`tot_${i}`)?.textContent || 0));
+  const fish = {};
+  FISH_ROWS.forEach((f,i)=> fish[f] = Math.max(0, Math.floor(Number(fishArr[i]||0))));
+  const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
+  const inv = {};
+  for(const [k,v] of Object.entries(inv0||{})){
+    inv[k] = Math.max(0, Math.floor(Number(v||0)));
+  }
+  return {fish, inv, inv0};
+}
+function _tab2_cloneState(st){
+  return {
+    fish: Object.fromEntries(Object.entries(st.fish).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
+    inv:  Object.fromEntries(Object.entries(st.inv ).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
+  };
+}
+
+// 엄격 제작: needQty 개를 만들 수 있으면 true(상태 갱신), 아니면 false
+function _tab2_craftNeedStrict(item, needQty, st, recipes, midSet, finalSet, craftLog, depth=0){
+  needQty = Math.max(0, Math.floor(Number(needQty||0)));
+  if(needQty<=0) return true;
+  if(depth>80) return false;
+
+  // 중간재 재고 선소모(완성품은 판매용이라 소모하지 않음)
+  if(!finalSet.has(item) && midSet.has(item)){
+    const have = Math.max(0, Math.floor(Number(st.inv[item]||0)));
+    if(have>0){
+      const use = Math.min(have, needQty);
+      st.inv[item] = have - use;
+      needQty -= use;
+      if(needQty<=0) return true;
+    }
+  }
+
+  const r = recipes[item];
+  if(!r){
+    // base: fish만 제약
+    if(st.fish[item] !== undefined){
+      const have = Math.max(0, Math.floor(Number(st.fish[item]||0)));
+      if(have < needQty) return false;
+      st.fish[item] = have - needQty;
+    }
+    return true;
+  }
+
+  let crafts = qtyToCrafts(item, needQty);
+  if(crafts<=0) return true;
+
+  // 직접 어패류 재료가 있으면 재고로 crafts 상한 캡 (부분 제작 금지)
+  for(const [ing, per] of Object.entries(r)){
+    if(st.fish[ing] !== undefined){
+      const perCraft = Math.max(0, Math.floor(Number(per||0)));
+      if(perCraft<=0) continue;
+      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
+      crafts = Math.min(crafts, Math.floor(have / perCraft));
+      if(crafts<=0) break;
+    }
+  }
+  if(crafts<=0) return false;
+
+  // 로그(제작 횟수)
+  craftLog[item] = (craftLog[item]||0) + crafts;
+
+  // yield surplus → 중간재 재고로 적립(중간재만)
+  const yld = recipeYield(item);
+  const produced = crafts * yld;
+  const surplus = Math.max(0, produced - needQty);
+  if(surplus>0 && midSet.has(item) && !finalSet.has(item)){
+    st.inv[item] = Math.max(0, Math.floor(Number(st.inv[item]||0))) + surplus;
+  }
+
+  // fish 재료는 전량 차감
+  for(const [ing, per] of Object.entries(r)){
+    if(st.fish[ing] !== undefined){
+      const perCraft = Math.max(0, Math.floor(Number(per||0)));
+      const need = crafts * perCraft;
+      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
+      if(have < need) return false;
+      st.fish[ing] = have - need;
+    }
+  }
+
+  // 나머지 재료 재귀 전개
+  for(const [ing, per] of Object.entries(r)){
+    if(st.fish[ing] !== undefined) continue;
+    const ok = _tab2_craftNeedStrict(ing, crafts * Number(per||0), st, recipes, midSet, finalSet, craftLog, depth+1);
+    if(!ok) return false;
+  }
+  return true;
+}
+
+// plan = [{name, qty}] 를 순서대로 제작 시도. 성공하면 {ok:true, st, craftLog}
+function _tab2_tryPlan(plan, baseState, recipes, midSet, finalSet){
+  const st = _tab2_cloneState(baseState);
+  const craftLog = {};
+  for(const p of plan){
+    const q = Math.max(0, Math.floor(Number(p.qty||0)));
+    if(!q) continue;
+    for(let k=0;k<q;k++){
+      const ok = _tab2_craftNeedStrict(p.name, 1, st, recipes, midSet, finalSet, craftLog, 0);
+      if(!ok) return {ok:false};
+    }
+  }
+  return {ok:true, st, craftLog};
+}
+
+// 등급별 3개 완성품 조합 전수(소형) 탐색
+function _tab2_solveTierILP(finalIdxs, prices, baseState, recipes, midSet, finalSet){
+  const names = finalIdxs.map(i=>PRODUCTS[i].name);
+  const unit = finalIdxs.map(i=>Math.max(0, Math.floor(Number(prices[i]||0))));
+
+  // 단독 상한(각각만 만들 때 최대치) 구하기: 이분탐색
+  function maxSingle(name){
+    let lo=0, hi=1;
+    while(true){
+      const r = _tab2_tryPlan([{name, qty:hi}], baseState, recipes, midSet, finalSet);
+      if(!r.ok) break;
+      hi*=2;
+      if(hi>512) break; // 안전 캡
+    }
+    while(lo<hi){
+      const mid = Math.floor((lo+hi+1)/2);
+      const r = _tab2_tryPlan([{name, qty:mid}], baseState, recipes, midSet, finalSet);
+      if(r.ok) lo = mid;
+      else hi = mid-1;
+    }
+    return lo;
+  }
+  const max0 = maxSingle(names[0]);
+  const max1 = maxSingle(names[1]);
+  const max2 = maxSingle(names[2]);
+
+  let best = {rev:-1, x:[0,0,0], st:null, craftLog:null};
+
+  // 전수: 큰 루프부터 best pruning
+  for(let x0=0;x0<=max0;x0++){
+    for(let x1=0;x1<=max1;x1++){
+      // 남은 최대치로도 best 못 넘으면 컷 (같은 가격이면 개수, 아니면 rev)
+      for(let x2=0;x2<=max2;x2++){
+        const rev = x0*unit[0] + x1*unit[1] + x2*unit[2];
+        if(rev <= best.rev) continue;
+
+        const plan = [
+          {name:names[0], qty:x0},
+          {name:names[1], qty:x1},
+          {name:names[2], qty:x2},
+        ];
+        const r = _tab2_tryPlan(plan, baseState, recipes, midSet, finalSet);
+        if(r.ok){
+          best = {rev, x:[x0,x1,x2], st:r.st, craftLog:r.craftLog};
+        }
+      }
+    }
+  }
+
+  return {best, names, max:[max0,max1,max2]};
+}
+
 function optimizeActual(){
   updateTotalsActual();
 
+  // 가격(프리미엄만) - 기존 정책 유지(동일 등급 최고가 통일)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
   let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
@@ -2773,53 +2942,65 @@ function optimizeActual(){
   const midSet = new Set(MID_ITEMS);
   const finalSet = new Set(PRODUCTS.map(p=>p.name));
 
-  const st = _tab2_stateFromUI();
-  const fishSupply = FISH_ROWS.map(f=> st.fish[f]||0);
+  // 기준 상태(어패류+중간재)
+  const baseState = _tab2_stateFromUI_noCredit();
 
+  // 티어별 인덱스 (PRODUCTS 순서 가정: ★3, ★★3, ★★★3)
+  const tierGroups = [
+    [0,1,2], // ★
+    [3,4,5], // ★★
+    [6,7,8], // ★★★
+  ];
+
+  // 티어별로 독립 최적(자원 공유 없음: 어패류/중간재가 별표로 분리되어있다는 전제)
+  // 실제로는 레시피가 별표를 섞지 않으므로 안전.
   const yFinal = Array(PRODUCTS.length).fill(0);
-  const craftLog = {};
 
-  while(true){
-    let bestIdx = -1;
-    let bestPrice = -1;
-    for(let i=0;i<PRODUCTS.length;i++){
-      const name = PRODUCTS[i].name;
-      const tmp = _tab2_cloneState(st);
-      const tmpLog = {};
-      const ok = _tab2_craftNeedStrict(name, 1, tmp, recipes, midSet, finalSet, tmpLog, 0);
-      if(!ok) continue;
-      const p = Math.max(0, Math.floor(Number(prices[i]||0)));
-      if(p > bestPrice){
-        bestPrice = p;
-        bestIdx = i;
+  // craftLog는 전체 합치기
+  const craftLogAll = {};
+  let stAfter = _tab2_cloneState(baseState);
+
+  for(const grp of tierGroups){
+    // 해당 티어만 소비되는 자원만 쓰도록, 상태를 통째로 공유해도 레시피가 다른 별표로만 접근하므로 안전.
+    const sol = _tab2_solveTierILP(grp, prices, stAfter, recipes, midSet, finalSet);
+    const {best, names} = sol;
+    // 결과 반영
+    for(let k=0;k<3;k++){
+      yFinal[grp[k]] = best.x[k];
+    }
+    // 상태/로그 누적
+    if(best.st){
+      stAfter = best.st;
+    }
+    if(best.craftLog){
+      for(const [k,v] of Object.entries(best.craftLog)){
+        craftLogAll[k] = (craftLogAll[k]||0) + v;
       }
     }
-    if(bestIdx < 0) break;
-
-    const ok2 = _tab2_tryCraftOneFinal(PRODUCTS[bestIdx].name, st, recipes, midSet, finalSet, craftLog);
-    if(!ok2) break;
-    yFinal[bestIdx] += 1;
   }
 
+  // 어패류 소모(usedFish) = supply - remaining
+  const fishSupplyArr = FISH_ROWS.map(f=> baseState.fish[f]||0);
   const usedFish = FISH_ROWS.map((f,i)=>{
-    const sup = Math.max(0, Math.floor(Number(fishSupply[i]||0)));
-    const rem = Math.max(0, Math.floor(Number(st.fish[f]||0)));
+    const sup = Math.max(0, Math.floor(Number(fishSupplyArr[i]||0)));
+    const rem = Math.max(0, Math.floor(Number(stAfter.fish[f]||0)));
     return Math.max(0, sup - rem);
   });
 
-  LAST_ACTUAL = { y: yFinal, prices, fishSupply };
+  LAST_ACTUAL = { y: yFinal, prices, fishSupply: fishSupplyArr };
 
-  renderActualResult(yFinal, prices, fishSupply, usedFish);
+  renderActualResult(yFinal, prices, fishSupplyArr, usedFish);
 
+  // 하위 제작 표: "실제로 제작된 중간재"만 표시(craftLogAll 기반)
   try{
     const rows = [];
     for(const sec of MID_SECTIONS){
       for(const name of (sec.items||[])){
-        const crafts = Math.max(0, Math.floor(Number(craftLog[name]||0)));
+        const crafts = Math.max(0, Math.floor(Number(craftLogAll[name]||0)));
         if(crafts<=0) continue;
         const yld = recipeYield(name);
         const produced = crafts * yld;
-        const invv = Math.max(0, Math.floor(Number(st.inv0[name]||0)));
+        const invv = Math.max(0, Math.floor(Number(baseState.inv0[name]||0)));
         rows.push({ name, need: produced, inv: invv, craft: produced });
       }
     }
