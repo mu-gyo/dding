@@ -697,6 +697,8 @@ function getAllRecipesForMid(){
 function calcNetNeedsForActualWithMidInv(yFinal){
   const recipes = getAllRecipesForMid();    // 최종품 9개 포함
   const fishSet = new Set(FISH_ROWS);
+  // ✅ 탭2(실제 제작) 기준: 완성품 재고는 "제작량"을 줄이지 않음(판매용으로만 사용)
+  const FINAL_SET = new Set((PRODUCTS||[]).map(p=>p.name));
 
   const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
   const inv = {};
@@ -716,12 +718,15 @@ function calcNetNeedsForActualWithMidInv(yFinal){
     if(depth > 40) return;
 
     // ✅ 중간재 재고 먼저 소비
-    const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
-    if(have > 0){
-      const use = Math.min(have, qty);
-      inv[item] = have - use;
-      qty -= use;
-      if(qty <= 0) return;
+    // (단, 완성품은 "판매용 재고"로만 취급하므로 제작 필요량에서 차감하지 않음)
+    if(!FINAL_SET.has(item)){
+      const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
+      if(have > 0){
+        const use = Math.min(have, qty);
+        inv[item] = have - use;
+        qty -= use;
+        if(qty <= 0) return;
+      }
     }
 
     const r = recipes[item];
@@ -2312,14 +2317,17 @@ function renderActualResult(y, prices, supply, usedFish){
   let sum = 0;
 
   PRODUCTS.forEach((p, i)=>{
-    const qty = Math.max(0, Math.floor(y[i]||0));
-const invQty = getMidInvQty(p.name);
-const sellQty = qty + invQty;
+    // ✅ 제작량(표시) = 이번에 새로 만드는 수량만
+    const craftQty = Math.max(0, Math.floor(Number(y[i] || 0)));
 
-    const unitView = viewPrices[i];          // ✅ 표기용 단가
-const rev = sellQty * unitView;
-sum += rev;
+    // ✅ 단가(표시/매출 공통)
+    const unitView = viewPrices[i];
 
+    // ✅ 매출(판매량) = 제작분 + 완성품 재고 (매출에만 반영)
+    const invQty = Math.max(0, Math.floor(Number(getMidInvQty(p.name) || 0)));
+    const sellQty = craftQty + invQty;
+    const rev = sellQty * unitView;
+    sum += rev;
 
     const tr = document.createElement("tr");
     const ck = getCraftCheck(i);
@@ -2328,12 +2336,11 @@ sum += rev;
 `<td><span class="tipName"
       data-tipname="${p.name}"
       data-tipkind="final"
-      data-tipqty="${qty}"
+      data-tipqty="${craftQty}"
     >${productLabel(p.name)}</span></td>
-<td class="right">${fmtGold(unitView)}</td>
-<td class="right">${sellQty}</td>
-
-<td class="right">${fmtGold(rev)}</td>` +
+ <td class="right">${fmtGold(unitView)}</td>
+ <td class="right">${craftQty}</td>
+ <td class="right">${fmtGold(rev)}</td>` +
 `<td class="center checkCell">
    <label class="checkbox">
      <input class="chk" type="checkbox" ${ck?"checked":""} data-idx="${i}">
@@ -2341,9 +2348,7 @@ sum += rev;
  </td>`;
 
     tb.appendChild(tr);
-  });
-
-  document.getElementById("revSumA").textContent = fmtGold(sum);
+  });document.getElementById("revSumA").textContent = fmtGold(sum);
   // === FORCE_SYNC_EXPECTED_FROM_TRADE ===
   try{
     const top = document.getElementById("revBadgeA");
@@ -2550,7 +2555,7 @@ function renderNeedCraftTableTo(sel, rows){
 
     // ✅ 총 필요 컬럼은 "개수" 기준으로 유지
     // (기존엔 craft+inv로 계산했는데, craft를 '횟수'로 바꾸면 깨지므로 need를 그대로 씀)
-    const totalNeed = needQty || Math.max(0, craftQty + invQty);
+    const totalNeed = needQty;
 
     tr.innerHTML =
       `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${craftCount}">${matLabel(r.name)}</span></td>` +
@@ -2568,6 +2573,118 @@ function renderNeedCraftTableTo(sel, rows){
 
 // (중요) 탭2에서는 getActualSupply()를 쓰지 않는다.
 // getActualSupply()가 mid credit을 더하고 있을 수 있으니, DOM에서 base_ + harv_만 직접 읽는다.
+// ================================
+// TAB2 REALISTIC SIM (no LP)
+// ================================
+
+// ================================
+// TAB2 REALISTIC SIM (no LP)
+// - 실제 재고(어패류 base+harv, 중간재 재고)로 "만들 수 있는 것만" 제작
+// - 부분 제작/부분 소모 금지
+// - 최종품은 1개씩 그리디(가격 기준)로 추가 제작 (현실 제약 반영)
+// NOTE: 완전한 전역 최적(ILP)은 비용이 커서, 현재는 '실제 제작 가능'을 최우선으로 보장하는 그리디 방식.
+// ================================
+function _tab2_stateFromUI(){
+  const fishArr = (typeof readActualFishSupplyNoMid === "function")
+    ? readActualFishSupplyNoMid()
+    : Array(FISH_ROWS.length).fill(0);
+  const fish = {};
+  FISH_ROWS.forEach((f,i)=> fish[f] = Math.max(0, Math.floor(Number(fishArr[i]||0))));
+  const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
+  const inv = {};
+  for(const [k,v] of Object.entries(inv0||{})){
+    inv[k] = Math.max(0, Math.floor(Number(v||0)));
+  }
+  return {fish, inv, inv0};
+}
+
+function _tab2_cloneState(st){
+  return {
+    fish: Object.fromEntries(Object.entries(st.fish).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
+    inv:  Object.fromEntries(Object.entries(st.inv ).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
+  };
+}
+
+function _tab2_craftNeedStrict(item, needQty, st, recipes, midSet, finalSet, craftLog, depth=0){
+  needQty = Math.max(0, Math.floor(Number(needQty||0)));
+  if(needQty<=0) return true;
+  if(depth>80) return false;
+
+  if(!finalSet.has(item) && midSet.has(item)){
+    const have = Math.max(0, Math.floor(Number(st.inv[item]||0)));
+    if(have>0){
+      const use = Math.min(have, needQty);
+      st.inv[item] = have - use;
+      needQty -= use;
+      if(needQty<=0) return true;
+    }
+  }
+
+  const r = recipes[item];
+  if(!r){
+    if(st.fish[item] !== undefined){
+      const have = Math.max(0, Math.floor(Number(st.fish[item]||0)));
+      if(have < needQty) return false;
+      st.fish[item] = have - needQty;
+    }
+    return true;
+  }
+
+  let crafts = qtyToCrafts(item, needQty);
+  if(crafts<=0) return true;
+
+  for(const [ing, per] of Object.entries(r)){
+    if(st.fish[ing] !== undefined){
+      const perCraft = Math.max(0, Math.floor(Number(per||0)));
+      if(perCraft<=0) continue;
+      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
+      crafts = Math.min(crafts, Math.floor(have / perCraft));
+      if(crafts<=0) break;
+    }
+  }
+  if(crafts<=0) return false;
+
+  craftLog[item] = (craftLog[item]||0) + crafts;
+
+  const yld = recipeYield(item);
+  const produced = crafts * yld;
+  const surplus = Math.max(0, produced - needQty);
+  if(surplus>0 && midSet.has(item) && !finalSet.has(item)){
+    st.inv[item] = Math.max(0, Math.floor(Number(st.inv[item]||0))) + surplus;
+  }
+
+  for(const [ing, per] of Object.entries(r)){
+    if(st.fish[ing] !== undefined){
+      const perCraft = Math.max(0, Math.floor(Number(per||0)));
+      const need = crafts * perCraft;
+      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
+      if(have < need) return false;
+      st.fish[ing] = have - need;
+    }
+  }
+
+  for(const [ing, per] of Object.entries(r)){
+    if(st.fish[ing] !== undefined) continue;
+    const ok = _tab2_craftNeedStrict(ing, crafts * Number(per||0), st, recipes, midSet, finalSet, craftLog, depth+1);
+    if(!ok) return false;
+  }
+
+  return true;
+}
+
+function _tab2_tryCraftOneFinal(finalName, st, recipes, midSet, finalSet, craftLog){
+  const tmp = _tab2_cloneState(st);
+  const tmpLog = {};
+  const ok = _tab2_craftNeedStrict(finalName, 1, tmp, recipes, midSet, finalSet, tmpLog, 0);
+  if(!ok) return null;
+  st.fish = tmp.fish;
+  st.inv = tmp.inv;
+  for(const [k,v] of Object.entries(tmpLog)){
+    craftLog[k] = (craftLog[k]||0) + v;
+  }
+  return true;
+}
+
 function readActualFishSupplyNoMid(){
   const out = Array(FISH_ROWS.length).fill(0);
   for(let i=0;i<FISH_ROWS.length;i++){
@@ -2647,40 +2764,67 @@ function calcFishUsedFromLP(A, x){
 function optimizeActual(){
   updateTotalsActual();
 
-  // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
   let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
   prices = equalizePricesWithinTierMax(prices);
 
-  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
-  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
+  const recipes = getAllRecipesForMid();
+  const midSet = new Set(MID_ITEMS);
+  const finalSet = new Set(PRODUCTS.map(p=>p.name));
 
-  const res = simplexMax(A, b, c);
-  if(res.status !== "optimal"){
-    alert("최적화 실패: 입력 재고를 확인해줘.");
-    return;
+  const st = _tab2_stateFromUI();
+  const fishSupply = FISH_ROWS.map(f=> st.fish[f]||0);
+
+  const yFinal = Array(PRODUCTS.length).fill(0);
+  const craftLog = {};
+
+  while(true){
+    let bestIdx = -1;
+    let bestPrice = -1;
+    for(let i=0;i<PRODUCTS.length;i++){
+      const name = PRODUCTS[i].name;
+      const tmp = _tab2_cloneState(st);
+      const tmpLog = {};
+      const ok = _tab2_craftNeedStrict(name, 1, tmp, recipes, midSet, finalSet, tmpLog, 0);
+      if(!ok) continue;
+      const p = Math.max(0, Math.floor(Number(prices[i]||0)));
+      if(p > bestPrice){
+        bestPrice = p;
+        bestIdx = i;
+      }
+    }
+    if(bestIdx < 0) break;
+
+    const ok2 = _tab2_tryCraftOneFinal(PRODUCTS[bestIdx].name, st, recipes, midSet, finalSet, craftLog);
+    if(!ok2) break;
+    yFinal[bestIdx] += 1;
   }
 
-  const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
-
-  // ✅ 기존 UI는 최종품 9개만 그리므로 yFinal만 추출
-  const yFinal = PRODUCTS.map(p=>{
-    const idx = items.indexOf(p.name);
-    return idx >= 0 ? (intRes.x[idx] || 0) : 0;
+  const usedFish = FISH_ROWS.map((f,i)=>{
+    const sup = Math.max(0, Math.floor(Number(fishSupply[i]||0)));
+    const rem = Math.max(0, Math.floor(Number(st.fish[f]||0)));
+    return Math.max(0, sup - rem);
   });
 
-  LAST_ACTUAL = {
-    x: intRes.x,          // 전체 변수(중간재 제작량 포함)
-    y: yFinal,            // 최종품만
-    prices,
-    fishSupply,
-    A
-  };
+  LAST_ACTUAL = { y: yFinal, prices, fishSupply };
 
-const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
-renderActualResult(yFinal, prices, fishSupply, usedFish);
+  renderActualResult(yFinal, prices, fishSupply, usedFish);
 
+  try{
+    const rows = [];
+    for(const sec of MID_SECTIONS){
+      for(const name of (sec.items||[])){
+        const crafts = Math.max(0, Math.floor(Number(craftLog[name]||0)));
+        if(crafts<=0) continue;
+        const yld = recipeYield(name);
+        const produced = crafts * yld;
+        const invv = Math.max(0, Math.floor(Number(st.inv0[name]||0)));
+        rows.push({ name, need: produced, inv: invv, craft: produced });
+      }
+    }
+    renderNeedCraftTableTo("#needCraftTblA tbody", rows);
+  }catch(e){}
 }
 
  
@@ -4270,3 +4414,316 @@ try{ renderTradeSummaryActual(); }catch(e){};
 
   setInterval(checkAlarms, 30 * 1000);
 })();
+
+
+// === Theme toggle compatibility (safe) ===
+(function(){
+  const sw = document.querySelector('.themeSwitch');
+  if(!sw) return;
+  const root = document.documentElement;
+  const saved = localStorage.getItem('theme');
+  if(saved){
+    root.dataset.theme = saved;
+  }
+  sw.addEventListener('click', ()=>{
+    const cur = root.dataset.theme === 'blue' ? '' : 'blue';
+    if(cur) root.dataset.theme = cur;
+    else delete root.dataset.theme;
+    localStorage.setItem('theme', cur);
+  });
+})();
+
+
+
+// ================================
+// Fish inventory: set / unit (SAFE, scoped)
+// - Does NOT touch trade or other tables
+// - Keeps underlying value as total units
+// ================================
+const FISH_SET_SIZE = 64;
+
+// Enhance fish inventory table rows AFTER render
+function enhanceFishInvRows(){
+  const rows = document.querySelectorAll("#invTbl tbody tr");
+  rows.forEach(tr=>{
+    if(tr.dataset.enhanced) return;
+
+    const inp = tr.querySelector("input[type='number']");
+    if(!inp) return;
+
+    // read existing total
+    const total = Math.max(0, Number(inp.value||0));
+    const set = Math.floor(total / FISH_SET_SIZE);
+    const unit = total % FISH_SET_SIZE;
+
+    // build wrapper
+    const wrap = document.createElement("div");
+    wrap.className = "fishSetUnitWrap";
+    wrap.style.display = "flex";
+    wrap.style.gap = "8px";
+    wrap.style.justifyContent = "flex-end";
+
+    const setInp = document.createElement("input");
+    setInp.type = "number";
+    setInp.min = "0";
+    setInp.className = inp.className;
+    setInp.value = set;
+
+    const unitInp = document.createElement("input");
+    unitInp.type = "number";
+    unitInp.min = "0";
+    unitInp.max = String(FISH_SET_SIZE-1);
+    unitInp.className = inp.className;
+    unitInp.value = unit;
+
+    // sync to hidden original input
+    function sync(){
+      const s = Math.max(0, Number(setInp.value||0));
+      const u = Math.max(0, Number(unitInp.value||0));
+      const tot = s * FISH_SET_SIZE + u;
+      inp.value = tot;
+      inp.dispatchEvent(new Event("input", {bubbles:true}));
+    }
+    setInp.addEventListener("input", sync);
+    unitInp.addEventListener("input", sync);
+
+    // hide original, insert wrapper
+    inp.type = "hidden";
+    wrap.appendChild(setInp);
+    wrap.appendChild(unitInp);
+    inp.parentElement.appendChild(wrap);
+
+    tr.dataset.enhanced = "1";
+  });
+}
+
+// Observe fish inventory table only
+document.addEventListener("DOMContentLoaded", ()=>{
+  const tbody = document.querySelector("#invTbl tbody");
+  if(!tbody) return;
+
+  const mo = new MutationObserver(()=>enhanceFishInvRows());
+  mo.observe(tbody, {childList:true, subtree:true});
+  setTimeout(enhanceFishInvRows, 0);
+});
+
+
+
+// === AUTO SYNC: Tab1 inv -> Tab2 base (on input) ===
+(function bindInvAutoSync(){
+  if(typeof FISH_ROWS === "undefined") return;
+  FISH_ROWS.forEach((_, i)=>{
+    const el = document.getElementById(`inv_${i}`);
+    if(!el) return;
+    if(el.dataset.autoSyncBound) return;
+    el.dataset.autoSyncBound = "1";
+    el.addEventListener("input", ()=>{
+      if(typeof syncExpectedToBase === "function"){
+        syncExpectedToBase();
+      }
+    });
+  });
+})();
+
+
+// === TAB2 today harvest set/ea enhancer (POST-BUILD, SAFE) ===
+(function(){
+  function enhance(){
+    if(typeof FISH_ROWS === "undefined") return;
+    FISH_ROWS.forEach((_, i)=>{
+      const harv = document.getElementById(`harv_${i}`);
+      if(!harv || harv.dataset.seteaEnhanced) return;
+      harv.dataset.seteaEnhanced = "1";
+
+      const td = harv.parentElement;
+      if(!td) return;
+
+      harv.style.display = "none";
+
+      const wrap = document.createElement("span");
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "4px";
+
+      const setI = document.createElement("input");
+      setI.type = "number"; setI.min = "0"; setI.step = "1"; setI.value = "0";
+      setI.style.width = "56px";
+
+      const setL = document.createElement("span");
+      setL.textContent = "세트";
+
+      const eaI = document.createElement("input");
+      eaI.type = "number"; eaI.min = "0"; eaI.step = "1"; eaI.value = "0";
+      eaI.style.width = "56px";
+
+      const eaL = document.createElement("span");
+      eaL.textContent = "개";
+
+      const sync = ()=>{
+        harv.value = (Number(setI.value||0)*64) + Number(eaI.value||0);
+        if(typeof updateTotalsActual === "function") updateTotalsActual();
+      };
+      setI.addEventListener("input", sync);
+      eaI.addEventListener("input", sync);
+
+      td.appendChild(wrap);
+      wrap.appendChild(setI);
+      wrap.appendChild(setL);
+      wrap.appendChild(eaI);
+      wrap.appendChild(eaL);
+    });
+  }
+
+  // hook after buildInvActual
+  if(typeof buildInvActual === "function"){
+    const _orig = buildInvActual;
+    buildInvActual = function(){
+      const r = _orig.apply(this, arguments);
+      enhance();
+      return r;
+    };
+  }
+
+  // fallback after load
+  window.addEventListener("DOMContentLoaded", ()=>{
+    setTimeout(enhance, 0);
+  });
+})();
+
+
+// === TAB1 inventory set/ea label enhancer (UI ONLY) ===
+(function(){
+  function enhanceTab1(){
+    if(typeof FISH_ROWS === "undefined") return;
+    FISH_ROWS.forEach((_, i)=>{
+      const base = document.getElementById(`inv_${i}`);
+      if(!base) return;
+
+      const td = base.parentElement;
+      if(!td || td.dataset.seteaLabeled) return;
+      td.dataset.seteaLabeled = "1";
+
+      const inputs = td.querySelectorAll("input[type='number']");
+      if(inputs.length < 2) return;
+
+      const setI = inputs[0];
+      const eaI  = inputs[1];
+
+      const wrap = document.createElement("span");
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "4px";
+
+      setI.before(wrap);
+      wrap.appendChild(setI);
+      wrap.insertAdjacentHTML("beforeend", "<span class='qty-unit'>세트</span>");
+      wrap.appendChild(eaI);
+      wrap.insertAdjacentHTML("beforeend", "<span class='qty-unit'>개</span>");
+    });
+  }
+
+  if(typeof buildTables === "function"){
+    const _b = buildTables;
+    buildTables = function(){
+      const r = _b.apply(this, arguments);
+      enhanceTab1();
+      return r;
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", ()=> setTimeout(enhanceTab1, 0));
+})();
+
+
+
+/* ===============================
+   PERSISTENCE PATCH
+   - Fish inventories (inv/base/harv)
+   - Upgrade stages
+   =============================== */
+
+const LS_KEY_FISH_INV = "DDTY_FISH_INV_V1";
+const LS_KEY_STAGE_CFG = "DDTY_STAGE_CFG_V1";
+
+function saveFishInv(){
+  if(typeof FISH_ROWS === "undefined") return;
+  const data = {};
+  FISH_ROWS.forEach((_, i)=>{
+    data[i] = {
+      inv:  Number(document.getElementById(`inv_${i}`)?.value  || 0),
+      base: Number(document.getElementById(`base_${i}`)?.value || 0),
+      harv: Number(document.getElementById(`harv_${i}`)?.value || 0),
+    };
+  });
+  localStorage.setItem(LS_KEY_FISH_INV, JSON.stringify(data));
+}
+
+function loadFishInv(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_FISH_INV);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(typeof FISH_ROWS === "undefined") return;
+    FISH_ROWS.forEach((_, i)=>{
+      const row = data[i];
+      if(!row) return;
+      const inv  = document.getElementById(`inv_${i}`);
+      const base = document.getElementById(`base_${i}`);
+      const harv = document.getElementById(`harv_${i}`);
+      if(inv)  inv.value  = row.inv  ?? 0;
+      if(base) base.value = row.base ?? 0;
+      if(harv) harv.value = row.harv ?? 0;
+    });
+  }catch(e){}
+}
+
+function bindFishInvPersistence(){
+  if(typeof FISH_ROWS === "undefined") return;
+  FISH_ROWS.forEach((_, i)=>{
+    ["inv","base","harv"].forEach(k=>{
+      const el = document.getElementById(`${k}_${i}`);
+      if(el){
+        el.addEventListener("input", saveFishInv);
+        el.addEventListener("change", saveFishInv);
+      }
+    });
+  });
+}
+
+function saveStages(){
+  const data = {};
+  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) data[id] = el.value;
+  });
+  localStorage.setItem(LS_KEY_STAGE_CFG, JSON.stringify(data));
+}
+
+function loadStages(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_STAGE_CFG);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.entries(data).forEach(([id,val])=>{
+      const el = document.getElementById(id);
+      if(el) el.value = val;
+    });
+  }catch(e){}
+}
+
+function bindStagePersistence(){
+  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener("change", saveStages);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", ()=>{
+  loadFishInv();
+  loadStages();
+  bindFishInvPersistence();
+  bindStagePersistence();
+  if(typeof updateTotalsActual === "function"){
+    updateTotalsActual();
+  }
+});
