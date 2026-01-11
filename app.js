@@ -1,3 +1,20 @@
+var __tab2_cached_state = null;
+
+// ===== GLOBAL ENGINE TUNING (SINGLE SOURCE OF TRUTH) =====
+(function(){
+  if (typeof window.ALPHA_GLOBAL === 'undefined') window.ALPHA_GLOBAL = 1.20;
+  if (typeof window.BETA_GLOBAL  === 'undefined') window.BETA_GLOBAL  = 0.50;
+  if (typeof window.GAMMA_GLOBAL === 'undefined') window.GAMMA_GLOBAL = 0.55;
+  if (typeof window.MAX_BURST    === 'undefined') window.MAX_BURST    = 50;
+  if (typeof window.BURST_EXEC_CAP === 'undefined') window.BURST_EXEC_CAP = 20; // execute up to N units per pick
+})();
+// =========================================================
+
+// ===== GLOBAL ENGINE TUNING =====
+ // immediate revenue weight
+ // lookahead weight
+// ================================
+
 
 // === Global Loading Overlay helpers (TAB1/TAB2 공용) ===
 function showGlobalLoadingOverlay(){
@@ -2263,7 +2280,11 @@ function buildInvActual(){
     tb.appendChild(tr);
   });
 
-  // change listeners
+  
+  // ✅ 안정화: 테이블 재생성 시에도 "오늘 채집"은 0으로 시작
+  FISH_ROWS.forEach((_, i)=>{ const hEl = document.getElementById(`harv_${i}`); if(hEl) hEl.value = 0; });
+  updateTotalsActual();
+// change listeners
   FISH_ROWS.forEach((_, i)=>{
     document.getElementById(`base_${i}`).addEventListener("change", updateTotalsActual);
     document.getElementById(`harv_${i}`).addEventListener("change", updateTotalsActual);
@@ -2275,7 +2296,7 @@ function buildInvActual(){
 function updateTotalsActual(){
   FISH_ROWS.forEach((_, i)=>{
     const b = Number(document.getElementById(`base_${i}`).value || 0);
-    const h = Number(document.getElementById(`harv_${i}`).value || 0);
+    const h = Number(document.getElementById(`harv_${i}`).value || 0) || 0;
     const t = Math.max(0, Math.floor(b) + Math.floor(h));
     document.getElementById(`tot_${i}`).textContent = String(t);
   });
@@ -2780,7 +2801,9 @@ function calcFishUsedFromLP(A, x){
 //   등급(★/★★/★★★)별 3개 완성품 조합을 전수(소형) 탐색해서 최대 매출(=최대 개수)을 찾는다.
 // - feasibility 판정/자원 소모는 레시피 기반 "엄격 제작" 시뮬로 검증(부분 제작 금지).
 // ================================
-function _tab2_stateFromUI_noCredit(){
+function _tab2_stateFromUI_noCredit(forceReset = false){
+  if(forceReset){ __tab2_cached_state = null; }
+
   // 탭2 실제 어패류 재고: base+harv만
   const fishArr = FISH_ROWS.map((_, i)=> Number(document.getElementById(`tot_${i}`)?.textContent || 0));
   const fish = {};
@@ -2940,84 +2963,144 @@ function _tab2_solveTierILP(finalIdxs, prices, baseState, recipes, midSet, final
   return {best, names, max:[max0,max1,max2]};
 }
 
+
+// =========================================================
+// TAB2 NEW ENGINE: Lookahead depth=2 (strict craft simulator)
+// - uses actual fish supply (tot_) + mid inventory
+// - NO same-tier price equalization (price diffs preserved)
+// - prevents the old "stuck" and "impossible craft" issues by:
+//   (A) strict feasibility checks (fish/inv must exist)
+//   (B) 1-by-1 crafting with 2-step lookahead scoring
+// =========================================================
+function _tab2_canCraftOneFinal(finalName, st, recipes, midSet, finalSet){
+  const tmp = _tab2_cloneState(st);
+  const tmpLog = {};
+  const ok = _tab2_craftNeedStrict(finalName, 1, tmp, recipes, midSet, finalSet, tmpLog, 0);
+  return !!ok;
+}
+
+
+// Estimate how many consecutive units of the same item can be crafted
+function _tab2_estimateBurst(name, st, recipes, midSet, finalSet){
+  let cnt = 0;
+  let tmp = _tab2_cloneState(st);
+  const log = {};
+  while(cnt < MAX_BURST){
+    const ok = _tab2_craftNeedStrict(name, 1, tmp, recipes, midSet, finalSet, log, 0);
+    if(!ok) break;
+    cnt++;
+  }
+  return cnt;
+}
+
+function _tab2_lookahead2_pick(st, prices, recipes, midSet, finalSet){
+  const n = PRODUCTS.length;
+
+
+  // Aggressive weighting (global, not item-specific)
+  // Higher ALPHA => trust immediate revenue more; BETA keeps 2-step awareness.
+  // using global ALPHA_GLOBAL / BETA_GLOBAL
+  let bestIdx = -1;
+  let bestScore = -Infinity;
+  let bestP1 = -Infinity;
+
+  for(let i=0;i<n;i++){
+    const name1 = PRODUCTS[i].name;
+    // first step feasibility
+    const st1 = _tab2_cloneState(st);
+    const log1 = {};
+    const ok1 = _tab2_craftNeedStrict(name1, 1, st1, recipes, midSet, finalSet, log1, 0);
+    if(!ok1) continue;
+
+    // second step: best additional price after taking i
+    let bestSecond = 0;
+    for(let j=0;j<n;j++){
+      const name2 = PRODUCTS[j].name;
+      const st2 = _tab2_cloneState(st1);
+      const log2 = {};
+      const ok2 = _tab2_craftNeedStrict(name2, 1, st2, recipes, midSet, finalSet, log2, 0);
+      if(ok2){
+        const pj = Math.max(0, Math.floor(Number(prices[j]||0)));
+        if(pj > bestSecond) bestSecond = pj;
+      }
+    }
+
+    const p1 = Math.max(0, Math.floor(Number(prices[i]||0)));
+    const burst = _tab2_estimateBurst(name1, st, recipes, midSet, finalSet);
+    const score = (p1 * ALPHA_GLOBAL)
+                + (bestSecond * BETA_GLOBAL)
+                + (Math.max(0, burst - 1) * p1 * GAMMA_GLOBAL);
+    // DEBUG (scope-safe): uncomment if needed
+    // console.log("[pick]", name1, {p1, bestSecond, score});
+
+    // tie-breaker: higher immediate price, then stable index
+    if(score > bestScore || (score === bestScore && (p1 > bestP1 || (p1 === bestP1 && i < bestIdx)))){
+      bestScore = score;
+      bestP1 = p1;
+      bestIdx = i;
+    }
+  }
+
+  return bestIdx;
+}
+
 function optimizeActual(){
   updateTotalsActual();
 
-  // 가격(프리미엄만) - 기존 정책 유지(동일 등급 최고가 통일)
+  // 가격(프리미엄만) - ✅ 가격 차이 유지 (동일 등급 통일 제거)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-  let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
-  prices = equalizePricesWithinTierMax(prices);
+  const prices = PRODUCTS.map(p=> Math.round(Number(p.base || 0) * premiumMul));
 
   const recipes = getAllRecipesForMid();
   const midSet = new Set(MID_ITEMS);
   const finalSet = new Set(PRODUCTS.map(p=>p.name));
 
-  // 기준 상태(어패류+중간재)
-  const baseState = _tab2_stateFromUI_noCredit();
+  // 기준 상태(어패류+중간재) : ✅ tot_ 기반 + midInv (no credit)
+  const st = _tab2_stateFromUI_noCredit(true);
+  const startFish = Object.fromEntries(FISH_ROWS.map(f=>[f, Math.max(0, Math.floor(Number(st.fish[f]||0)))]));
 
-  // 티어별 인덱스 (PRODUCTS 순서 가정: ★3, ★★3, ★★★3)
-  const tierGroups = [
-    [0,1,2], // ★
-    [3,4,5], // ★★
-    [6,7,8], // ★★★
-  ];
+  const y = Array(PRODUCTS.length).fill(0);
 
-  // 티어별로 독립 최적(자원 공유 없음: 어패류/중간재가 별표로 분리되어있다는 전제)
-  // 실제로는 레시피가 별표를 섞지 않으므로 안전.
-  const yFinal = Array(PRODUCTS.length).fill(0);
+  // Hard safety cap (prevents accidental infinite loops)
+  const MAX_STEPS = 50000;
+  let steps = 0;
 
-  // craftLog는 전체 합치기
-  const craftLogAll = {};
-  let stAfter = _tab2_cloneState(baseState);
+  while(steps++ < MAX_STEPS){
+    const pick = _tab2_lookahead2_pick(st, prices, recipes, midSet, finalSet);
+    if(pick < 0) break;
+    const name = PRODUCTS[pick].name;
 
-  for(const grp of tierGroups){
-    // 해당 티어만 소비되는 자원만 쓰도록, 상태를 통째로 공유해도 레시피가 다른 별표로만 접근하므로 안전.
-    const sol = _tab2_solveTierILP(grp, prices, stAfter, recipes, midSet, finalSet);
-    const {best, names} = sol;
-    // 결과 반영
-    for(let k=0;k<3;k++){
-      yFinal[grp[k]] = best.x[k];
-    }
-    // 상태/로그 누적
-    if(best.st){
-      stAfter = best.st;
-    }
-    if(best.craftLog){
-      for(const [k,v] of Object.entries(best.craftLog)){
-        craftLogAll[k] = (craftLogAll[k]||0) + v;
-      }
+    // Adaptive Batch: keep crafting while this item remains the best pick
+    let guard = 0;
+    const MAX_ADAPTIVE = Number(window.BURST_EXEC_CAP || 20);
+
+    while(guard++ < MAX_ADAPTIVE){
+      const log = {};
+      const ok = _tab2_craftNeedStrict(name, 1, st, recipes, midSet, finalSet, log, 0);
+      if(!ok) break;
+
+      y[pick] += 1;
+
+      // Re-evaluate: if another item becomes better, stop batching
+      const nextPick = _tab2_lookahead2_pick(st, prices, recipes, midSet, finalSet);
+      if(nextPick !== pick) break;
     }
   }
 
-  // 어패류 소모(usedFish) = supply - remaining
-  const fishSupplyArr = FISH_ROWS.map(f=> baseState.fish[f]||0);
-  const usedFish = FISH_ROWS.map((f,i)=>{
-    const sup = Math.max(0, Math.floor(Number(fishSupplyArr[i]||0)));
-    const rem = Math.max(0, Math.floor(Number(stAfter.fish[f]||0)));
-    return Math.max(0, sup - rem);
+  // supply (표에 보여줄 재고) = tot_ 기반 (no credit)
+  const supply = FISH_ROWS.map(f=> Math.max(0, Math.floor(Number(startFish[f]||0))));
+
+  // usedFish: 시작-종료 (표시/디버그용)
+  const usedFish = FISH_ROWS.map(f=>{
+    const before = Math.max(0, Math.floor(Number(startFish[f]||0)));
+    const after  = Math.max(0, Math.floor(Number(st.fish[f]||0)));
+    return Math.max(0, before - after);
   });
 
-  LAST_ACTUAL = { y: yFinal, prices, fishSupply: fishSupplyArr };
-
-  renderActualResult(yFinal, prices, fishSupplyArr, usedFish);
-
-  // 하위 제작 표: "실제로 제작된 중간재"만 표시(craftLogAll 기반)
-  try{
-    const rows = [];
-    for(const sec of MID_SECTIONS){
-      for(const name of (sec.items||[])){
-        const crafts = Math.max(0, Math.floor(Number(craftLogAll[name]||0)));
-        if(crafts<=0) continue;
-        const yld = recipeYield(name);
-        const produced = crafts * yld;
-        const invv = Math.max(0, Math.floor(Number(baseState.inv0[name]||0)));
-        rows.push({ name, need: produced, inv: invv, craft: produced });
-      }
-    }
-    renderNeedCraftTableTo("#needCraftTblA tbody", rows);
-  }catch(e){}
+  renderActualResult(y, prices, supply, usedFish);
 }
+
 
  
 
