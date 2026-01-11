@@ -418,6 +418,11 @@ table {
   border-radius: 14px !important;
 }
 
+
+/* === PATCH(TAB2): Need card layout === */
+#needMatCard .split{ display:block !important; }
+#needMatCard #needMatTblA{ width:100%; }
+
 </style>
 <link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet"/>
@@ -2699,11 +2704,11 @@ table {
         <tr><th style="width:80px">슬롯</th><th>요구 수량 (1~30)</th><th>퍼센트 (101~120)</th></tr>
       </thead>
       <tbody>
-        <tr class="tradeRow" data-slot="1"><td class="muted">📦 1</td><td><input id="tradeReq1" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct1" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="2"><td class="muted">📦 2</td><td><input id="tradeReq2" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct2" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="3"><td class="muted">📦 3</td><td><input id="tradeReq3" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct3" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="4"><td class="muted">📦 4</td><td><input id="tradeReq4" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct4" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
-<tr class="tradeRow" data-slot="5"><td class="muted">📦 5</td><td><input id="tradeReq5" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="(미입력)"/></td><td><input id="tradePct5" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="(미입력)"/></td></tr>
+        <tr class="tradeRow" data-slot="1"><td class="muted">📦 1</td><td><input id="tradeReq1" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="0"/></td><td><input id="tradePct1" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="0"/></td></tr>
+<tr class="tradeRow" data-slot="2"><td class="muted">📦 2</td><td><input id="tradeReq2" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="0"/></td><td><input id="tradePct2" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="0"/></td></tr>
+<tr class="tradeRow" data-slot="3"><td class="muted">📦 3</td><td><input id="tradeReq3" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="0"/></td><td><input id="tradePct3" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="0"/></td></tr>
+<tr class="tradeRow" data-slot="4"><td class="muted">📦 4</td><td><input id="tradeReq4" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="0"/></td><td><input id="tradePct4" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="0"/></td></tr>
+<tr class="tradeRow" data-slot="5"><td class="muted">📦 5</td><td><input id="tradeReq5" type="number" data-setea="ea" min="1" max="30" step="1" placeholder="0"/></td><td><input id="tradePct5" type="number" data-setea="ea" min="101" max="120" step="1" placeholder="0"/></td></tr>
       </tbody>
     </table>
     <div class="btnbar" style="margin-top:8px">
@@ -2934,29 +2939,21 @@ table {
 
 <div class="card" id="needMatCard" style="grid-column:1 / -1">
 <h2>필요 재료 (채집 후 기준)</h2>
-<div class="split">
-<div>
-<h2 style="margin:0 0 8px">어패류 재고 / 소모 / 잔여 (제작 횟수 기준)</h2>
-<table id="needFishTblA">
-<thead><tr><th>어패류</th><th>재고</th><th>소모</th><th>잔여</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-<div>
-<h2 style="margin:0 0 8px">부재료 필요량</h2>
-<table id="needMatTblA">
-<thead><tr><th>부재료</th><th class="right">필요</th></tr></thead>
-<tbody></tbody>
-</table>
-</div>
-</div>
 <div style="margin-top:14px">
-<h2 style="margin:0 0 8px">하위 제작 필요량 (중간재 재고 반영)</h2>
-<table id="needCraftTblA">
-<thead><tr><th>중간재</th><th>추가 제작 (횟수)</th><th>재고</th><th>총 필요</th></tr></thead>
-<tbody></tbody>
-</table>
-<div class="note">• “추가 제작”은 현재 중간재 재고를 뺀 실제 제작 필요량, “총 필요”는 추천 제작량을 만들기 위해 필요한 총량입니다.</div>
+  <h2 style="margin:0 0 8px">하위 제작 필요량 (중간재 재고 반영)</h2>
+  <table id="needCraftTblA">
+    <thead><tr><th>중간재</th><th>추가 제작 (횟수)</th><th>재고</th><th>총 필요</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="note">• “추가 제작”은 현재 중간재 재고를 뺀 실제 제작 필요량, “총 필요”는 추천 제작량을 만들기 위해 필요한 총량입니다.</div>
+</div>
+
+<div style="margin-top:14px">
+  <h2 style="margin:0 0 8px">부재료 필요량</h2>
+  <table id="needMatTblA">
+    <thead><tr><th>부재료</th><th class="right">필요</th></tr></thead>
+    <tbody></tbody>
+  </table>
 </div>
 <div class="note">• 부재료 재고는 받지 않으므로, 필요량만 표시합니다.</div>
 </div>
@@ -4145,5 +4142,8 @@ table {
 #panelRecipe .recipeIng{
   border-radius: 14px !important;
 }
+
+
+
 
 </style>

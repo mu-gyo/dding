@@ -2419,11 +2419,11 @@ if(badge){
 }
 
 
-  const {needFish, needMat} = calcNetNeedsForActualWithMidInv(y);
-  renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
+  // PATCH(TAB2): fish need table hidden/removed from UI
+  const {needMat} = calcNetNeedsForActualWithMidInv(y);
+  // renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
   renderNeedMatTableTo("#needMatTblA tbody", needMat);
-
-  const craftPlan = calcNetCraftPlanFromActual(y);
+const craftPlan = calcNetCraftPlanFromActual(y);
   renderNeedCraftTableTo("#needCraftTblA tbody", craftPlan);
 }
 
