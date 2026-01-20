@@ -1,3 +1,4 @@
+const SET_SIZE = 64;
 var __tab2_cached_state = null;
 
 // ===== GLOBAL ENGINE TUNING (SINGLE SOURCE OF TRUTH) =====
@@ -655,16 +656,16 @@ function qtyToCrafts(item, qty){
 
 // calcMatNeed 안에 있던 레시피를 "중간재 전개용"으로 재사용 (복붙이지만 1차 구현은 이게 안전)
 function getAllRecipesForMid(){
-  // ✅ 네가 준 "업데이트 레시피" 그대로 (추측/변형 없음)
+  // ✅ 오늘 업데이트 레시피 (이름 유지, 재료만 갱신)
   const R1 = {
     // 1성 정수(1회 제작 시 2개 생산)
-    "수호의 정수 ★": { "굴 ★": 2, "점토": 1 },
-    "파동의 정수 ★": { "소라 ★": 2, "모래": 2 },
-    "혼란의 정수 ★": { "문어 ★": 2, "흙": 4 },
-    "생명의 정수 ★": { "미역 ★": 2, "자갈": 2 },
-    "부식의 정수 ★": { "성게 ★": 2, "화강암": 1 },
+    "수호의 정수 ★": { "굴 ★": 2, "점토": 2 },
+    "파동의 정수 ★": { "소라 ★": 2, "모래": 4 },
+    "혼란의 정수 ★": { "문어 ★": 2, "흙": 8 },
+    "생명의 정수 ★": { "미역 ★": 2, "자갈": 4 },
+    "부식의 정수 ★": { "성게 ★": 2, "화강암": 2 },
 
-    // 1성 핵(1개 생산)
+    // 1성 핵
     "물결 수호의 핵 ★": { "수호의 정수 ★": 1, "파동의 정수 ★": 1, "익히지 않은 새우": 1 },
     "파동 오염의 핵 ★": { "파동의 정수 ★": 1, "혼란의 정수 ★": 1, "익히지 않은 도미": 1 },
     "질서 파괴의 핵 ★": { "혼란의 정수 ★": 1, "생명의 정수 ★": 1, "익히지 않은 청어": 1 },
@@ -674,51 +675,57 @@ function getAllRecipesForMid(){
     // 1성 최종품
     "영생의 아쿠티스 ★": { "물결 수호의 핵 ★": 1, "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1 },
     "크라켄의 광란체 ★": { "질서 파괴의 핵 ★": 1, "활력 붕괴의 핵 ★": 1, "파동 오염의 핵 ★": 1 },
-    "리바이던의 깃털 ★": { "침식 방어의 핵 ★": 1, "파동 오염의 핵 ★": 1, "물결 수호의 핵 ★": 1 }
+    "리바이던의 깃털 ★": { "침식 방어의 핵 ★": 1, "파동 오염의 핵 ★": 1, "물결 수호의 핵 ★": 1 },
   };
 
   const R2 = {
     // 2성 에센스(1회 제작 시 2개 생산)
-    "수호 에센스 ★★": { "굴 ★★": 2, "해초": 2, "참나무 잎": 4 },
-    "파동 에센스 ★★": { "소라 ★★": 2, "해초": 2, "가문비나무 잎": 4 },
-    "혼란 에센스 ★★": { "문어 ★★": 2, "해초": 2, "자작나무 잎": 4 },
-    "생명 에센스 ★★": { "미역 ★★": 2, "해초": 2, "아카시아나무 잎": 4 },
-    "부식 에센스 ★★": { "성게 ★★": 2, "해초": 2, "벚나무 잎": 4 },
+    "수호 에센스 ★★": { "굴 ★★": 2, "해초": 4, "참나무 잎": 6 },
+    "파동 에센스 ★★": { "소라 ★★": 2, "해초": 4, "가문비나무 잎": 6 },
+    "혼란 에센스 ★★": { "문어 ★★": 2, "해초": 4, "자작나무 잎": 6 },
+    "생명 에센스 ★★": { "미역 ★★": 2, "해초": 4, "아카시아나무 잎": 6 },
+    "부식 에센스 ★★": { "성게 ★★": 2, "해초": 4, "벚나무 잎": 6 },
 
-    // 2성 결정/최종품(1개 생산)
-    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "켈프": 2, "청금석 블록": 1 },
-    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "켈프": 2, "레드스톤 블록": 1 },
-    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "켈프": 2, "철 주괴": 1 },
-    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "켈프": 2, "금 주괴": 1 },
-    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "켈프": 2, "다이아몬드": 1 },
+    // 2성 결정
+    "활기 보존의 결정 ★★": { "수호 에센스 ★★": 1, "생명 에센스 ★★": 1, "켈프": 4, "청금석 블록": 1 },
+    "파도 침식의 결정 ★★": { "파동 에센스 ★★": 1, "부식 에센스 ★★": 1, "켈프": 4, "레드스톤 블록": 1 },
+    "방어 오염의 결정 ★★": { "혼란 에센스 ★★": 1, "수호 에센스 ★★": 1, "켈프": 4, "철 주괴": 3 },
+    "격류 재생의 결정 ★★": { "생명 에센스 ★★": 1, "파동 에센스 ★★": 1, "켈프": 4, "금 주괴": 2 },
+    "맹독 혼란의 결정 ★★": { "부식 에센스 ★★": 1, "혼란 에센스 ★★": 1, "켈프": 4, "다이아몬드": 1 },
 
+    // 2성 최종품
     "해구 파동의 코어 ★★": { "활기 보존의 결정 ★★": 1, "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1 },
     "침묵의 심해 비약 ★★": { "파도 침식의 결정 ★★": 1, "격류 재생의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1 },
-    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 }
+    "청해룡의 날개 ★★": { "방어 오염의 결정 ★★": 1, "맹독 혼란의 결정 ★★": 1, "활기 보존의 결정 ★★": 1 },
   };
 
   const R3 = {
-    // 3성 엘릭서(1개 생산)
-    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "네더랙": 4 },
-    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "마그마 블록": 2 },
-    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "영혼 흙": 2 },
-    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "진홍빛 자루": 2 },
-    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 1, "유리병": 3, "뒤틀린 자루": 2 },
+    // 3성 엘릭서
+    "수호의 엘릭서 ★★★": { "굴 ★★★": 1, "불우렁쉥이": 2, "유리병": 3, "네더랙": 8 },
+    "파동의 엘릭서 ★★★": { "소라 ★★★": 1, "불우렁쉥이": 2, "유리병": 3, "마그마 블록": 4 },
+    "혼란의 엘릭서 ★★★": { "문어 ★★★": 1, "불우렁쉥이": 2, "유리병": 3, "영혼 흙": 4 },
+    "생명의 엘릭서 ★★★": { "미역 ★★★": 1, "불우렁쉥이": 2, "유리병": 3, "진홍빛 자루": 4 },
+    "부식의 엘릭서 ★★★": { "성게 ★★★": 1, "불우렁쉥이": 2, "유리병": 3, "뒤틀린 자루": 4 },
 
-    // 3성 영약(1개 생산)
-    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "말린 켈프": 4, "발광 열매": 2, "죽은 관 산호 블록": 1 },
-    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "말린 켈프": 4, "발광 열매": 2, "죽은 사방 산호 블록": 1 },
-    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "말린 켈프": 4, "발광 열매": 2, "죽은 거품 산호 블록": 1 },
-    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "말린 켈프": 4, "발광 열매": 2, "죽은 불 산호 블록": 1 },
-    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "말린 켈프": 4, "발광 열매": 2, "죽은 뇌 산호 블록": 1 },
+    // 3성 영약
+    "불멸 재생의 영약 ★★★": { "수호의 엘릭서 ★★★": 1, "생명의 엘릭서 ★★★": 1, "말린 켈프": 6, "발광 열매": 4, "죽은 관 산호 블록": 2 },
+    "파동 장벽의 영약 ★★★": { "파동의 엘릭서 ★★★": 1, "수호의 엘릭서 ★★★": 1, "말린 켈프": 6, "발광 열매": 4, "죽은 사방 산호 블록": 2 },
+    "타락 침식의 영약 ★★★": { "혼란의 엘릭서 ★★★": 1, "부식의 엘릭서 ★★★": 1, "말린 켈프": 6, "발광 열매": 4, "죽은 거품 산호 블록": 2 },
+    "생명 광란의 영약 ★★★": { "생명의 엘릭서 ★★★": 1, "혼란의 엘릭서 ★★★": 1, "말린 켈프": 6, "발광 열매": 4, "죽은 불 산호 블록": 2 },
+    "맹독 파동의 영약 ★★★": { "부식의 엘릭서 ★★★": 1, "파동의 엘릭서 ★★★": 1, "말린 켈프": 6, "발광 열매": 4, "죽은 뇌 산호 블록": 2 },
 
     // 3성 최종품
     "아쿠아 펄스 파편 ★★★": { "불멸 재생의 영약 ★★★": 1, "파동 장벽의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1 },
     "나우틸러스의 손 ★★★": { "파동 장벽의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1, "불멸 재생의 영약 ★★★": 1 },
-    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 }
+    "무저의 척추 ★★★": { "타락 침식의 영약 ★★★": 1, "맹독 파동의 영약 ★★★": 1, "생명 광란의 영약 ★★★": 1 },
   };
 
-  return { ...R1, ...R2, ...R3 };
+  // 레시피 탭 표시/툴팁용으로만 추가 (탭2 계산에는 추가하지 않음)
+  const EXTRA = {
+    "추출된 희석액": { "침식 방어의 핵 ★": 3, "방어 오염의 결정 ★★": 2, "타락 침식의 영약 ★★★": 1 }
+  };
+
+  return { ...R1, ...R2, ...R3, ...EXTRA };
 }
 
 // 탭2 표기용: (최종품 yFinal 기준) 중간재 재고를 먼저 쓰고, 부족분만 재료로 분해
@@ -1018,7 +1025,7 @@ function bindMidInvResetButtons(){
 
   btns.forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      if(!confirm("중간재 재고를 모두 0으로 초기화할까요?")) return;
+      if(!confirm("재고를 초기화할까요?")) return;
       clearMidInvAll();
       renderMidInvGrid();
       try{ recalcFromCurrent(); }catch(e){}
@@ -1485,15 +1492,15 @@ function matLabel(name, includeYield=true){
 }
 
 const PRODUCTS = [
-{ name:"영생의 아쿠티스 ★", base:5669 },
-  { name:"크라켄의 광란체 ★", base:5752 },
-  { name:"리바이던의 깃털 ★", base:5927 },
-  { name:"해구 파동의 코어 ★★", base:12231 },
-  { name:"침묵의 심해 비약 ★★", base:12354 },
-  { name:"청해룡의 날개 ★★", base:12527 },
-  { name:"아쿠아 펄스 파편 ★★★", base:20863 },
-  { name:"나우틸러스의 손 ★★★", base:21107 },
-  { name:"무저의 척추 ★★★", base:21239 },
+{ name:"영생의 아쿠티스 ★", base:4913 },
+  { name:"크라켄의 광란체 ★", base:4985 },
+  { name:"리바이던의 깃털 ★", base:5137 },
+  { name:"해구 파동의 코어 ★★", base:10601 },
+  { name:"침묵의 심해 비약 ★★", base:10706 },
+  { name:"청해룡의 날개 ★★", base:10857 },
+  { name:"아쿠아 펄스 파편 ★★★", base:18081 },
+  { name:"나우틸러스의 손 ★★★", base:18293 },
+  { name:"무저의 척추 ★★★", base:18407 },
 ];
 
 const FISH_ROWS = [
@@ -2255,16 +2262,18 @@ function loadExpectedInv(){
   }catch(e){}
 }
 
-// 탭1(기댓값) 재고 → 탭2(기존 재고) 자동 복사
-function syncExpectedToBase(){
-  const arr = getExpectedInv();
-  arr.forEach((v,i)=>{
-    const el = document.getElementById(`base_${i}`);
-    if(el) el.value = v;
-  });
-  updateTotalsActual();
-}
+// NOTE: 탭1 ↔ 탭2 어패류 재고 자동 동기화는 제거됨.
+// (과거 "총 재고가 누적/증식" 버그 원인) 필요 시 "버튼으로 1회 복사" 형태로만 제공.
 
+
+
+function readSetEa(prefix, i){
+  const s = document.getElementById(`${prefix}_set_${i}`);
+  const e = document.getElementById(`${prefix}_ea_${i}`);
+  const set = Math.max(0, Math.floor(Number(s?.value || 0)));
+  const ea  = Math.max(0, Math.floor(Number(e?.value || 0)));
+  return set * SET_SIZE + ea;
+}
 
 function buildInvActual(){
   const tb = document.querySelector("#invActualTbl tbody");
@@ -2273,8 +2282,7 @@ function buildInvActual(){
     const tr = document.createElement("tr");
     tr.innerHTML = `
 <td>${matLabel(label)}</td>
-      <td><input id="base_${i}" type="number" min="0" step="1" value="0"/></td>
-      <td><input id="harv_${i}" type="number" min="0" step="1" value="0"/></td>
+      <td><div class="qty-pair"><input id="base_set_${i}" type="number" min="0" step="1" value="0" style="width:64px; margin-right:6px"/><span class="unit set">세트</span></div><div class="qty-pair"><input id="base_ea_${i}" type="number" min="0" step="1" value="0" style="width:72px"/><span class="unit ea">개</span></div></td><td><div class="qty-pair"><input id="harv_set_${i}" type="number" min="0" step="1" value="0" style="width:64px; margin-right:6px"/><span class="unit set">세트</span></div><div class="qty-pair"><input id="harv_ea_${i}" type="number" min="0" step="1" value="0" style="width:72px"/><span class="unit ea">개</span></div></td>
       <td class="right" id="tot_${i}">0</td>
     `;
     tb.appendChild(tr);
@@ -2282,12 +2290,11 @@ function buildInvActual(){
 
   
   // ✅ 안정화: 테이블 재생성 시에도 "오늘 채집"은 0으로 시작
-  FISH_ROWS.forEach((_, i)=>{ const hEl = document.getElementById(`harv_${i}`); if(hEl) hEl.value = 0; });
+  FISH_ROWS.forEach((_, i)=>{ const hs = document.getElementById(`harv_set_${i}`); if(hs) hs.value = 0; const he = document.getElementById(`harv_ea_${i}`); if(he) he.value = 0;});
   updateTotalsActual();
 // change listeners
   FISH_ROWS.forEach((_, i)=>{
-    document.getElementById(`base_${i}`).addEventListener("change", updateTotalsActual);
-    document.getElementById(`harv_${i}`).addEventListener("change", updateTotalsActual);
+    ["base_set","base_ea","harv_set","harv_ea"].forEach(p=>{ const el = document.getElementById(`${p}_${i}`); if(el) el.addEventListener("change", updateTotalsActual);});
   });
 
   updateTotalsActual();
@@ -2295,8 +2302,8 @@ function buildInvActual(){
 
 function updateTotalsActual(){
   FISH_ROWS.forEach((_, i)=>{
-    const b = Number(document.getElementById(`base_${i}`).value || 0);
-    const h = Number(document.getElementById(`harv_${i}`).value || 0) || 0;
+    const b = readSetEa("base", i);
+    const h = readSetEa("harv", i);
     const t = Math.max(0, Math.floor(b) + Math.floor(h));
     document.getElementById(`tot_${i}`).textContent = String(t);
   });
@@ -2305,10 +2312,8 @@ function updateTotalsActual(){
 function saveBaseInv(){
   // baseInv 저장
 
-  const base = FISH_ROWS.map((_, i)=> Math.max(0, Math.floor(Number(document.getElementById(`base_${i}`).value || 0))));
+  const base = FISH_ROWS.map((_, i)=> Math.max(0, Math.floor(readSetEa("base", i))));
   localStorage.setItem(LS_KEY_BASE, JSON.stringify(base));
-  // 탭1에도 동일하게 저장
-  localStorage.setItem(LS_KEY_EXPECTED, JSON.stringify(base));
 }
 
 function loadBaseInv(){
@@ -2317,8 +2322,7 @@ function loadBaseInv(){
   try{
     const arr = JSON.parse(raw);
     if(Array.isArray(arr) && arr.length === FISH_ROWS.length){
-      arr.forEach((v,i)=>{ document.getElementById(`base_${i}`).value = Math.max(0, Math.floor(Number(v||0))); });
-      updateTotalsActual();
+      arr.forEach((v,i)=>{ const units = Math.max(0, Math.floor(Number(v||0))); const set = Math.floor(units / SET_SIZE); const ea  = units % SET_SIZE; const sEl = document.getElementById(`base_set_${i}`); const eEl = document.getElementById(`base_ea_${i}`); if(sEl) sEl.value = set; if(eEl) eEl.value = ea;});updateTotalsActual();
     }
   }catch(e){}
 }
@@ -2491,45 +2495,47 @@ function isMidItemName(name){
 }
 
 function calcNetCraftPlanFromActual(yFinal){
-  const recipes = getAllRecipesForMid(); // 최종품 포함(키:아이템명, 값:재료맵)
+  const recipes = getAllRecipesForMid(); // 키: 아이템명, 값: 재료맵
   const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
   const inv = {};
-  for(const [k,v] of Object.entries(inv0)) inv[k] = Math.max(0, Math.floor(Number(v||0)));
+  for(const [k,v] of Object.entries(inv0)){
+    inv[k] = Math.max(0, Math.floor(Number(v || 0)));
+  }
 
-  const gross = {}; // 총 필요
-  const net   = {}; // 추가 제작(재고 반영)
+  const gross = {}; // 총 필요(개수)
+  const net   = {}; // 추가 제작 필요(개수, 재고 반영 전개 결과)
 
   const add = (obj, k, v) => {
     if(v <= 0) return;
     obj[k] = (obj[k] || 0) + v;
   };
 
+  // 총 필요 전개 (재고 무시, 순수 필요량)
   const expandGross = (item, qty, depth=0) => {
-    qty = Math.max(0, Math.floor(Number(qty||0)));
-    if(qty <= 0) return;
-    if(depth > 60) return;
+    qty = Math.max(0, Math.floor(Number(qty || 0)));
+    if(qty <= 0 || depth > 60) return;
 
     if(isMidItemName(item)) add(gross, item, qty);
 
     const r = recipes[item];
     if(!r) return;
     for(const [mat, per] of Object.entries(r)){
-      expandGross(mat, qty * Number(per||0), depth+1);
+      expandGross(mat, qty * Number(per || 0), depth + 1);
     }
   };
 
+  // 추가 제작 전개 (중간재 재고 선차감)
   const expandNet = (item, qty, depth=0) => {
-    qty = Math.max(0, Math.floor(Number(qty||0)));
-    if(qty <= 0) return;
-    if(depth > 60) return;
+    qty = Math.max(0, Math.floor(Number(qty || 0)));
+    if(qty <= 0 || depth > 60) return;
 
     const r = recipes[item];
     if(!r) return;
 
-    // ✅ 중간재면 재고를 먼저 소비하고, 부족분만 제작/전개
+    // 중간재면 재고 먼저 소비
     if(isMidItemName(item)){
       const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
-      const use = Math.min(have, qty);
+      const use  = Math.min(have, qty);
       if(use > 0) inv[item] = have - use;
       qty -= use;
       if(qty <= 0) return;
@@ -2538,28 +2544,39 @@ function calcNetCraftPlanFromActual(yFinal){
     }
 
     for(const [mat, per] of Object.entries(r)){
-      expandNet(mat, qty * Number(per||0), depth+1);
+      expandNet(mat, qty * Number(per || 0), depth + 1);
     }
   };
 
-  PRODUCTS.forEach((p,i)=>{
-    const qty = Math.max(0, Math.floor(Number(yFinal[i]||0)));
+  // 최종품 기준 전개
+  PRODUCTS.forEach((p, i)=>{
+    const qty = Math.max(0, Math.floor(Number(yFinal[i] || 0)));
     if(!qty) return;
     expandGross(p.name, qty, 0);
     expandNet(p.name, qty, 0);
   });
 
-  // 출력용 rows: MID_SECTIONS 순서로, 필요/재고/추가제작이 있는 것만
+  // ===============================
+  // 출력용 rows 생성 (여기서만 x2/xN 제작 강제)
+  // ===============================
   const rows = [];
   for(const sec of MID_SECTIONS){
     for(const name of (sec.items || [])){
       const need = Math.max(0, Math.floor(Number(gross[name] || 0)));
-      const invv = Math.max(0, Math.floor(Number(inv0[name] || 0)));
-      const craft = Math.max(0, Math.floor(Number(net[name] || 0)));
+      const invv = Math.max(0, Math.floor(Number(inv0[name]  || 0)));
+      let craft  = Math.max(0, Math.floor(Number(net[name]   || 0)));
+
+      // 🔒 x2/xN 생산 강제 (정수/에센스 등)
+      const yld = (typeof recipeYield === "function") ? recipeYield(name) : 1;
+      if(yld > 1 && craft > 0){
+        craft = Math.ceil(craft / yld) * yld;
+      }
+
       if(need <= 0 && invv <= 0 && craft <= 0) continue;
       rows.push({ name, need, inv: invv, craft });
     }
   }
+
   return rows;
 }
 
@@ -2571,33 +2588,38 @@ function renderNeedCraftTableTo(sel, rows){
   (rows || []).forEach(r=>{
     const tr = document.createElement("tr");
 
-    // r.need  : 총 필요(개수)
-    // r.inv   : 재고(개수)
-    // r.craft : 추가 제작(개수 기준으로 들어옴)  ← 기존 구조 유지
+    // r.need  : 총 목표 필요 개수 (개수 기준)
+    // r.inv   : 현재 재고 개수
+    // r.craft : 이번에 추가로 제작해야 할 개수
     const needQty  = Math.max(0, Math.floor(Number(r.need  || 0)));
     const invQty   = Math.max(0, Math.floor(Number(r.inv   || 0)));
-    const craftQty = Math.max(0, Math.floor(Number(r.craft || 0))); // 부족분 개수
+    const craftQty = Math.max(0, Math.floor(Number(r.craft || 0)));
 
-    // ✅ 표시/툴팁용 "제작 횟수"로 변환 (x2/xN 반영)
-    const craftCount = (typeof qtyToCrafts === "function")
-      ? qtyToCrafts(r.name, craftQty)
-      : craftQty;
+    // 전부 0이면 숨김 (기존 UX 유지)
+    if(needQty <= 0 && invQty <= 0 && craftQty <= 0) return;
 
-    const craftCls = craftCount > 0 ? "neg" : "muted";
+    // ✅ 핵심 규칙:
+    // 총 필요 = 제작 개수 + 재고 개수
+    // (제작 횟수 / recipeYield / qtyToCrafts 절대 사용하지 않음)
+    const totalNeed = craftQty + invQty;
 
-    // ✅ 총 필요 컬럼은 "개수" 기준으로 유지
-    // (기존엔 craft+inv로 계산했는데, craft를 '횟수'로 바꾸면 깨지므로 need를 그대로 씀)
-    const totalNeed = needQty;
+    const craftCls = craftQty > 0 ? "neg" : "muted";
 
     tr.innerHTML =
-      `<td><span class="tipName" data-tipname="${r.name}" data-tipcraft="${craftCount}">${matLabel(r.name)}</span></td>` +
-      `<td class="right ${craftCls}">${craftCount}<span class="qty-unit">회</span></td>` +
+      `<td>
+        <span class="tipName"
+          data-tipname="${r.name}"
+          data-tipqty="${craftQty}"
+        >${matLabel(r.name)}</span>
+      </td>` +
+      `<td class="right ${craftCls}">${fmtSet64(craftQty)}</td>` +
       `<td class="right">${fmtSet64(invQty)}</td>` +
       `<td class="right">${fmtSet64(totalNeed)}</td>`;
 
     tb.appendChild(tr);
   });
 }
+
 
 // ===============================
 // TAB2: Actual optimization with MID inventory balance (NO fish-credit)
@@ -3327,24 +3349,34 @@ tabRecipe?.addEventListener("click", ()=>showPanel("recipe"));
   updateTradeForActiveTab();
 })();
 document.getElementById("btnZero").addEventListener("click", ()=>{
-  FISH_ROWS.forEach((_, i)=> document.getElementById(`inv_${i}`).value = 0);
-  buildInvActual();
-loadExpectedInv();
-syncExpectedToBase();
-loadBaseInv();
-recalcFromCurrent();
+  if(!confirm("재고를 초기화할까요?")) return;
+
+  // TAB1: 어패류 재고 입력칸 전부 초기화
+  const invTbl = document.getElementById("invTbl");
+  if(invTbl){
+    invTbl.querySelectorAll('input[type="number"]').forEach(inp=> inp.value = 0);
+  }
+
+  // TAB2: 기존 재고 + 오늘 채집 + 총 재고 초기화
+  const invActual = document.getElementById("invActualTbl");
+  if(invActual){
+    invActual.querySelectorAll('input[type="number"]').forEach(inp=> inp.value = 0);
+    invActual.querySelectorAll('[id^="tot_"]').forEach(td=> td.textContent = "0");
+  }
+
+  // 저장값 삭제
+  try{ localStorage.removeItem(LS_KEY_EXPECTED); }catch(e){}
+  try{ localStorage.removeItem(LS_KEY_BASE); }catch(e){}
+
+  // 탭2 테이블 재생성 및 미계산 표시
+  try{ buildInvActual(); }catch(e){}
+  try{ if(typeof markActualTotalsDirty==='function') markActualTotalsDirty(); }catch(e){}
 });
 document.querySelectorAll("#panelExpected input,#panelExpected select").forEach(el=>{
   el.addEventListener("change", ()=>recalcFromCurrent());
 });
 
-// 탭1 재고 변경 시 탭2 기존재고에도 자동 반영 + 저장
-FISH_ROWS.forEach((_, i)=>{
-  const el = document.getElementById(`inv_${i}`);
-  if(el){
-    el.addEventListener("change", ()=>{ saveExpectedInv(); syncExpectedToBase(); });
-  }
-});
+// NOTE: 탭1 ↔ 탭2 재고 자동 동기화는 제거됨(증식 버그 원인).
 
 
 /* =========================
@@ -3421,44 +3453,64 @@ function buildTipHtml(name, meta) {
   const r = getRecipe(name);
   if (!r) return null;
 
-  const kind  = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
-  const qty   = Math.max(0, Math.floor(Number(meta?.qty ?? 0)));
-  const craft = Math.max(0, Math.floor(Number(meta?.craft ?? qty ?? 0)));
-  const need  = Math.max(0, Math.floor(Number(meta?.need ?? craft ?? 0)));
-  const inv   = Math.max(0, Math.floor(Number(meta?.inv || 0)));
+  const kind = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
 
-  // 레시피 수량 배수는 “추가 제작” 기준
-  const mul = (kind === "final")
-    ? Math.max(1, Math.floor(Number(qty ?? craft ?? 0)))
-    : Math.max(1, craft);
+  // ── 기준 값: 제작 개수 (개수 기준 유지) ──
+  const makeQty = Math.max(
+    0,
+    Math.floor(Number(meta?.need ?? meta?.craft ?? meta?.qty ?? 0))
+  );
 
-  // ── 타이틀: 산출물이므로 yield(×2) 표시 유지 ──
+  const yieldN = (typeof recipeYield === "function")
+    ? recipeYield(name)
+    : 1;
+
+  // ── 타이틀 ──
   const titleHtml = (kind === "final")
     ? productLabel(name)
     : matLabel(name);
 
-  // ── 배지 규칙 ──
-  let badges = "";
+// ── 배지: "제작 세트·개" 숫자만 ──
+const badges =
+  makeQty > 0
+    ? `<span class="tipBadge">${fmtSet64Text(makeQty)}</span>`
+    : "";
 
-  if (kind === "final") {
-    const rec = Math.max(0, Number(qty || craft || 0));
-    badges = rec > 0
-      ? `<span class="tipBadge">추천 제작 ${rec}회</span>`
-      : `<span class="tipBadge">레시피</span>`;
-  } else {
-    badges = craft > 0
-      ? `<span class="tipBadge">추가 제작 ${craft}회</span>`
-      : `<span class="tipBadge">레시피</span>`;
-  }
+// ── 세트/개 포맷 ──
+function fmtSet64Text(n){
+  n = Math.max(0, Math.floor(Number(n || 0)));
 
-  // ── 재료 목록: 소비 재료 → yield(×2) 숨김 ──
+  const set = Math.floor(n / 64);
+  const ea  = n % 64;
+
+  // "제작 2 세트 14 개" 형태 (텍스트만 반환)
+  if(set > 0 && ea > 0) return `${set} 세트 ${ea} 개`;
+  if(set > 0)          return `${set} 세트`;
+  return `${ea} 개`;
+}
+
+
+
+
+  // ── 재료 목록: 개수 기준 전개 ──
   const lines = Object.entries(r)
-    .map(([mat, per]) => {
-      const total = Math.max(0, Math.floor(Number(per || 0) * mul));
+    .map(([mat, perCraft]) => {
+      // 1회 제작당 필요 재료(perCraft)
+      // 1회 제작당 생산 개수(yieldN)
+      const perItem = perCraft / yieldN;
+
+      // 안전장치 (정수/에센스는 항상 나눠떨어져야 함)
+      if (perItem !== Math.floor(perItem)) {
+        console.warn("레시피/생산량 불일치:", name, mat);
+      }
+
+      const total = makeQty * perItem;
+      if (total <= 0) return "";
+
       return `
         <div class="tipRow">
           <div class="tipLeft"><span>${matLabel(mat, false)}</span></div>
-          <div class="tipQty">×${fmtSet64(total)}</div>
+          <div class="tipQty">${fmtSet64(total)}</div>
         </div>
       `;
     })
@@ -3593,8 +3645,8 @@ renderMidInvGrid();   // ✅ 이 줄
 bindMidInvResetButtons();
 updateMidInvBadge();
 loadExpectedInv();
-syncExpectedToBase();
-loadBaseInv();
+// [PATCH] disable auto-load on startup
+// loadBaseInv();
 recalcFromCurrent();
 updateTotalsActual();
 
@@ -4799,21 +4851,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
 
 
-// === AUTO SYNC: Tab1 inv -> Tab2 base (on input) ===
-(function bindInvAutoSync(){
-  if(typeof FISH_ROWS === "undefined") return;
-  FISH_ROWS.forEach((_, i)=>{
-    const el = document.getElementById(`inv_${i}`);
-    if(!el) return;
-    if(el.dataset.autoSyncBound) return;
-    el.dataset.autoSyncBound = "1";
-    el.addEventListener("input", ()=>{
-      if(typeof syncExpectedToBase === "function"){
-        syncExpectedToBase();
-      }
-    });
-  });
-})();
+// NOTE: 탭1 → 탭2 어패류 재고 "자동" 동기화는 제거됨.
+// (입력 중간에 탭2 base_*가 덮어써지며 총재고가 증식하는 원인)
 
 
 // === TAB2 today harvest set/ea enhancer (POST-BUILD, SAFE) ===
@@ -5017,3 +5056,120 @@ window.addEventListener("DOMContentLoaded", ()=>{
     updateTotalsActual();
   }
 });
+
+
+
+
+
+
+// 탭2 어패류 기존 재고 초기화 (탭1 재고 초기화와 동일 개념)
+
+
+// 📥 재고 불러오기 (탭1 어패류 기존 재고 → 탭2 어패류 기존 재고)
+document.getElementById("btnLoadToActual")?.addEventListener("click", ()=>{
+  if(!confirm("탭1 어패류 기존 재고를 불러올까요?")) return;
+  FISH_ROWS.forEach((_, i)=>{
+    const inv = document.getElementById(`inv_${i}`);
+    const bs  = document.getElementById(`base_set_${i}`);
+    const be  = document.getElementById(`base_ea_${i}`);
+    if(!inv || !bs || !be) return;
+    const units = Math.max(0, Math.floor(Number(inv.value||0)));
+    const set = Math.floor(units / SET_SIZE);
+    const ea  = units % SET_SIZE;
+    bs.value = set;
+    be.value = ea;
+  });
+  try{ saveBaseInv(); }catch(e){}
+  try{ updateTotalsActual(); }catch(e){}
+});
+
+// 🗑️ 재고 초기화 (탭2 연금품/어패류 기존 재고)
+document.getElementById("btnResetActualInv")?.addEventListener("click", ()=>{
+  if(!confirm("재고를 초기화할까요?")) return;
+  FISH_ROWS.forEach((_, i)=>{
+    const bs = document.getElementById(`base_set_${i}`);
+    const be = document.getElementById(`base_ea_${i}`);
+    if(bs) bs.value = 0;
+    if(be) be.value = 0;
+  });
+  try{ saveBaseInv(); }catch(e){}
+  try{ updateTotalsActual(); }catch(e){}
+});
+
+
+// ===============================
+// 탭2 계산 후 남은 어패류 스냅샷 저장
+// ===============================
+window.__lastLeftoverFish = null;
+
+(function(){
+  const _updateTotalsActual = window.updateTotalsActual;
+  if (typeof _updateTotalsActual !== "function") return;
+
+  window.updateTotalsActual = function(){
+    const ret = _updateTotalsActual.apply(this, arguments);
+
+    try{
+      const snap = [];
+      FISH_ROWS.forEach((_, i)=>{
+        const bs = document.getElementById(`base_set_${i}`);
+        const be = document.getElementById(`base_ea_${i}`);
+        const set = Math.max(0, Number(bs?.value || 0));
+        const ea  = Math.max(0, Number(be?.value || 0));
+        snap[i] = set * SET_SIZE + ea; // 총 개수로 정규화
+      });
+      window.__lastLeftoverFish = snap;
+    }catch(e){
+      console.error("leftover snapshot failed", e);
+    }
+
+    return ret;
+  };
+})();
+
+
+function renderLeftoverAnalysis(){
+  const box = document.getElementById("leftoverAnalysisBody");
+  if(!box) return;
+  const snap = window.__lastLeftoverFish;
+  if(!snap){
+    box.textContent = "아직 계산된 데이터가 없습니다. 탭2 계산을 실행하세요.";
+    return;
+  }
+  const rows = [];
+  FISH_ROWS.forEach((label,i)=>{
+    const v = snap[i]||0;
+    if(v>0) rows.push(`<div>${matLabel(label)}: ${v}개</div>`);
+  });
+  box.innerHTML = rows.length ? rows.join("") : "<div>남은 어패류가 없습니다.</div>";
+}
+
+// hook after updateTotalsActual snapshot
+(function(){
+  const _u = window.updateTotalsActual;
+  if(typeof _u !== "function") return;
+  window.updateTotalsActual = function(){
+    const r = _u.apply(this, arguments);
+    try{ renderLeftoverAnalysis(); }catch(e){}
+    return r;
+  };
+})();
+
+
+// style tweak: match list appearance with other cards
+(function(){
+  const _r = window.renderLeftoverAnalysis;
+  if(typeof _r !== "function") return;
+  window.renderLeftoverAnalysis = function(){
+    const box=document.getElementById("leftoverAnalysisBody");
+    if(!box) return;
+    const snap=window.__lastLeftoverFish;
+    if(!snap){ box.textContent="아직 계산된 데이터가 없습니다. 탭2 계산을 실행하세요."; return; }
+    const rows=[];
+    FISH_ROWS.forEach((label,i)=>{
+      const v=snap[i]||0;
+      if(v>0) rows.push(`<div class="noteLine">• ${matLabel(label)} : <span class="num">${v}</span>개</div>`);
+    });
+    box.innerHTML = rows.length? rows.join("") : "<div class='muted'>남은 어패류가 없습니다.</div>";
+  };
+})();
