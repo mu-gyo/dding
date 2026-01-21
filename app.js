@@ -1492,15 +1492,15 @@ function matLabel(name, includeYield=true){
 }
 
 const PRODUCTS = [
-{ name:"영생의 아쿠티스 ★", base:4913 },
-  { name:"크라켄의 광란체 ★", base:4985 },
-  { name:"리바이던의 깃털 ★", base:5137 },
-  { name:"해구 파동의 코어 ★★", base:10601 },
-  { name:"침묵의 심해 비약 ★★", base:10706 },
-  { name:"청해룡의 날개 ★★", base:10857 },
-  { name:"아쿠아 펄스 파편 ★★★", base:18081 },
-  { name:"나우틸러스의 손 ★★★", base:18293 },
-  { name:"무저의 척추 ★★★", base:18407 },
+{ name:"영생의 아쿠티스 ★", base:5159 },
+  { name:"크라켄의 광란체 ★", base:5234 },
+  { name:"리바이던의 깃털 ★", base:5393 },
+  { name:"해구 파동의 코어 ★★", base:11131 },
+  { name:"침묵의 심해 비약 ★★", base:11242 },
+  { name:"청해룡의 날개 ★★", base:11399 },
+  { name:"아쿠아 펄스 파편 ★★★", base:18985 },
+  { name:"나우틸러스의 손 ★★★", base:19207 },
+  { name:"무저의 척추 ★★★", base:19328 },
 ];
 
 const FISH_ROWS = [
