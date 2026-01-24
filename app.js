@@ -1,4 +1,18 @@
 
+// =============================
+// 부재료 그룹 매핑 (렌더 전용)
+// =============================
+function MAT_GROUP_NAME(mat){
+  if(mat === "점토" || mat === "모래" || mat === "흙") return "정수";
+  if(mat === "익히지 않은 새우") return "핵";
+  if(mat === "해초") return "에센스";
+  if(mat === "켈프") return "결정";
+  if(mat === "불우렁쉥이") return "엘릭서";
+  if(mat === "말린 켈프") return "영약";
+  return null;
+}
+
+
 // ===== Fish tier order helpers (UI only) =====
 const __FISH_BASE_ORDER = [
   "굴","소라","문어","미역","성게",
@@ -30,7 +44,7 @@ function __fishOrderedIndices(){
   });
   return idxs;
 }
-function __tierLabel(t){ return t===1 ? "1티어" : t===2 ? "2티어" : "3티어"; }
+function __tierLabel(t){ return t===0 ? "0티어" : t===1 ? "1티어" : t===2 ? "2티어" : "3티어"; }
 
 
 // ================================
@@ -588,11 +602,10 @@ function fmtSet64(n) {
 // need[i] = Σ_j A[i][j] * y[j]
 // ================================
 function calcFishNeed(y) {
-  const A = buildFishMatrix(); // 15x9
+  const A = buildFishMatrix(); // 15xN
   const rows = 15;
-  const cols = 9;
-
-  const yy = Array.isArray(y) ? y : [];
+  const cols = (A && A.products) ? A.products.length : (A[0] ? A[0].length : 0);
+const yy = Array.isArray(y) ? y : [];
   const need = Array(rows).fill(0);
 
   for (let i = 0; i < rows; i++) {
@@ -1189,7 +1202,7 @@ function getFishCreditFromMidInv(){
 // 반환: { items: [{name, qty}], totals: { [name]: qty } }
 // ================================
 function calcMatNeed(y) {
-  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(9).fill(0);
+  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(PRODUCTS.length).fill(0);
 
   // --- 유틸 ---
   const add = (totals, name, qty) => {
@@ -1357,6 +1370,7 @@ function buildFishMatrix() {
 
   // product col order (9)
   const products = [
+  "추출된 희석액",
     "영생의 아쿠티스 ★",
     "크라켄의 광란체 ★",
     "리바이던의 깃털 ★",
@@ -1365,7 +1379,8 @@ function buildFishMatrix() {
     "청해룡의 날개 ★★",
     "아쿠아 펄스 파편 ★★★",
     "나우틸러스의 손 ★★★",
-    "무저의 척추 ★★★"
+    "무저의 척추 ★★★",
+    "추출된 희석액"
   ];
 
   // 빈 벡터
@@ -1386,6 +1401,26 @@ function buildFishMatrix() {
   req[products[6]] = { ...col(), "굴★★★":2, "소라★★★":2, "문어★★★":0, "미역★★★":1, "성게★★★":1 };
   req[products[7]] = { ...col(), "굴★★★":2, "소라★★★":1, "문어★★★":1, "미역★★★":2, "성게★★★":0 };
   req[products[8]] = { ...col(), "굴★★★":0, "소라★★★":1, "문어★★★":2, "미역★★★":1, "성게★★★":2 };
+  // 추출된 희석액 (어패류 전개값 환산, 사람 계산과 동일)
+  const dilution = { ...col() };
+
+  // 침식 방어의 핵 ★ x3
+  for (const k in req[products[0]]) {
+    dilution[k] += req[products[0]][k] * 3;
+  }
+
+  // 방어 오염의 결정 ★★ x2
+  for (const k in req[products[3]]) {
+    dilution[k] += req[products[3]][k] * 2;
+  }
+
+  // 타락 침식의 영약 ★★★ x1
+  for (const k in req[products[6]]) {
+    dilution[k] += req[products[6]][k] * 1;
+  }
+
+  req[products[9]] = dilution;
+
 
   // A[15][9] 생성
   const A = fishRows.map(fr => products.map(p => req[p][fr] || 0));
@@ -1590,6 +1625,7 @@ const PRODUCTS = [
   { name:"아쿠아 펄스 파편 ★★★", base:18985 },
   { name:"나우틸러스의 손 ★★★", base:19207 },
   { name:"무저의 척추 ★★★", base:19328 },
+  { name:"추출된 희석액", base:18444, tier:0 },
 ];
 
 const FISH_ROWS = [
@@ -1821,6 +1857,7 @@ function fmtGold(n){
 
 // --- 가격을 등급(★/★★/★★★) 단위로 "최고가"로 통일 (탭1/탭2 공용) ---
 function getTierFromName(name){
+  if (name === "추출된 희석액") return 0;
   if (!name) return 1;
   if (name.includes("★★★")) return 3;
   if (name.includes("★★")) return 2;
@@ -2577,29 +2614,44 @@ if(badge){
   const {needFish, needMat} = calcNetNeedsForActualWithMidInv(y);
   renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
 
-  // ✅ 중간재(하위 제작 필요량) 티어 헤더 포함
+  // ✅ 중간재 필요 제작량: 티어 헤더 포함
   const craftPlan = calcNetCraftPlanFromActual(y);
   renderNeedCraftTableTieredTo("#needCraftTblA tbody", craftPlan);
 
-  // ✅ 부재료: '중간재 제작 순서(craftPlan)' 기반으로 누적 (가나다/랭크 정렬 금지)
+  // ✅ 부재료: '중간재 제작 순서(craftPlan)' 기준으로 누적
+  // - 여기서 "정렬" 하지 않음 (Map 삽입 순서가 곧 표시 순서)
+  // - 중간재/어패류는 제외하고 '진짜 부재료'만 집계
   const recipesAll = getAllRecipesForMid();
-  const needMatByTier = {1:new Map(),2:new Map(),3:new Map()};
+  const fishSet = new Set(FISH_ROWS);
+  const needMatByTier = {1:new Map(), 2:new Map(), 3:new Map()};
 
-  (craftPlan||[]).forEach(row=>{
-    const midName = row?.name;
-    const needNet = Math.max(0, Math.floor(Number(row?.needNet || 0)));
-    if(!midName || needNet<=0) return;
+  (craftPlan||[]).forEach(r=>{
+    const midName = r?.name;
+    const craftNeedQty = Math.max(0, Math.floor(Number(r?.craft || 0))); // 결과 개수 기준
+    if(!midName || craftNeedQty<=0) return;
+
+    const recipe = recipesAll[midName];
+    if(!recipe) return;
+
+    // 제작 횟수(crafts) 기준으로 재료 소모 계산 (x2 생산 반영)
+    const crafts = (typeof qtyToCrafts === "function") ? qtyToCrafts(midName, craftNeedQty) : craftNeedQty;
+    if(crafts<=0) return;
 
     const tier = getTierFromName(midName);
-    const r = recipesAll[midName];
-    if(!r) return;
+    const bucket = needMatByTier[tier] || needMatByTier[1];
 
-    for(const [mat, q0] of Object.entries(r)){
-      const q = Math.floor(Number(q0||0));
-      if(q<=0) continue;
-      const add = needNet * q;
-      const m = needMatByTier[tier];
-      m.set(mat, (m.get(mat)||0) + add);
+    for(const [ing, per0] of Object.entries(recipe)){
+      const per = Math.max(0, Math.floor(Number(per0||0)));
+      if(per<=0) continue;
+
+      // 어패류는 needFishTblA에서 처리
+      if(fishSet.has(ing)) continue;
+
+      // 중간재는 needCraftTblA에서 처리 (중복 집계 방지)
+      if(typeof isMidItemName === "function" && isMidItemName(ing)) continue;
+
+      const add = crafts * per;
+      bucket.set(ing, (bucket.get(ing)||0) + add);
     }
   });
 
@@ -4722,52 +4774,23 @@ html[data-theme="blue"] .recipeTip .tipBadge.strong{
 })();
 
 
-// =============================
-// TAB2: 부재료(needMat) - 티어 헤더 포함 렌더
-// - tbody 초기화는 여기서만
-// - entries 순서는 Map 삽입 순서(=중간재 제작 순서 기반 누적) 유지
-// =============================
-function renderNeedMatTableTieredTo(sel, byTier){
-  const tb = document.querySelector(sel);
-  if(!tb) return;
-  tb.innerHTML = "";
-
-  [1,2,3].forEach(t=>{
-    const m = byTier?.[t];
-    if(!m || m.size===0) return;
-
-    const trH = document.createElement("tr");
-    trH.className = `tier-sep tier-${t}`;
-    trH.innerHTML = `<td colspan="2" class="tier-title">${__tierLabel(t)}</td>`;
-    tb.appendChild(trH);
-
-    for(const [k, v0] of m.entries()){
-      const v = Math.round(Number(v0||0));
-      if(v<=0) continue;
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${matLabel(k)}</td><td class="right">${fmtSet64(v)}</td>`;
-      tb.appendChild(tr);
-    }
-  });
-}
-
 
 // =============================
-// TAB2: 하위 제작 필요량(중간재) - 티어 헤더 포함 렌더
-// - plan: [{name, need, have, needNet}, ...]
+// TAB2: 하위 제작 필요량(중간재) - 티어 헤더 렌더
+// - 기존 renderNeedCraftTableTo 로직(툴팁 qtyToCrafts 포함) 재사용
 // =============================
-function renderNeedCraftTableTieredTo(sel, plan){
+function renderNeedCraftTableTieredTo(sel, rows){
   const tb = document.querySelector(sel);
   if(!tb) return;
   tb.innerHTML = "";
 
   const byTier = {1:[],2:[],3:[]};
-  (plan||[]).forEach(r=>{
+  (rows||[]).forEach(r=>{
     const t = getTierFromName(r.name);
     (byTier[t] || byTier[1]).push(r);
   });
 
-  [1,2,3].forEach(t=>{
+  [0,1,2,3].forEach(t=>{
     const arr = byTier[t];
     if(!arr || arr.length===0) return;
 
@@ -4776,14 +4799,102 @@ function renderNeedCraftTableTieredTo(sel, plan){
     trH.innerHTML = `<td colspan="4" class="tier-title">${__tierLabel(t)}</td>`;
     tb.appendChild(trH);
 
+    // 기존 행 렌더 그대로
     arr.forEach(r=>{
       const tr = document.createElement("tr");
+
+      const craftNeedQty = Math.max(0, Math.floor(Number(r.craft || 0)));
+      const invQty       = Math.max(0, Math.floor(Number(r.inv   || 0)));
+      if(craftNeedQty <= 0 && invQty <= 0) return;
+
+      const yieldPerCraft =
+        (typeof recipeYield === "function")
+          ? Math.max(1, recipeYield(r.name))
+          : 1;
+
+      const crafts =
+        (typeof qtyToCrafts === "function")
+          ? qtyToCrafts(r.name, craftNeedQty)
+          : Math.ceil(craftNeedQty / yieldPerCraft);
+
+      const shownQty = crafts * yieldPerCraft;
+      const totalQty = shownQty + invQty;
+      const craftCls = shownQty > 0 ? "neg" : "muted";
+
       tr.innerHTML =
-        `<td>${matLabel(r.name)}</td>` +
-        `<td class="right">${fmtSet64(Math.round(Number(r.need||0)))}</td>` +
-        `<td class="right">${fmtSet64(Math.round(Number(r.have||0)))}</td>` +
-        `<td class="right">${fmtSet64(Math.round(Number(r.needNet||0)))}</td>`;
+        `<td>
+          <span class="tipName"
+            data-tipname="${r.name}"
+            data-tipqty="${crafts}"
+          >${matLabel(r.name)}</span>
+        </td>` +
+        `<td class="right ${craftCls}">${fmtSet64(shownQty)}</td>` +
+        `<td class="right">${fmtSet64(invQty)}</td>` +
+        `<td class="right">${fmtSet64(totalQty)}</td>`;
+
       tb.appendChild(tr);
     });
   });
 }
+
+
+
+// =============================
+// TAB2: 부재료(needMat) - 티어 헤더 + 삽입순서 렌더(정렬 금지)
+// =============================
+
+function renderNeedMatTableTieredTo(sel, byTier){
+  const tb = document.querySelector(sel);
+  if(!tb) return;
+  tb.innerHTML = "";
+
+  [0,1,2,3].forEach(t=>{
+    const m = byTier?.[t];
+    if(!m || m.size===0) return;
+
+    // Tier header
+    const trH = document.createElement("tr");
+    trH.className = `tier-sep tier-${t}`;
+    trH.innerHTML = `<td colspan="2" class="tier-title">${__tierLabel(t)}</td>`;
+    tb.appendChild(trH);
+
+    let lastGroup = null;
+
+    for(const [k, v0] of m.entries()){
+      const v = Math.round(Number(v0||0));
+      if(v<=0) continue;
+
+      const g = MAT_GROUP_NAME(k);
+      if(g && g !== lastGroup){
+        const sub = document.createElement("tr");
+        sub.className = "mat-subhead";
+        sub.innerHTML = `<td colspan="2">${g}</td>`;
+        tb.appendChild(sub);
+        lastGroup = g;
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${matLabel(k)}</td><td class="right">${fmtSet64(v)}</td>`;
+      tb.appendChild(tr);
+    }
+  });
+}
+
+
+
+// =============================
+// 부재료 소헤더 스타일
+// =============================
+const __matSubStyle = document.createElement("style");
+__matSubStyle.textContent = `
+  .mat-subhead td{
+    padding:8px 8px;
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:#444;
+    background:transparent;
+    border-top:1px solid rgba(0,0,0,.08);
+  }
+`;
+document.head.appendChild(__matSubStyle);
