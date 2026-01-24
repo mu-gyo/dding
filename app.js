@@ -1606,11 +1606,19 @@ function productLabel(name, includeYield=true){
 }
 
 
+
 function matLabel(name, includeYield=true){
   const shown = displayNameWithYield(name, includeYield);
-  const url = MATERIAL_ICON_URL[name] || MATERIAL_ICON_URL[stripStars(name)] || FALLBACK_ICON_SVG;
+  // ✅ 0티어 희석액 전용 아이콘
+  let url;
+  if(String(name).includes("추출된 희석액")){
+    url = "icons/mid/bottle.png";
+  }else{
+    url = MATERIAL_ICON_URL[name] || MATERIAL_ICON_URL[stripStars(name)] || FALLBACK_ICON_SVG;
+  }
   return `<span class="mat"><img class="icon" src="${url}" alt="" onerror="this.src='${FALLBACK_ICON_SVG}'"/>${escHtml(shown)}</span>`;
 }
+
 
 const PRODUCTS = [
 { name:"영생의 아쿠티스 ★", base:5159 },
