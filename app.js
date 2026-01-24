@@ -602,10 +602,11 @@ function fmtSet64(n) {
 // need[i] = Σ_j A[i][j] * y[j]
 // ================================
 function calcFishNeed(y) {
-  const A = buildFishMatrix(); // 15xN
+  const A = buildFishMatrix(); // 15x9
   const rows = 15;
-  const cols = (A && A.products) ? A.products.length : (A[0] ? A[0].length : 0);
-const yy = Array.isArray(y) ? y : [];
+  const cols = 9;
+
+  const yy = Array.isArray(y) ? y : [];
   const need = Array(rows).fill(0);
 
   for (let i = 0; i < rows; i++) {
@@ -1202,7 +1203,7 @@ function getFishCreditFromMidInv(){
 // 반환: { items: [{name, qty}], totals: { [name]: qty } }
 // ================================
 function calcMatNeed(y) {
-  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(PRODUCTS.length).fill(0);
+  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(9).fill(0);
 
   // --- 유틸 ---
   const add = (totals, name, qty) => {
@@ -1370,7 +1371,6 @@ function buildFishMatrix() {
 
   // product col order (9)
   const products = [
-  "추출된 희석액",
     "영생의 아쿠티스 ★",
     "크라켄의 광란체 ★",
     "리바이던의 깃털 ★",
@@ -1379,7 +1379,8 @@ function buildFishMatrix() {
     "청해룡의 날개 ★★",
     "아쿠아 펄스 파편 ★★★",
     "나우틸러스의 손 ★★★",
-    "무저의 척추 ★★★",
+    "무저의 척추 ★★★"
+  ,
     "추출된 희석액"
   ];
 
@@ -1401,29 +1402,24 @@ function buildFishMatrix() {
   req[products[6]] = { ...col(), "굴★★★":2, "소라★★★":2, "문어★★★":0, "미역★★★":1, "성게★★★":1 };
   req[products[7]] = { ...col(), "굴★★★":2, "소라★★★":1, "문어★★★":1, "미역★★★":2, "성게★★★":0 };
   req[products[8]] = { ...col(), "굴★★★":0, "소라★★★":1, "문어★★★":2, "미역★★★":1, "성게★★★":2 };
-  // 추출된 희석액 (어패류 전개값 환산, 사람 계산과 동일)
+
+
+  // ================================
+  // 추출된 희석액 (0티어) 어패류 전개
+  // - 침식 방어의 핵 ★ x3  -> (★ tier) 영생의 아쿠티스 ★ (products[0])
+  // - 방어 오염의 결정 ★★ x2 -> (★★ tier) 해구 파동의 코어 ★★ (products[3])
+  // - 타락 침식의 영약 ★★★ x1 -> (★★★ tier) 아쿠아 펄스 파편 ★★★ (products[6])
+  // ================================
   const dilution = { ...col() };
 
-  // 침식 방어의 핵 ★ x3
-  for (const k in req[products[0]]) {
-    dilution[k] += req[products[0]][k] * 3;
-  }
+  for (const k in req[products[0]]) dilution[k] += req[products[0]][k] * 3;
+  for (const k in req[products[3]]) dilution[k] += req[products[3]][k] * 2;
+  for (const k in req[products[6]]) dilution[k] += req[products[6]][k] * 1;
 
-  // 방어 오염의 결정 ★★ x2
-  for (const k in req[products[3]]) {
-    dilution[k] += req[products[3]][k] * 2;
-  }
+  req["추출된 희석액"] = dilution;
 
-  // 타락 침식의 영약 ★★★ x1
-  for (const k in req[products[6]]) {
-    dilution[k] += req[products[6]][k] * 1;
-  }
-
-  req[products[9]] = dilution;
-
-
-  // A[15][9] 생성
-  const A = fishRows.map(fr => products.map(p => req[p][fr] || 0));
+  // A[15][N] 생성 (N = products.length)
+  const A = fishRows.map(fr => products.map(p => (req[p] && req[p][fr]) || 0));
 
   // 메타 붙여두기(필요할 때 디버그/표시용)
   A.fishRows = fishRows;
@@ -1560,7 +1556,8 @@ const PRODUCT_ICON_URL = {
   "청해룡의 날개": "icons/azure_dragon.png",
   "아쿠아 펄스 파편": "icons/aqua.png",
   "나우틸러스의 손": "icons/nautilus.png",
-  "무저의 척추": "icons/abyss_tentacle.png"
+  "무저의 척추": "icons/abyss_tentacle.png",
+  "추출된 희석액": "icons/bottle.png"
 };
 
 function stripStars(name){
@@ -1626,6 +1623,7 @@ const PRODUCTS = [
   { name:"나우틸러스의 손 ★★★", base:19207 },
   { name:"무저의 척추 ★★★", base:19328 },
   { name:"추출된 희석액", base:18444, tier:0 },
+
 ];
 
 const FISH_ROWS = [
@@ -1857,8 +1855,9 @@ function fmtGold(n){
 
 // --- 가격을 등급(★/★★/★★★) 단위로 "최고가"로 통일 (탭1/탭2 공용) ---
 function getTierFromName(name){
-  if (name === "추출된 희석액") return 0;
-  if (!name) return 1;
+  if(!name) return 1;
+  // ✅ 0티어: 추출된 희석액은 별(★)이 없으므로 예외 처리
+  if(String(name).includes("추출된 희석액")) return 0;
   if (name.includes("★★★")) return 3;
   if (name.includes("★★")) return 2;
   return 1;
@@ -2230,6 +2229,10 @@ function optimize(){
   // prices with premium
   let prices = PRODUCTS.map(p => p.base * d.premiumMul);
   prices = equalizePricesWithinTierMax(prices);
+
+  // TAB1 uses only the original 9 final products (exclude dilution from LP)
+  const N_TAB1 = 9;
+  prices = prices.slice(0, N_TAB1);
 // enumerate all compositions of blocksTotal into 5 parts
   let best = {rev:-1, blocks:[0,0,0,0,0], y:Array(PRODUCTS.length).fill(0), supply:null};
 
@@ -2268,7 +2271,7 @@ function optimize(){
 
   // set craft quantities (editable)
   PRODUCTS.forEach((p, idx)=>{
-    document.getElementById(`qty_${idx}`).value = (best.y[idx] || 0).toString();
+    document.getElementById(`qty_${idx}`).value = Math.max(0, Math.floor((idx < 9 ? (best.y[idx]||0) : 0)));
   });
 
   // update derived tables
@@ -4790,7 +4793,7 @@ function renderNeedCraftTableTieredTo(sel, rows){
     (byTier[t] || byTier[1]).push(r);
   });
 
-  [0,1,2,3].forEach(t=>{
+  [0, 1, 2, 3].forEach(t=>{
     const arr = byTier[t];
     if(!arr || arr.length===0) return;
 
@@ -4848,7 +4851,7 @@ function renderNeedMatTableTieredTo(sel, byTier){
   if(!tb) return;
   tb.innerHTML = "";
 
-  [0,1,2,3].forEach(t=>{
+  [1,2,3].forEach(t=>{
     const m = byTier?.[t];
     if(!m || m.size===0) return;
 
@@ -4898,3 +4901,90 @@ __matSubStyle.textContent = `
   }
 `;
 document.head.appendChild(__matSubStyle);
+
+
+
+function calculateExpectedRevenue() {
+  // 희석액 매출량 계산 (기대 매출에 반영)
+  const dilutionRevenue = calculateDilutionBonus();  // 희석액의 매출량 계산
+
+  // 다른 완성품들의 매출량 계산 (기존 계산 로직)
+  const otherRevenue = calculateOtherRevenue();  // 다른 완성품들의 매출량 계산
+
+  // 총 기대 매출량 계산
+  const totalRevenue = dilutionRevenue + otherRevenue;
+
+  // UI에 반영 (탭1에서 보여주는 부분)
+  updateUITab1(totalRevenue);  // 탭1 UI 업데이트
+}
+
+function calculateDilutionBonus() {
+  const dilutionPrice = getDilutionPrice();  // 희석액 단가
+  const dilutionQuantity = getDilutionQuantity();  // 희석액 수량
+  const totalRevenue = dilutionPrice * dilutionQuantity;
+
+  // 희석액이 경쟁할 때, 매출량이 더 높으면 생산되도록
+  const otherProductsRevenue = calculateOtherProductsRevenue();  // 다른 완성품들의 매출 계산
+  const dilutionEfficiency = totalRevenue / dilutionQuantity;  // 희석액의 효율 (단가와 수량)
+
+  // 다른 완성품들이 더 효율적이라면 희석액을 생산하지 않음
+  if (dilutionEfficiency > otherProductsRevenue) {
+    return totalRevenue;  // 희석액이 더 많은 매출을 내는 경우만 생산
+  } else {
+    return 0;  // 매출이 더 낮으면 생산되지 않음
+  }
+}
+
+function calculateActualRevenue() {
+  // 실제 재고와 매출량 계산
+  const actualRevenue = calculateOtherActualRevenue();  // 실제 매출량 계산 (다른 완성품들)
+
+  // 희석액 매출량 계산
+  const dilutionRevenue = calculateDilutionBonus();  // 희석액 매출량 계산
+
+  // 총 실제 매출량 계산
+  const totalRevenue = actualRevenue + dilutionRevenue;
+
+  // UI에 반영 (탭2에서 보여주는 부분)
+  updateUITab2(totalRevenue);  // 탭2 UI 업데이트
+}
+
+function calcMatNeed(y) {
+  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(9).fill(0);
+
+  // --- 유틸 ---
+  const add = (totals, name, qty) => {
+    if (!qty) return;
+    if (isFishItem(name)) return;
+    totals[name] = (totals[name] || 0) + qty;
+  };
+
+  // --- 레시피 정의 ---
+  const R1 = {
+    "수호의 정수 ★": { "굴 ★": 2, "점토": 1 },
+    "파동의 정수 ★": { "소라 ★": 2, "모래": 3 },
+    // 희석액을 제외 (경쟁을 위해 중간재 소모량에서 제외)
+    "추출된 희석액": { "굴★": 1, "소라★": 1, "문어★": 1, "미역★": 1, "성게★": 1 },
+  };
+
+  const totals = {};
+
+  // 각 완성품을 만드는 데 필요한 재료를 계산
+  for (const [product, ingredients] of Object.entries(R1)) {
+    Object.entries(ingredients).forEach(([ingredient, qty]) => {
+      add(totals, ingredient, qty);  // 재료 추가
+    });
+  }
+
+  return totals;  // 재료들 반환
+}
+
+function updateUITab1(result) {
+  const resultElement = document.getElementById("resultDisplayTab1");  // 탭1 UI 요소
+  resultElement.textContent = result ? result : "계산 오류";  // 결과 출력
+}
+
+function updateUITab2(result) {
+  const resultElement = document.getElementById("resultDisplayTab2");  // 탭2 UI 요소
+  resultElement.textContent = result ? result : "계산 오류";  // 결과 출력
+}
