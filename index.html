@@ -124,10 +124,14 @@
 }
 
 .item-icon {
-  width: 18px;
-  height: 18px;
+  height: 22px;
+  width: auto;
+  image-rendering: auto;
+  filter:
+    blur(0.2px)                   /* 계단만 살짝 녹임 */
+    contrast(1.08)                /* 선명도 체감 업 */
+    saturate(1.02); 
   flex-shrink: 0;
-  image-rendering: pixelated;
 }
 
 
@@ -446,6 +450,30 @@ input + .unit.ea{  margin-left:6px !important; }
 
 
 
+
+/* ===== Tier header ultra-ultra soft pastel ===== */
+.tier-sep td{
+  font-weight: 600;
+  padding: 8px 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* 1티어 – barely-there green */
+.tier-sep.tier-1 td{
+  background: rgba(168, 220, 190, 0.12);
+}
+
+/* 2티어 – barely-there pink */
+.tier-sep.tier-2 td{
+  background: rgba(255, 195, 210, 0.12);
+}
+
+/* 3티어 – barely-there yellow */
+.tier-sep.tier-3 td{
+  background: rgba(255, 235, 170, 0.14);
+}
+
 </style>
 <link crossorigin="" href="https://cdn.jsdelivr.net" rel="preconnect"/>
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet"/>
@@ -674,8 +702,13 @@ tr:last-child td{border-bottom:none}
 .footer-space{height:48px}
 .mat{display:inline-flex; align-items:center; gap:8px}
 .icon{
-  width:18px; height:18px;
-  image-rendering: pixelated;
+  height: 22px;
+  width: auto;
+  image-rendering: auto;
+  filter:
+    blur(0.2px)                   /* 계단만 살짝 녹임 */
+    contrast(1.08)                /* 선명도 체감 업 */
+    saturate(1.02); 
   border-radius:6px;
   background:rgba(0,0,0,.06);
 }
@@ -782,14 +815,26 @@ th:nth-child(n+2), td:nth-child(n+2){ text-align: right !important; }
 
 /* 어패류 아이콘 기본 리셋 */
 .icon{
-  width:18px;
-  height:18px;
+  height: 22px;
+  width: auto;
+  image-rendering: auto;
+  filter:
+    blur(0.2px)                   /* 계단만 살짝 녹임 */
+    contrast(1.08)                /* 선명도 체감 업 */
+    saturate(1.02); 
   display:inline-block;
   background-color: transparent !important;
 }
 
 /* 아이콘(부재료/어패류 공통): URL background-image 표시용 */
 .icon{
+  height:22px;        /* ← 이 줄만 추가 */
+  width:auto;         /* ← 혹시 몰라 명시 */
+  image-rendering: auto;
+  filter:
+    blur(0.2px)                   /* 계단만 살짝 녹임 */
+    contrast(1.08)                /* 선명도 체감 업 */
+    saturate(1.02);   
   background: transparent !important;          /* 기존 회색 background 단축 속성 무력화 */
   background-repeat: no-repeat !important;
   background-position: center !important;
@@ -1288,8 +1333,13 @@ border-color: var(--focus-border) !important;
   min-width: 0;
 }
 .midInvRow .midLabel img{
-  width: 18px;
-  height: 18px;
+  height: 22px;
+  width: auto;
+  image-rendering: auto;
+  filter:
+    blur(0.2px)                   /* 계단만 살짝 녹임 */
+    contrast(1.08)                /* 선명도 체감 업 */
+    saturate(1.02); 
   display: block;
 }
 .midInvRow .midLabel span{
@@ -1513,8 +1563,13 @@ button:hover{
   min-width: 0;
 }
 .recipeTip img{
-  width: 18px;
-  height: 18px;
+  height: 22px;
+  width: auto;
+  image-rendering: auto;
+  filter:
+    blur(0.2px)                   /* 계단만 살짝 녹임 */
+    contrast(1.08)                /* 선명도 체감 업 */
+    saturate(1.02); 
   flex: 0 0 auto;
 }
 .recipeTip .m .qty{
@@ -1581,8 +1636,9 @@ button:hover{
 .recipeTip img,
 .recipeTip .icon,
 .recipeTip .item-icon{
-  width: 18px;
-  height: 18px;
+  height: 22px;
+  width: auto;
+  image-rendering: auto;
   flex: 0 0 auto;
   display:block;
 }
@@ -2863,6 +2919,87 @@ input + .unit.ea{  margin-left:6px !important; }
 
 
 
+</style>
+
+
+<!-- === SET/EA INPUT CSS (fish inventory) === -->
+<style id="setea-input-css">
+/* set/ea pair layout */
+.qty-pair{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.qty-pair .unit{
+  font-size: 0.85em;
+  opacity: .75;
+  margin-left:2px;
+}
+
+/* match existing numeric input tone */
+table input[type="number"][data-setea="set"],
+table input[type="number"][data-setea="ea"]{
+  width: 72px !important;
+  max-width: 120px !important;
+  padding: 0 10px !important;
+  height: 34px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* make set a bit narrower */
+table input[type="number"][data-setea="set"]{ width: 64px !important; }
+</style>
+
+
+<!-- ===== BLUE THEME – RECIPE TOOLTIP FINAL (BORDER 1.5px) ===== -->
+<style id="blue-tooltip-unify-final">
+/* lock box model to avoid size jump */
+[data-theme="blue"] .recipeTip,
+[data-theme="blue"] .recipeTip:hover,
+[data-theme="blue"] .recipeTip.pinned{
+  box-sizing: border-box;
+}
+
+/* force border on real elements (1.5px) */
+[data-theme="blue"] .recipeTip,
+[data-theme="blue"] .recipeTip .recipeDialog,
+[data-theme="blue"] .recipeTip .recipeDialogInner{
+  border:1.5px solid #3b5fd9 !important;
+}
+
+/* prevent inner double-border artifacts */
+[data-theme="blue"] .recipeTip .recipeDialog,
+[data-theme="blue"] .recipeTip .recipeDialogInner,
+[data-theme="blue"] .recipeTip .tipCard{
+  border-color:#3b5fd9 !important;
+}
+
+/* shadows without layout shift */
+[data-theme="blue"] .recipeTip{
+  background:#ffffff;
+  box-shadow:0 10px 24px rgba(59,95,217,.18);
+  transition:box-shadow .15s ease;
+}
+[data-theme="blue"] .recipeTip:hover{
+  box-shadow:0 14px 32px rgba(59,95,217,.26);
+}
+[data-theme="blue"] .recipeTip.pinned{
+  box-shadow:0 18px 40px rgba(59,95,217,.32);
+}
+
+/* badge */
+[data-theme="blue"] .recipeTip .badge,
+[data-theme="blue"] .recipeTip .pill{
+  background:rgba(59,95,217,.12);
+  color:#3b5fd9;
+  font-weight:600;
+}
 </style>
 
 </head>
@@ -4270,6 +4407,18 @@ input + .unit.ea{  margin-left:6px !important; }
 
 </style>
 
+
+<!-- TEXT READABILITY PATCH -->
+<style id="text-scale-fix">
+  html{
+    font-size: 15px; /* +1px global bump */
+  }
+  body{
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+</style>
+
 </body>
 
 <style id="blue-theme-recipe-tooltip-final">
@@ -4650,6 +4799,27 @@ input + .unit.ea{  margin-left:6px !important; }
 /* emphasize load button text */
 .btn-strong{ font-size:0.85rem; font-weight:500; }
 
+
+
+/* ===== FIX: blue theme checkbox contrast (lighter) ===== */
+[data-theme="blue"] .checkbox input:checked{
+  background: rgba(90,130,255,.72) !important;
+  border-color: rgba(90,130,255,.72) !important;
+}
+
+[data-theme="blue"] .checkbox input:checked::after{
+  border-color: #ffffff !important;
+}
+
+
+
+.recipeTip{
+  transition: box-shadow .15s ease, opacity .15s ease;
+}
+.recipeTip:hover,
+.recipeTip.pinned{
+  box-shadow: 0 8px 24px rgba(0,0,0,.18);
+}
 
 
 </style>

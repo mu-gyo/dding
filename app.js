@@ -1,31 +1,139 @@
-const SET_SIZE = 64;
-var __tab2_cached_state = null;
 
-// ===== GLOBAL ENGINE TUNING (SINGLE SOURCE OF TRUTH) =====
-(function(){
-  if (typeof window.ALPHA_GLOBAL === 'undefined') window.ALPHA_GLOBAL = 1.20;
-  if (typeof window.BETA_GLOBAL  === 'undefined') window.BETA_GLOBAL  = 0.50;
-  if (typeof window.GAMMA_GLOBAL === 'undefined') window.GAMMA_GLOBAL = 0.55;
-  if (typeof window.MAX_BURST    === 'undefined') window.MAX_BURST    = 50;
-  if (typeof window.BURST_EXEC_CAP === 'undefined') window.BURST_EXEC_CAP = 20; // execute up to N units per pick
-})();
-// =========================================================
+// =============================
+// 부재료 그룹 매핑 (렌더 전용)
+// =============================
+function MAT_GROUP_NAME(mat){
+  if(mat === "점토" || mat === "모래" || mat === "흙") return "정수";
+  if(mat === "익히지 않은 새우") return "핵";
+  if(mat === "해초") return "에센스";
+  if(mat === "켈프") return "결정";
+  if(mat === "불우렁쉥이") return "엘릭서";
+  if(mat === "말린 켈프") return "영약";
+  return null;
+}
 
-// ===== GLOBAL ENGINE TUNING =====
- // immediate revenue weight
- // lookahead weight
+
+// ===== Fish tier order helpers (UI only) =====
+const __FISH_BASE_ORDER = [
+  "굴","소라","문어","미역","성게",
+  "익히지 않은 새우","익히지 않은 도미","익히지 않은 청어",
+  "금붕어","농어"
+];
+function __fishStarCount(label){
+  return (String(label||"").match(/★/g) || []).length;
+}
+function __fishBaseName(label){
+  return String(label||"").replace(/★+/g,"").replace(/\s+/g," ").trim();
+}
+function __fishBaseRank(label){
+  const b = __fishBaseName(label);
+  const idx = __FISH_BASE_ORDER.indexOf(b);
+  return idx >= 0 ? idx : 999;
+}
+function __fishOrderedIndices(){
+  // returns indices of FISH_ROWS in desired order: tier1 bases, tier2 bases, tier3 bases
+  const idxs = FISH_ROWS.map((_,i)=>i);
+  idxs.sort((a,b)=>{
+    const ta = __fishStarCount(FISH_ROWS[a]);
+    const tb = __fishStarCount(FISH_ROWS[b]);
+    if(ta !== tb) return ta - tb; // 1,2,3
+    const ra = __fishBaseRank(FISH_ROWS[a]);
+    const rb = __fishBaseRank(FISH_ROWS[b]);
+    if(ra !== rb) return ra - rb;
+    return a - b;
+  });
+  return idxs;
+}
+function __tierLabel(t){ return t===1 ? "1티어" : t===2 ? "2티어" : "3티어"; }
+
+
+// ================================
+// TAB1 NULL GUARD (legacy safety)
+// ================================
+function _safeVal(id){
+  const el = document.getElementById(id);
+  return el ? Math.max(0, Math.floor(Number(el.value||0))) : 0;
+}
+
+// ================================
+// FIX: Quantity formatter (from app참고.js)
+// Always return HTML with set/ea units
+// ================================
+function fmtSet64(n) {
+  const v = Math.max(0, Math.floor(Number(n || 0)));
+  const set = Math.floor(v / 64);
+  const rem = v % 64;
+  if (set <= 0)
+    return `<span class="qty-num">${v}</span><span class="qty-unit">개</span>`;
+  if (rem <= 0)
+    return `<span class="qty-num">${set}</span><span class="qty-unit">세트</span>`;
+  return `<span class="qty-num">${set}</span><span class="qty-unit">세트</span> ` +
+         `<span class="qty-num">${rem}</span><span class="qty-unit">개</span>`;
+}
+// ================================
+// END FIX
 // ================================
 
 
-// === Global Loading Overlay helpers (TAB1/TAB2 공용) ===
-function showGlobalLoadingOverlay(){
-  const el = document.getElementById("globalLoadingOverlay");
-  if(el) el.style.display = "flex";
+// ================================
+// THEME (merged from base / index)
+// ================================
+const THEME_KEY = "DDTYCOON_THEME";
+
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme);
 }
-function hideGlobalLoadingOverlay(){
-  const el = document.getElementById("globalLoadingOverlay");
-  if(el) el.style.display = "none";
+
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY) || "beige";
+  applyTheme(saved);
+
+  const sw = document.getElementById("themeSwitch");
+  if(!sw) return;
+
+  sw.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "beige";
+    const next = (cur === "blue") ? "beige" : "blue";
+    localStorage.setItem(THEME_KEY, next);
+    applyTheme(next);
+  });
 }
+
+document.addEventListener("DOMContentLoaded", initTheme);
+
+// ================================
+// END THEME
+// ================================
+
+
+// ================================
+// SET/EA INPUT HELPERS (global)
+// ================================
+const SET_EA_SIZE = 64;
+
+function _eaToSetEa(v){
+  v = Math.max(0, Math.floor(Number(v||0)));
+  return [Math.floor(v/SET_EA_SIZE), v%SET_EA_SIZE];
+}
+function _setEaToEa(setVal, eaVal){
+  const s = Math.max(0, Math.floor(Number(setVal||0)));
+  const e = Math.max(0, Math.floor(Number(eaVal||0)));
+  return s*SET_EA_SIZE + e;
+}
+function _readSetEa(prefix, i){
+  const s = document.getElementById(`${prefix}_set_${i}`);
+  const e = document.getElementById(`${prefix}_ea_${i}`);
+  return _setEaToEa(s?.value, e?.value);
+}
+function _writeSetEa(prefix, i, ea){
+  const [s, r] = _eaToSetEa(ea);
+  const sEl = document.getElementById(`${prefix}_set_${i}`);
+  const eEl = document.getElementById(`${prefix}_ea_${i}`);
+  if(sEl) sEl.value = String(s);
+  if(eEl) eEl.value = String(r);
+}
+
+
 
 
 
@@ -732,8 +840,6 @@ function getAllRecipesForMid(){
 function calcNetNeedsForActualWithMidInv(yFinal){
   const recipes = getAllRecipesForMid();    // 최종품 9개 포함
   const fishSet = new Set(FISH_ROWS);
-  // ✅ 탭2(실제 제작) 기준: 완성품 재고는 "제작량"을 줄이지 않음(판매용으로만 사용)
-  const FINAL_SET = new Set((PRODUCTS||[]).map(p=>p.name));
 
   const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
   const inv = {};
@@ -753,15 +859,12 @@ function calcNetNeedsForActualWithMidInv(yFinal){
     if(depth > 40) return;
 
     // ✅ 중간재 재고 먼저 소비
-    // (단, 완성품은 "판매용 재고"로만 취급하므로 제작 필요량에서 차감하지 않음)
-    if(!FINAL_SET.has(item)){
-      const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
-      if(have > 0){
-        const use = Math.min(have, qty);
-        inv[item] = have - use;
-        qty -= use;
-        if(qty <= 0) return;
-      }
+    const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
+    if(have > 0){
+      const use = Math.min(have, qty);
+      inv[item] = have - use;
+      qty -= use;
+      if(qty <= 0) return;
     }
 
     const r = recipes[item];
@@ -1025,7 +1128,7 @@ function bindMidInvResetButtons(){
 
   btns.forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      if(!confirm("재고를 초기화할까요?")) return;
+      if(!confirm("중간재 재고를 모두 0으로 초기화할까요?")) return;
       clearMidInvAll();
       renderMidInvGrid();
       try{ recalcFromCurrent(); }catch(e){}
@@ -1100,7 +1203,7 @@ function getFishCreditFromMidInv(){
 // 반환: { items: [{name, qty}], totals: { [name]: qty } }
 // ================================
 function calcMatNeed(y) {
-  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(9).fill(0);
+  const yy = Array.isArray(y) ? y.map(v => Number(v || 0)) : Array(PRODUCTS.length).fill(0);
 
   // --- 유틸 ---
   const add = (totals, name, qty) => {
@@ -1276,7 +1379,8 @@ function buildFishMatrix() {
     "청해룡의 날개 ★★",
     "아쿠아 펄스 파편 ★★★",
     "나우틸러스의 손 ★★★",
-    "무저의 척추 ★★★"
+    "무저의 척추 ★★★",
+    "추출된 희석액"
   ];
 
   // 빈 벡터
@@ -1297,6 +1401,26 @@ function buildFishMatrix() {
   req[products[6]] = { ...col(), "굴★★★":2, "소라★★★":2, "문어★★★":0, "미역★★★":1, "성게★★★":1 };
   req[products[7]] = { ...col(), "굴★★★":2, "소라★★★":1, "문어★★★":1, "미역★★★":2, "성게★★★":0 };
   req[products[8]] = { ...col(), "굴★★★":0, "소라★★★":1, "문어★★★":2, "미역★★★":1, "성게★★★":2 };
+  // 추출된 희석액 (어패류 전개값 환산, 사람 계산과 동일)
+  const dilution = { ...col() };
+
+  // 침식 방어의 핵 ★ x3
+  for (const k in req[products[0]]) {
+    dilution[k] += req[products[0]][k] * 3;
+  }
+
+  // 방어 오염의 결정 ★★ x2
+  for (const k in req[products[3]]) {
+    dilution[k] += req[products[3]][k] * 2;
+  }
+
+  // 타락 침식의 영약 ★★★ x1
+  for (const k in req[products[6]]) {
+    dilution[k] += req[products[6]][k] * 1;
+  }
+
+  req[products[9]] = dilution;
+
 
   // A[15][9] 생성
   const A = fishRows.map(fr => products.map(p => req[p][fr] || 0));
@@ -1501,6 +1625,7 @@ const PRODUCTS = [
   { name:"아쿠아 펄스 파편 ★★★", base:18985 },
   { name:"나우틸러스의 손 ★★★", base:19207 },
   { name:"무저의 척추 ★★★", base:19328 },
+  { name:"추출된 희석액", base:18444, tier:0 },
 ];
 
 const FISH_ROWS = [
@@ -1732,6 +1857,7 @@ function fmtGold(n){
 
 // --- 가격을 등급(★/★★/★★★) 단위로 "최고가"로 통일 (탭1/탭2 공용) ---
 function getTierFromName(name){
+  if (name === "추출된 희석액") return 0;
   if (!name) return 1;
   if (name.includes("★★★")) return 3;
   if (name.includes("★★")) return 2;
@@ -1800,16 +1926,31 @@ function buildTables(){
   });
 
   invBody.innerHTML = "";
-  FISH_ROWS.forEach((name, i)=>{
+  const __ord = __fishOrderedIndices();
+  let __lastT = null;
+  __ord.forEach(i=>{
+    const name = FISH_ROWS[i];
+    const t = __fishStarCount(name);
+    if(t !== __lastT){
+      __lastT = t;
+      const trH = document.createElement("tr");
+      trH.className = `tier-sep tier-${t}`;
+      trH.innerHTML = `<td colspan="2" class="tier-title">${__tierLabel(t)}</td>`;
+      invBody.appendChild(trH);
+    }
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${matLabel(name,false)}</td>
-      <td><input type="number" min="0" step="1" value="0" style="width:120px;max-width:100%" id="inv_${i}"></td>
+      <td><span class="qty-pair">
+        <input type="number" min="0" step="1" value="0" data-setea="set" id="inv_set_${i}">
+        <span class="unit set">세트</span>
+        <input type="number" min="0" step="1" value="0" data-setea="ea" id="inv_ea_${i}">
+        <span class="unit ea">개</span>
+      </span></td>
     `;
     invBody.appendChild(tr);
   });
-
-  renderAlloc([0,0,0,0,0], 0, 15);
+renderAlloc([0,0,0,0,0], 0, 15);
 }
 buildTables();
 
@@ -2049,7 +2190,7 @@ function computeSupplyForBlocks(blocks, d){
   // inventory
   const supply = Array(FISH_ROWS.length).fill(0);
   for(let i=0;i<FISH_ROWS.length;i++){
-    const inv = Math.max(0, Math.floor(Number(document.getElementById(`inv_${i}`).value) || 0));
+    const inv = Math.max(0, Math.floor(Number(_readSetEa("inv", i)) || 0));
     supply[i] = inv;
   }
 
@@ -2194,7 +2335,7 @@ document.getElementById(`rev_${idx}`).textContent = fmtGold(rev);
 // inventory fish
   const invFish = new Map();
   FISH_ROWS.forEach((name, i)=>{
-    invFish.set(name, Math.max(0, Math.floor(Number(document.getElementById(`inv_${i}`).value) || 0)));
+    invFish.set(name, Math.max(0, Math.floor(Number(_readSetEa("inv", i)) || 0)));
   });
 
   // render need fish
@@ -2240,7 +2381,7 @@ const LS_KEY_EXPECTED = "ddtycoon_expectedInv_v1";
 const LS_KEY_CRAFTCHECK = "ddtycoon_craftcheck_v1";
 
 function getExpectedInv(){
-  return FISH_ROWS.map((_, i)=> Math.max(0, Math.floor(Number(document.getElementById(`inv_${i}`).value || 0))));
+  return FISH_ROWS.map((_, i)=> Math.max(0, Math.floor(_readSetEa("inv", i))));
 }
 function setExpectedInv(arr){
   if(!Array.isArray(arr) || arr.length !== FISH_ROWS.length) return;
@@ -2262,58 +2403,84 @@ function loadExpectedInv(){
   }catch(e){}
 }
 
-// NOTE: 탭1 ↔ 탭2 어패류 재고 자동 동기화는 제거됨.
-// (과거 "총 재고가 누적/증식" 버그 원인) 필요 시 "버튼으로 1회 복사" 형태로만 제공.
-
-
-
-function readSetEa(prefix, i){
-  const s = document.getElementById(`${prefix}_set_${i}`);
-  const e = document.getElementById(`${prefix}_ea_${i}`);
-  const set = Math.max(0, Math.floor(Number(s?.value || 0)));
-  const ea  = Math.max(0, Math.floor(Number(e?.value || 0)));
-  return set * SET_SIZE + ea;
+// 탭1(기댓값) 재고 → 탭2(기존 재고) 자동 복사
+function syncExpectedToBase(ev){
+  if(ev && ev.type && ev.type !== "click") return;
+  const arr = getExpectedInv();
+  arr.forEach((v,i)=>{ _writeSetEa("base", i, v); });
+  updateTotalsActual();
 }
+
+
 
 function buildInvActual(){
   const tb = document.querySelector("#invActualTbl tbody");
   tb.innerHTML = "";
-  FISH_ROWS.forEach((label, i)=>{
+
+  const __ord = __fishOrderedIndices();
+  let __lastT = null;
+
+  __ord.forEach(i=>{
+    const label = FISH_ROWS[i];
+    const t = __fishStarCount(label);
+
+    if(t !== __lastT){
+      __lastT = t;
+      const trH = document.createElement("tr");
+      trH.className = `tier-sep tier-${t}`;
+      trH.innerHTML = `<td colspan="4" class="tier-title">${__tierLabel(t)}</td>`;
+      tb.appendChild(trH);
+    }
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
 <td>${matLabel(label)}</td>
-      <td><div class="qty-pair"><input id="base_set_${i}" type="number" min="0" step="1" value="0" style="width:64px; margin-right:6px"/><span class="unit set">세트</span></div><div class="qty-pair"><input id="base_ea_${i}" type="number" min="0" step="1" value="0" style="width:72px"/><span class="unit ea">개</span></div></td><td><div class="qty-pair"><input id="harv_set_${i}" type="number" min="0" step="1" value="0" style="width:64px; margin-right:6px"/><span class="unit set">세트</span></div><div class="qty-pair"><input id="harv_ea_${i}" type="number" min="0" step="1" value="0" style="width:72px"/><span class="unit ea">개</span></div></td>
+      <td><span class="qty-pair">
+        <input id="base_set_${i}" data-setea="set" type="number" min="0" step="1" value="0"/>
+        <span class="unit set">세트</span>
+        <input id="base_ea_${i}" data-setea="ea" type="number" min="0" step="1" value="0"/>
+        <span class="unit ea">개</span>
+      </span></td>
+      <td><span class="qty-pair">
+        <input id="harv_set_${i}" data-setea="set" type="number" min="0" step="1" value="0"/>
+        <span class="unit set">세트</span>
+        <input id="harv_ea_${i}" data-setea="ea" type="number" min="0" step="1" value="0"/>
+        <span class="unit ea">개</span>
+      </span></td>
       <td class="right" id="tot_${i}">0</td>
     `;
     tb.appendChild(tr);
   });
 
-  
-  // ✅ 안정화: 테이블 재생성 시에도 "오늘 채집"은 0으로 시작
-  FISH_ROWS.forEach((_, i)=>{ const hs = document.getElementById(`harv_set_${i}`); if(hs) hs.value = 0; const he = document.getElementById(`harv_ea_${i}`); if(he) he.value = 0;});
-  updateTotalsActual();
-// change listeners
+  // change listeners (existing behavior)
   FISH_ROWS.forEach((_, i)=>{
-    ["base_set","base_ea","harv_set","harv_ea"].forEach(p=>{ const el = document.getElementById(`${p}_${i}`); if(el) el.addEventListener("change", updateTotalsActual);});
+    ["base_set_","base_ea_","harv_set_","harv_ea_"].forEach(p=>{
+      document.getElementById(`${p}${i}`)?.addEventListener("change", updateTotalsActual);
+    });
   });
 
   updateTotalsActual();
 }
+
 
 function updateTotalsActual(){
   FISH_ROWS.forEach((_, i)=>{
-    const b = readSetEa("base", i);
-    const h = readSetEa("harv", i);
+    const b = _readSetEa("base", i);
+    const h = _readSetEa("harv", i);
     const t = Math.max(0, Math.floor(b) + Math.floor(h));
-    document.getElementById(`tot_${i}`).textContent = String(t);
+    const el = document.getElementById(`tot_${i}`);
+    if(el) el.textContent = String(t);
   });
 }
+
 
 function saveBaseInv(){
   // baseInv 저장
 
-  const base = FISH_ROWS.map((_, i)=> Math.max(0, Math.floor(readSetEa("base", i))));
+  const base = FISH_ROWS.map((_, i)=> Math.max(0, Math.floor(_readSetEa("base", i))));
   localStorage.setItem(LS_KEY_BASE, JSON.stringify(base));
+  // 탭1에도 동일하게 저장
+  localStorage.setItem(LS_KEY_EXPECTED, JSON.stringify(base));
 }
 
 function loadBaseInv(){
@@ -2322,7 +2489,8 @@ function loadBaseInv(){
   try{
     const arr = JSON.parse(raw);
     if(Array.isArray(arr) && arr.length === FISH_ROWS.length){
-      arr.forEach((v,i)=>{ const units = Math.max(0, Math.floor(Number(v||0))); const set = Math.floor(units / SET_SIZE); const ea  = units % SET_SIZE; const sEl = document.getElementById(`base_set_${i}`); const eEl = document.getElementById(`base_ea_${i}`); if(sEl) sEl.value = set; if(eEl) eEl.value = ea;});updateTotalsActual();
+      arr.forEach((v,i)=>{ document.getElementById(`base_${i}`).value = Math.max(0, Math.floor(Number(v||0))); });
+      updateTotalsActual();
     }
   }catch(e){}
 }
@@ -2352,16 +2520,31 @@ function renderActualResult(y, prices, supply, usedFish){
 
   let sum = 0;
 
-  PRODUCTS.forEach((p, i)=>{
-    // ✅ 제작량(표시) = 이번에 새로 만드는 수량만
-    const craftQty = Math.max(0, Math.floor(Number(y[i] || 0)));
+  // ✅ 티어별(★) 헤더 + 원래 PRODUCTS 순서 유지
+  const __idxs = PRODUCTS.map((_,i)=>i).sort((a,b)=>{
+    const ta = getTierFromName(PRODUCTS[a].name);
+    const tb = getTierFromName(PRODUCTS[b].name);
+    return (ta - tb) || (a - b);
+  });
+  let __lastT = null;
 
-    // ✅ 단가(표시/매출 공통)
-    const unitView = viewPrices[i];
+  __idxs.forEach((i)=>{
+    const p = PRODUCTS[i];
+    const t = getTierFromName(p.name);
 
-    // ✅ 매출(판매량) = 제작분 + 완성품 재고 (매출에만 반영)
-    const invQty = Math.max(0, Math.floor(Number(getMidInvQty(p.name) || 0)));
-    const sellQty = craftQty + invQty;
+    if(t !== __lastT){
+      __lastT = t;
+      const trH = document.createElement("tr");
+      trH.className = `tier-sep tier-${t}`;
+      trH.innerHTML = `<td colspan="5" class="tier-title">${__tierLabel(t)}</td>`;
+      tb.appendChild(trH);
+    }
+
+    const qty = Math.max(0, Math.floor(y[i]||0));
+    const invQty = getMidInvQty(p.name);
+    const sellQty = qty + invQty;
+
+    const unitView = viewPrices[i];          // ✅ 표기용 단가
     const rev = sellQty * unitView;
     sum += rev;
 
@@ -2372,11 +2555,12 @@ function renderActualResult(y, prices, supply, usedFish){
 `<td><span class="tipName"
       data-tipname="${p.name}"
       data-tipkind="final"
-      data-tipqty="${craftQty}"
+      data-tipqty="${qty}"
     >${productLabel(p.name)}</span></td>
- <td class="right">${fmtGold(unitView)}</td>
- <td class="right">${craftQty}</td>
- <td class="right">${fmtGold(rev)}</td>` +
+<td class="right">${fmtGold(unitView)}</td>
+<td class="right">${sellQty}</td>
+
+<td class="right">${fmtGold(rev)}</td>` +
 `<td class="center checkCell">
    <label class="checkbox">
      <input class="chk" type="checkbox" ${ck?"checked":""} data-idx="${i}">
@@ -2384,7 +2568,10 @@ function renderActualResult(y, prices, supply, usedFish){
  </td>`;
 
     tb.appendChild(tr);
-  });document.getElementById("revSumA").textContent = fmtGold(sum);
+  });
+
+
+  document.getElementById("revSumA").textContent = fmtGold(sum);
   // === FORCE_SYNC_EXPECTED_FROM_TRADE ===
   try{
     const top = document.getElementById("revBadgeA");
@@ -2423,12 +2610,52 @@ if(badge){
 }
 
 
-  // PATCH(TAB2): fish need table hidden/removed from UI
-  const {needMat} = calcNetNeedsForActualWithMidInv(y);
-  // renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
-  renderNeedMatTableTo("#needMatTblA tbody", needMat);
-const craftPlan = calcNetCraftPlanFromActual(y);
-  renderNeedCraftTableTo("#needCraftTblA tbody", craftPlan);
+  
+  const {needFish, needMat} = calcNetNeedsForActualWithMidInv(y);
+  renderNeedFishTableTo("#needFishTblA tbody", needFish, supply);
+
+  // ✅ 중간재 필요 제작량: 티어 헤더 포함
+  const craftPlan = calcNetCraftPlanFromActual(y);
+  renderNeedCraftTableTieredTo("#needCraftTblA tbody", craftPlan);
+
+  // ✅ 부재료: '중간재 제작 순서(craftPlan)' 기준으로 누적
+  // - 여기서 "정렬" 하지 않음 (Map 삽입 순서가 곧 표시 순서)
+  // - 중간재/어패류는 제외하고 '진짜 부재료'만 집계
+  const recipesAll = getAllRecipesForMid();
+  const fishSet = new Set(FISH_ROWS);
+  const needMatByTier = {1:new Map(), 2:new Map(), 3:new Map()};
+
+  (craftPlan||[]).forEach(r=>{
+    const midName = r?.name;
+    const craftNeedQty = Math.max(0, Math.floor(Number(r?.craft || 0))); // 결과 개수 기준
+    if(!midName || craftNeedQty<=0) return;
+
+    const recipe = recipesAll[midName];
+    if(!recipe) return;
+
+    // 제작 횟수(crafts) 기준으로 재료 소모 계산 (x2 생산 반영)
+    const crafts = (typeof qtyToCrafts === "function") ? qtyToCrafts(midName, craftNeedQty) : craftNeedQty;
+    if(crafts<=0) return;
+
+    const tier = getTierFromName(midName);
+    const bucket = needMatByTier[tier] || needMatByTier[1];
+
+    for(const [ing, per0] of Object.entries(recipe)){
+      const per = Math.max(0, Math.floor(Number(per0||0)));
+      if(per<=0) continue;
+
+      // 어패류는 needFishTblA에서 처리
+      if(fishSet.has(ing)) continue;
+
+      // 중간재는 needCraftTblA에서 처리 (중복 집계 방지)
+      if(typeof isMidItemName === "function" && isMidItemName(ing)) continue;
+
+      const add = crafts * per;
+      bucket.set(ing, (bucket.get(ing)||0) + add);
+    }
+  });
+
+  renderNeedMatTableTieredTo("#needMatTblA tbody", needMatByTier);
 }
 
 
@@ -2495,47 +2722,45 @@ function isMidItemName(name){
 }
 
 function calcNetCraftPlanFromActual(yFinal){
-  const recipes = getAllRecipesForMid(); // 키: 아이템명, 값: 재료맵
+  const recipes = getAllRecipesForMid(); // 최종품 포함(키:아이템명, 값:재료맵)
   const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
   const inv = {};
-  for(const [k,v] of Object.entries(inv0)){
-    inv[k] = Math.max(0, Math.floor(Number(v || 0)));
-  }
+  for(const [k,v] of Object.entries(inv0)) inv[k] = Math.max(0, Math.floor(Number(v||0)));
 
-  const gross = {}; // 총 필요(개수)
-  const net   = {}; // 추가 제작 필요(개수, 재고 반영 전개 결과)
+  const gross = {}; // 총 필요
+  const net   = {}; // 추가 제작(재고 반영)
 
   const add = (obj, k, v) => {
     if(v <= 0) return;
     obj[k] = (obj[k] || 0) + v;
   };
 
-  // 총 필요 전개 (재고 무시, 순수 필요량)
   const expandGross = (item, qty, depth=0) => {
-    qty = Math.max(0, Math.floor(Number(qty || 0)));
-    if(qty <= 0 || depth > 60) return;
+    qty = Math.max(0, Math.floor(Number(qty||0)));
+    if(qty <= 0) return;
+    if(depth > 60) return;
 
     if(isMidItemName(item)) add(gross, item, qty);
 
     const r = recipes[item];
     if(!r) return;
     for(const [mat, per] of Object.entries(r)){
-      expandGross(mat, qty * Number(per || 0), depth + 1);
+      expandGross(mat, qty * Number(per||0), depth+1);
     }
   };
 
-  // 추가 제작 전개 (중간재 재고 선차감)
   const expandNet = (item, qty, depth=0) => {
-    qty = Math.max(0, Math.floor(Number(qty || 0)));
-    if(qty <= 0 || depth > 60) return;
+    qty = Math.max(0, Math.floor(Number(qty||0)));
+    if(qty <= 0) return;
+    if(depth > 60) return;
 
     const r = recipes[item];
     if(!r) return;
 
-    // 중간재면 재고 먼저 소비
+    // ✅ 중간재면 재고를 먼저 소비하고, 부족분만 제작/전개
     if(isMidItemName(item)){
       const have = Math.max(0, Math.floor(Number(inv[item] || 0)));
-      const use  = Math.min(have, qty);
+      const use = Math.min(have, qty);
       if(use > 0) inv[item] = have - use;
       qty -= use;
       if(qty <= 0) return;
@@ -2544,39 +2769,28 @@ function calcNetCraftPlanFromActual(yFinal){
     }
 
     for(const [mat, per] of Object.entries(r)){
-      expandNet(mat, qty * Number(per || 0), depth + 1);
+      expandNet(mat, qty * Number(per||0), depth+1);
     }
   };
 
-  // 최종품 기준 전개
-  PRODUCTS.forEach((p, i)=>{
-    const qty = Math.max(0, Math.floor(Number(yFinal[i] || 0)));
+  PRODUCTS.forEach((p,i)=>{
+    const qty = Math.max(0, Math.floor(Number(yFinal[i]||0)));
     if(!qty) return;
     expandGross(p.name, qty, 0);
     expandNet(p.name, qty, 0);
   });
 
-  // ===============================
-  // 출력용 rows 생성 (여기서만 x2/xN 제작 강제)
-  // ===============================
+  // 출력용 rows: MID_SECTIONS 순서로, 필요/재고/추가제작이 있는 것만
   const rows = [];
   for(const sec of MID_SECTIONS){
     for(const name of (sec.items || [])){
       const need = Math.max(0, Math.floor(Number(gross[name] || 0)));
-      const invv = Math.max(0, Math.floor(Number(inv0[name]  || 0)));
-      let craft  = Math.max(0, Math.floor(Number(net[name]   || 0)));
-
-      // 🔒 x2/xN 생산 강제 (정수/에센스 등)
-      const yld = (typeof recipeYield === "function") ? recipeYield(name) : 1;
-      if(yld > 1 && craft > 0){
-        craft = Math.ceil(craft / yld) * yld;
-      }
-
+      const invv = Math.max(0, Math.floor(Number(inv0[name] || 0)));
+      const craft = Math.max(0, Math.floor(Number(net[name] || 0)));
       if(need <= 0 && invv <= 0 && craft <= 0) continue;
       rows.push({ name, need, inv: invv, craft });
     }
   }
-
   return rows;
 }
 
@@ -2588,38 +2802,45 @@ function renderNeedCraftTableTo(sel, rows){
   (rows || []).forEach(r=>{
     const tr = document.createElement("tr");
 
-    // r.need  : 총 목표 필요 개수 (개수 기준)
-    // r.inv   : 현재 재고 개수
-    // r.craft : 이번에 추가로 제작해야 할 개수
-    const needQty  = Math.max(0, Math.floor(Number(r.need  || 0)));
-    const invQty   = Math.max(0, Math.floor(Number(r.inv   || 0)));
-    const craftQty = Math.max(0, Math.floor(Number(r.craft || 0)));
+    // r.craft : 필요한 '제작 결과 개수' 기준
+    // r.inv   : 재고 개수
+    const craftNeedQty = Math.max(0, Math.floor(Number(r.craft || 0)));
+    const invQty       = Math.max(0, Math.floor(Number(r.inv   || 0)));
 
-    // 전부 0이면 숨김 (기존 UX 유지)
-    if(needQty <= 0 && invQty <= 0 && craftQty <= 0) return;
+    if(craftNeedQty <= 0 && invQty <= 0) return;
 
-    // ✅ 핵심 규칙:
-    // 총 필요 = 제작 개수 + 재고 개수
-    // (제작 횟수 / recipeYield / qtyToCrafts 절대 사용하지 않음)
-    const totalNeed = craftQty + invQty;
+    // x2 / xN 제작 아이템 처리
+    // - 툴팁(재료 계산)은 제작 횟수(crafts) 기준
+    // - 표시는 실제 생산 개수 기준
+    const yieldPerCraft =
+      (typeof recipeYield === "function")
+        ? Math.max(1, recipeYield(r.name))
+        : 1;
 
-    const craftCls = craftQty > 0 ? "neg" : "muted";
+    const crafts =
+      (typeof qtyToCrafts === "function")
+        ? qtyToCrafts(r.name, craftNeedQty)
+        : Math.ceil(craftNeedQty / yieldPerCraft);
+
+    const shownQty = crafts * yieldPerCraft;
+    const totalQty = shownQty + invQty;
+
+    const craftCls = shownQty > 0 ? "neg" : "muted";
 
     tr.innerHTML =
       `<td>
         <span class="tipName"
           data-tipname="${r.name}"
-          data-tipqty="${craftQty}"
+          data-tipqty="${crafts}"
         >${matLabel(r.name)}</span>
       </td>` +
-      `<td class="right ${craftCls}">${fmtSet64(craftQty)}</td>` +
+      `<td class="right ${craftCls}">${fmtSet64(shownQty)}</td>` +
       `<td class="right">${fmtSet64(invQty)}</td>` +
-      `<td class="right">${fmtSet64(totalNeed)}</td>`;
+      `<td class="right">${fmtSet64(totalQty)}</td>`;
 
     tb.appendChild(tr);
   });
 }
-
 
 // ===============================
 // TAB2: Actual optimization with MID inventory balance (NO fish-credit)
@@ -2627,123 +2848,11 @@ function renderNeedCraftTableTo(sel, rows){
 
 // (중요) 탭2에서는 getActualSupply()를 쓰지 않는다.
 // getActualSupply()가 mid credit을 더하고 있을 수 있으니, DOM에서 base_ + harv_만 직접 읽는다.
-// ================================
-// TAB2 REALISTIC SIM (no LP)
-// ================================
-
-// ================================
-// TAB2 REALISTIC SIM (no LP)
-// - 실제 재고(어패류 base+harv, 중간재 재고)로 "만들 수 있는 것만" 제작
-// - 부분 제작/부분 소모 금지
-// - 최종품은 1개씩 그리디(가격 기준)로 추가 제작 (현실 제약 반영)
-// NOTE: 완전한 전역 최적(ILP)은 비용이 커서, 현재는 '실제 제작 가능'을 최우선으로 보장하는 그리디 방식.
-// ================================
-function _tab2_stateFromUI(){
-  const fishArr = (typeof readActualFishSupplyNoMid === "function")
-    ? readActualFishSupplyNoMid()
-    : Array(FISH_ROWS.length).fill(0);
-  const fish = {};
-  FISH_ROWS.forEach((f,i)=> fish[f] = Math.max(0, Math.floor(Number(fishArr[i]||0))));
-  const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
-  const inv = {};
-  for(const [k,v] of Object.entries(inv0||{})){
-    inv[k] = Math.max(0, Math.floor(Number(v||0)));
-  }
-  return {fish, inv, inv0};
-}
-
-function _tab2_cloneState(st){
-  return {
-    fish: Object.fromEntries(Object.entries(st.fish).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
-    inv:  Object.fromEntries(Object.entries(st.inv ).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
-  };
-}
-
-function _tab2_craftNeedStrict(item, needQty, st, recipes, midSet, finalSet, craftLog, depth=0){
-  needQty = Math.max(0, Math.floor(Number(needQty||0)));
-  if(needQty<=0) return true;
-  if(depth>80) return false;
-
-  if(!finalSet.has(item) && midSet.has(item)){
-    const have = Math.max(0, Math.floor(Number(st.inv[item]||0)));
-    if(have>0){
-      const use = Math.min(have, needQty);
-      st.inv[item] = have - use;
-      needQty -= use;
-      if(needQty<=0) return true;
-    }
-  }
-
-  const r = recipes[item];
-  if(!r){
-    if(st.fish[item] !== undefined){
-      const have = Math.max(0, Math.floor(Number(st.fish[item]||0)));
-      if(have < needQty) return false;
-      st.fish[item] = have - needQty;
-    }
-    return true;
-  }
-
-  let crafts = qtyToCrafts(item, needQty);
-  if(crafts<=0) return true;
-
-  for(const [ing, per] of Object.entries(r)){
-    if(st.fish[ing] !== undefined){
-      const perCraft = Math.max(0, Math.floor(Number(per||0)));
-      if(perCraft<=0) continue;
-      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
-      crafts = Math.min(crafts, Math.floor(have / perCraft));
-      if(crafts<=0) break;
-    }
-  }
-  if(crafts<=0) return false;
-
-  craftLog[item] = (craftLog[item]||0) + crafts;
-
-  const yld = recipeYield(item);
-  const produced = crafts * yld;
-  const surplus = Math.max(0, produced - needQty);
-  if(surplus>0 && midSet.has(item) && !finalSet.has(item)){
-    st.inv[item] = Math.max(0, Math.floor(Number(st.inv[item]||0))) + surplus;
-  }
-
-  for(const [ing, per] of Object.entries(r)){
-    if(st.fish[ing] !== undefined){
-      const perCraft = Math.max(0, Math.floor(Number(per||0)));
-      const need = crafts * perCraft;
-      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
-      if(have < need) return false;
-      st.fish[ing] = have - need;
-    }
-  }
-
-  for(const [ing, per] of Object.entries(r)){
-    if(st.fish[ing] !== undefined) continue;
-    const ok = _tab2_craftNeedStrict(ing, crafts * Number(per||0), st, recipes, midSet, finalSet, craftLog, depth+1);
-    if(!ok) return false;
-  }
-
-  return true;
-}
-
-function _tab2_tryCraftOneFinal(finalName, st, recipes, midSet, finalSet, craftLog){
-  const tmp = _tab2_cloneState(st);
-  const tmpLog = {};
-  const ok = _tab2_craftNeedStrict(finalName, 1, tmp, recipes, midSet, finalSet, tmpLog, 0);
-  if(!ok) return null;
-  st.fish = tmp.fish;
-  st.inv = tmp.inv;
-  for(const [k,v] of Object.entries(tmpLog)){
-    craftLog[k] = (craftLog[k]||0) + v;
-  }
-  return true;
-}
-
 function readActualFishSupplyNoMid(){
   const out = Array(FISH_ROWS.length).fill(0);
   for(let i=0;i<FISH_ROWS.length;i++){
-    const base = Math.max(0, Math.floor(Number(document.getElementById(`base_${i}`)?.value || 0)));
-    const harv = Math.max(0, Math.floor(Number(document.getElementById(`harv_${i}`)?.value || 0)));
+    const base = Math.max(0, Math.floor(_readSetEa("base", i)));
+    const harv = Math.max(0, Math.floor(_readSetEa("harv", i)));
     out[i] = base + harv;
   }
   return out;
@@ -2815,314 +2924,44 @@ function calcFishUsedFromLP(A, x){
   return used;
 }
 
-
-// ================================
-// TAB2: 미니-ILP(브루트포스) 기반 실제 제작 최적화
-// - 같은 등급 내 가격은 이미 equalizePricesWithinTierMax로 통일된다는 전제
-// - 그리디가 동점에서 한 품목에 몰빵되는 문제를 해결하기 위해
-//   등급(★/★★/★★★)별 3개 완성품 조합을 전수(소형) 탐색해서 최대 매출(=최대 개수)을 찾는다.
-// - feasibility 판정/자원 소모는 레시피 기반 "엄격 제작" 시뮬로 검증(부분 제작 금지).
-// ================================
-function _tab2_stateFromUI_noCredit(forceReset = false){
-  if(forceReset){ __tab2_cached_state = null; }
-
-  // 탭2 실제 어패류 재고: base+harv만
-  const fishArr = FISH_ROWS.map((_, i)=> Number(document.getElementById(`tot_${i}`)?.textContent || 0));
-  const fish = {};
-  FISH_ROWS.forEach((f,i)=> fish[f] = Math.max(0, Math.floor(Number(fishArr[i]||0))));
-  const inv0 = (typeof loadMidInv === "function") ? (loadMidInv() || {}) : {};
-  const inv = {};
-  for(const [k,v] of Object.entries(inv0||{})){
-    inv[k] = Math.max(0, Math.floor(Number(v||0)));
-  }
-  return {fish, inv, inv0};
-}
-function _tab2_cloneState(st){
-  return {
-    fish: Object.fromEntries(Object.entries(st.fish).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
-    inv:  Object.fromEntries(Object.entries(st.inv ).map(([k,v])=>[k, Math.max(0, Math.floor(Number(v||0)))])),
-  };
-}
-
-// 엄격 제작: needQty 개를 만들 수 있으면 true(상태 갱신), 아니면 false
-function _tab2_craftNeedStrict(item, needQty, st, recipes, midSet, finalSet, craftLog, depth=0){
-  needQty = Math.max(0, Math.floor(Number(needQty||0)));
-  if(needQty<=0) return true;
-  if(depth>80) return false;
-
-  // 중간재 재고 선소모(완성품은 판매용이라 소모하지 않음)
-  if(!finalSet.has(item) && midSet.has(item)){
-    const have = Math.max(0, Math.floor(Number(st.inv[item]||0)));
-    if(have>0){
-      const use = Math.min(have, needQty);
-      st.inv[item] = have - use;
-      needQty -= use;
-      if(needQty<=0) return true;
-    }
-  }
-
-  const r = recipes[item];
-  if(!r){
-    // base: fish만 제약
-    if(st.fish[item] !== undefined){
-      const have = Math.max(0, Math.floor(Number(st.fish[item]||0)));
-      if(have < needQty) return false;
-      st.fish[item] = have - needQty;
-    }
-    return true;
-  }
-
-  let crafts = qtyToCrafts(item, needQty);
-  if(crafts<=0) return true;
-
-  // 직접 어패류 재료가 있으면 재고로 crafts 상한 캡 (부분 제작 금지)
-  for(const [ing, per] of Object.entries(r)){
-    if(st.fish[ing] !== undefined){
-      const perCraft = Math.max(0, Math.floor(Number(per||0)));
-      if(perCraft<=0) continue;
-      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
-      crafts = Math.min(crafts, Math.floor(have / perCraft));
-      if(crafts<=0) break;
-    }
-  }
-  if(crafts<=0) return false;
-
-  // 로그(제작 횟수)
-  craftLog[item] = (craftLog[item]||0) + crafts;
-
-  // yield surplus → 중간재 재고로 적립(중간재만)
-  const yld = recipeYield(item);
-  const produced = crafts * yld;
-  const surplus = Math.max(0, produced - needQty);
-  if(surplus>0 && midSet.has(item) && !finalSet.has(item)){
-    st.inv[item] = Math.max(0, Math.floor(Number(st.inv[item]||0))) + surplus;
-  }
-
-  // fish 재료는 전량 차감
-  for(const [ing, per] of Object.entries(r)){
-    if(st.fish[ing] !== undefined){
-      const perCraft = Math.max(0, Math.floor(Number(per||0)));
-      const need = crafts * perCraft;
-      const have = Math.max(0, Math.floor(Number(st.fish[ing]||0)));
-      if(have < need) return false;
-      st.fish[ing] = have - need;
-    }
-  }
-
-  // 나머지 재료 재귀 전개
-  for(const [ing, per] of Object.entries(r)){
-    if(st.fish[ing] !== undefined) continue;
-    const ok = _tab2_craftNeedStrict(ing, crafts * Number(per||0), st, recipes, midSet, finalSet, craftLog, depth+1);
-    if(!ok) return false;
-  }
-  return true;
-}
-
-// plan = [{name, qty}] 를 순서대로 제작 시도. 성공하면 {ok:true, st, craftLog}
-function _tab2_tryPlan(plan, baseState, recipes, midSet, finalSet){
-  const st = _tab2_cloneState(baseState);
-  const craftLog = {};
-  for(const p of plan){
-    const q = Math.max(0, Math.floor(Number(p.qty||0)));
-    if(!q) continue;
-    for(let k=0;k<q;k++){
-      const ok = _tab2_craftNeedStrict(p.name, 1, st, recipes, midSet, finalSet, craftLog, 0);
-      if(!ok) return {ok:false};
-    }
-  }
-  return {ok:true, st, craftLog};
-}
-
-// 등급별 3개 완성품 조합 전수(소형) 탐색
-function _tab2_solveTierILP(finalIdxs, prices, baseState, recipes, midSet, finalSet){
-  const names = finalIdxs.map(i=>PRODUCTS[i].name);
-  const unit = finalIdxs.map(i=>Math.max(0, Math.floor(Number(prices[i]||0))));
-
-  // 단독 상한(각각만 만들 때 최대치) 구하기: 이분탐색
-  function maxSingle(name){
-    let lo=0, hi=1;
-    while(true){
-      const r = _tab2_tryPlan([{name, qty:hi}], baseState, recipes, midSet, finalSet);
-      if(!r.ok) break;
-      hi*=2;
-      if(hi>512) break; // 안전 캡
-    }
-    while(lo<hi){
-      const mid = Math.floor((lo+hi+1)/2);
-      const r = _tab2_tryPlan([{name, qty:mid}], baseState, recipes, midSet, finalSet);
-      if(r.ok) lo = mid;
-      else hi = mid-1;
-    }
-    return lo;
-  }
-  const max0 = maxSingle(names[0]);
-  const max1 = maxSingle(names[1]);
-  const max2 = maxSingle(names[2]);
-
-  let best = {rev:-1, x:[0,0,0], st:null, craftLog:null};
-
-  // 전수: 큰 루프부터 best pruning
-  for(let x0=0;x0<=max0;x0++){
-    for(let x1=0;x1<=max1;x1++){
-      // 남은 최대치로도 best 못 넘으면 컷 (같은 가격이면 개수, 아니면 rev)
-      for(let x2=0;x2<=max2;x2++){
-        const rev = x0*unit[0] + x1*unit[1] + x2*unit[2];
-        if(rev <= best.rev) continue;
-
-        const plan = [
-          {name:names[0], qty:x0},
-          {name:names[1], qty:x1},
-          {name:names[2], qty:x2},
-        ];
-        const r = _tab2_tryPlan(plan, baseState, recipes, midSet, finalSet);
-        if(r.ok){
-          best = {rev, x:[x0,x1,x2], st:r.st, craftLog:r.craftLog};
-        }
-      }
-    }
-  }
-
-  return {best, names, max:[max0,max1,max2]};
-}
-
-
-// =========================================================
-// TAB2 NEW ENGINE: Lookahead depth=2 (strict craft simulator)
-// - uses actual fish supply (tot_) + mid inventory
-// - NO same-tier price equalization (price diffs preserved)
-// - prevents the old "stuck" and "impossible craft" issues by:
-//   (A) strict feasibility checks (fish/inv must exist)
-//   (B) 1-by-1 crafting with 2-step lookahead scoring
-// =========================================================
-function _tab2_canCraftOneFinal(finalName, st, recipes, midSet, finalSet){
-  const tmp = _tab2_cloneState(st);
-  const tmpLog = {};
-  const ok = _tab2_craftNeedStrict(finalName, 1, tmp, recipes, midSet, finalSet, tmpLog, 0);
-  return !!ok;
-}
-
-
-// Estimate how many consecutive units of the same item can be crafted
-function _tab2_estimateBurst(name, st, recipes, midSet, finalSet){
-  let cnt = 0;
-  let tmp = _tab2_cloneState(st);
-  const log = {};
-  while(cnt < MAX_BURST){
-    const ok = _tab2_craftNeedStrict(name, 1, tmp, recipes, midSet, finalSet, log, 0);
-    if(!ok) break;
-    cnt++;
-  }
-  return cnt;
-}
-
-function _tab2_lookahead2_pick(st, prices, recipes, midSet, finalSet){
-  const n = PRODUCTS.length;
-
-
-  // Aggressive weighting (global, not item-specific)
-  // Higher ALPHA => trust immediate revenue more; BETA keeps 2-step awareness.
-  // using global ALPHA_GLOBAL / BETA_GLOBAL
-  let bestIdx = -1;
-  let bestScore = -Infinity;
-  let bestP1 = -Infinity;
-
-  for(let i=0;i<n;i++){
-    const name1 = PRODUCTS[i].name;
-    // first step feasibility
-    const st1 = _tab2_cloneState(st);
-    const log1 = {};
-    const ok1 = _tab2_craftNeedStrict(name1, 1, st1, recipes, midSet, finalSet, log1, 0);
-    if(!ok1) continue;
-
-    // second step: best additional price after taking i
-    let bestSecond = 0;
-    for(let j=0;j<n;j++){
-      const name2 = PRODUCTS[j].name;
-      const st2 = _tab2_cloneState(st1);
-      const log2 = {};
-      const ok2 = _tab2_craftNeedStrict(name2, 1, st2, recipes, midSet, finalSet, log2, 0);
-      if(ok2){
-        const pj = Math.max(0, Math.floor(Number(prices[j]||0)));
-        if(pj > bestSecond) bestSecond = pj;
-      }
-    }
-
-    const p1 = Math.max(0, Math.floor(Number(prices[i]||0)));
-    const burst = _tab2_estimateBurst(name1, st, recipes, midSet, finalSet);
-    const score = (p1 * ALPHA_GLOBAL)
-                + (bestSecond * BETA_GLOBAL)
-                + (Math.max(0, burst - 1) * p1 * GAMMA_GLOBAL);
-    // DEBUG (scope-safe): uncomment if needed
-    // console.log("[pick]", name1, {p1, bestSecond, score});
-
-    // tie-breaker: higher immediate price, then stable index
-    if(score > bestScore || (score === bestScore && (p1 > bestP1 || (p1 === bestP1 && i < bestIdx)))){
-      bestScore = score;
-      bestP1 = p1;
-      bestIdx = i;
-    }
-  }
-
-  return bestIdx;
-}
-
 function optimizeActual(){
   updateTotalsActual();
 
-  // 가격(프리미엄만) - ✅ 가격 차이 유지 (동일 등급 통일 제거)
+  // prices use premium level only (storm/star irrelevant after harvest)
   const premiumLevel = Number(document.getElementById("premiumLevel").value || 0);
   const premiumMul = premiumMulFromLevel(premiumLevel);
-  const prices = PRODUCTS.map(p=> Math.round(Number(p.base || 0) * premiumMul));
+  let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
+  prices = equalizePricesWithinTierMax(prices);
 
-  const recipes = getAllRecipesForMid();
-  const midSet = new Set(MID_ITEMS);
-  const finalSet = new Set(PRODUCTS.map(p=>p.name));
+  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
+  const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
-  // 기준 상태(어패류+중간재) : ✅ tot_ 기반 + midInv (no credit)
-  const st = _tab2_stateFromUI_noCredit(true);
-  const startFish = Object.fromEntries(FISH_ROWS.map(f=>[f, Math.max(0, Math.floor(Number(st.fish[f]||0)))]));
-
-  const y = Array(PRODUCTS.length).fill(0);
-
-  // Hard safety cap (prevents accidental infinite loops)
-  const MAX_STEPS = 50000;
-  let steps = 0;
-
-  while(steps++ < MAX_STEPS){
-    const pick = _tab2_lookahead2_pick(st, prices, recipes, midSet, finalSet);
-    if(pick < 0) break;
-    const name = PRODUCTS[pick].name;
-
-    // Adaptive Batch: keep crafting while this item remains the best pick
-    let guard = 0;
-    const MAX_ADAPTIVE = Number(window.BURST_EXEC_CAP || 20);
-
-    while(guard++ < MAX_ADAPTIVE){
-      const log = {};
-      const ok = _tab2_craftNeedStrict(name, 1, st, recipes, midSet, finalSet, log, 0);
-      if(!ok) break;
-
-      y[pick] += 1;
-
-      // Re-evaluate: if another item becomes better, stop batching
-      const nextPick = _tab2_lookahead2_pick(st, prices, recipes, midSet, finalSet);
-      if(nextPick !== pick) break;
-    }
+  const res = simplexMax(A, b, c);
+  if(res.status !== "optimal"){
+    alert("최적화 실패: 입력 재고를 확인해줘.");
+    return;
   }
 
-  // supply (표에 보여줄 재고) = tot_ 기반 (no credit)
-  const supply = FISH_ROWS.map(f=> Math.max(0, Math.floor(Number(startFish[f]||0))));
+  const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
 
-  // usedFish: 시작-종료 (표시/디버그용)
-  const usedFish = FISH_ROWS.map(f=>{
-    const before = Math.max(0, Math.floor(Number(startFish[f]||0)));
-    const after  = Math.max(0, Math.floor(Number(st.fish[f]||0)));
-    return Math.max(0, before - after);
+  // ✅ 기존 UI는 최종품 9개만 그리므로 yFinal만 추출
+  const yFinal = PRODUCTS.map(p=>{
+    const idx = items.indexOf(p.name);
+    return idx >= 0 ? (intRes.x[idx] || 0) : 0;
   });
 
-  renderActualResult(y, prices, supply, usedFish);
-}
+  LAST_ACTUAL = {
+    x: intRes.x,          // 전체 변수(중간재 제작량 포함)
+    y: yFinal,            // 최종품만
+    prices,
+    fishSupply,
+    A
+  };
 
+const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
+renderActualResult(yFinal, prices, fishSupply, usedFish);
+
+}
 
  
 
@@ -3135,8 +2974,8 @@ function optimizeActual(){
 function readActualFishSupplyNoMid(){
   const out = Array(FISH_ROWS.length).fill(0);
   for(let i=0;i<FISH_ROWS.length;i++){
-    const base = Math.max(0, Math.floor(Number(document.getElementById(`base_${i}`)?.value || 0)));
-    const harv = Math.max(0, Math.floor(Number(document.getElementById(`harv_${i}`)?.value || 0)));
+    const base = Math.max(0, Math.floor(_readSetEa("base", i)));
+    const harv = Math.max(0, Math.floor(_readSetEa("harv", i)));
     out[i] = base + harv;
   }
   return out;
@@ -3241,24 +3080,16 @@ document.getElementById("btnOpt").addEventListener("click", () => {
 
 document.getElementById("btnSolveActual").addEventListener("click", () => {
   const btn = document.getElementById("btnSolveActual");
-  // 기존 버튼 스피너도 유지
   setButtonLoading(btn, true, "계산 중…");
-  // ✅ 중앙 오버레이 즉시 표시
-  showGlobalLoadingOverlay();
 
-  // ✅ 반드시 먼저 paint 되게 한 틱 양보 후 계산 시작
   requestAnimationFrame(() => {
-    setTimeout(() => {
-      try {
-        optimizeActual(); // 기존 계산 로직 그대로
-      } finally {
-        hideGlobalLoadingOverlay();
-        setButtonLoading(btn, false);
-      }
-    }, 0);
+    try {
+      optimizeActual(); // ✅ 기존 함수 그대로 호출
+    } finally {
+      setButtonLoading(btn, false);
+    }
   });
 });
-
 
 
 document.getElementById("craftTblA").addEventListener("change",(e)=>{
@@ -3349,34 +3180,24 @@ tabRecipe?.addEventListener("click", ()=>showPanel("recipe"));
   updateTradeForActiveTab();
 })();
 document.getElementById("btnZero").addEventListener("click", ()=>{
-  if(!confirm("재고를 초기화할까요?")) return;
-
-  // TAB1: 어패류 재고 입력칸 전부 초기화
-  const invTbl = document.getElementById("invTbl");
-  if(invTbl){
-    invTbl.querySelectorAll('input[type="number"]').forEach(inp=> inp.value = 0);
-  }
-
-  // TAB2: 기존 재고 + 오늘 채집 + 총 재고 초기화
-  const invActual = document.getElementById("invActualTbl");
-  if(invActual){
-    invActual.querySelectorAll('input[type="number"]').forEach(inp=> inp.value = 0);
-    invActual.querySelectorAll('[id^="tot_"]').forEach(td=> td.textContent = "0");
-  }
-
-  // 저장값 삭제
-  try{ localStorage.removeItem(LS_KEY_EXPECTED); }catch(e){}
-  try{ localStorage.removeItem(LS_KEY_BASE); }catch(e){}
-
-  // 탭2 테이블 재생성 및 미계산 표시
-  try{ buildInvActual(); }catch(e){}
-  try{ if(typeof markActualTotalsDirty==='function') markActualTotalsDirty(); }catch(e){}
+  FISH_ROWS.forEach((_, i)=> _readSetEa("inv", i) = 0);
+  buildInvActual();
+loadExpectedInv();
+syncExpectedToBase();
+loadBaseInv();
+recalcFromCurrent();
 });
 document.querySelectorAll("#panelExpected input,#panelExpected select").forEach(el=>{
   el.addEventListener("change", ()=>recalcFromCurrent());
 });
 
-// NOTE: 탭1 ↔ 탭2 재고 자동 동기화는 제거됨(증식 버그 원인).
+// 탭1 재고 변경 시 탭2 기존재고에도 자동 반영 + 저장
+FISH_ROWS.forEach((_, i)=>{
+  const el = document.getElementById(`inv_${i}`);
+  if(el){
+    el.addEventListener("change", ()=>{ saveExpectedInv(); syncExpectedToBase(); });
+  }
+});
 
 
 /* =========================
@@ -3453,60 +3274,55 @@ function buildTipHtml(name, meta) {
   const r = getRecipe(name);
   if (!r) return null;
 
-  const kind = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
+  const kind  = meta?.kind || (isFinalProductName(name) ? "final" : "mid");
+  const qty   = Math.max(0, Math.floor(Number(meta?.qty ?? 0)));
+  const craft = Math.max(0, Math.floor(Number(meta?.craft ?? qty ?? 0)));
+  const need  = Math.max(0, Math.floor(Number(meta?.need ?? craft ?? 0)));
+  const inv   = Math.max(0, Math.floor(Number(meta?.inv || 0)));
 
-  // ── 기준 값: 제작 개수 (개수 기준 유지) ──
-  const makeQty = Math.max(
-    0,
-    Math.floor(Number(meta?.need ?? meta?.craft ?? meta?.qty ?? 0))
-  );
+  
+  // ── 세트/개 텍스트(툴팁 배지용, HTML span 없이) ──
+  function fmtSet64Text(n){
+    n = Math.max(0, Math.floor(Number(n || 0)));
+    const set = Math.floor(n / 64);
+    const ea  = n % 64;
+    if(set > 0 && ea > 0) return `${set} 세트 ${ea} 개`;
+    if(set > 0) return `${set} 세트`;
+    return `${ea} 개`;
+  }
 
-  const yieldN = (typeof recipeYield === "function")
-    ? recipeYield(name)
-    : 1;
+  // ── meta.qty / meta.craft 는 "제작 횟수"로 들어올 수 있음(표에서 data-tipqty=crafts)
+  const __tipCrafts = Math.max(0, Math.floor(Number(meta?.qty ?? meta?.craft ?? 0)));
+  const __tipYield  = (typeof recipeYield === "function") ? Math.max(1, recipeYield(name)) : 1;
+  const __tipMakeQty = __tipCrafts * __tipYield;
+// 레시피 수량 배수는 “추가 제작” 기준
+  const mul = (kind === "final")
+    ? Math.max(1, Math.floor(Number(qty ?? craft ?? 0)))
+    : Math.max(1, craft);
 
-  // ── 타이틀 ──
+  // ── 타이틀: 산출물이므로 yield(×2) 표시 유지 ──
   const titleHtml = (kind === "final")
     ? productLabel(name)
     : matLabel(name);
 
-// ── 배지: "제작 세트·개" 숫자만 ──
-const badges =
-  makeQty > 0
-    ? `<span class="tipBadge">${fmtSet64Text(makeQty)}</span>`
-    : "";
+  // ── 배지 규칙 ──
+  let badges = "";
 
-// ── 세트/개 포맷 ──
-function fmtSet64Text(n){
-  n = Math.max(0, Math.floor(Number(n || 0)));
+  if (kind === "final") {
+    const rec = Math.max(0, Number(qty || craft || 0));
+    badges = (__tipMakeQty > 0)
+      ? `<span class="tipBadge">${fmtSet64Text(__tipMakeQty)}</span>`
+      : `<span class="tipBadge">레시피</span>`;
+  } else {
+    badges = (__tipMakeQty > 0)
+      ? `<span class="tipBadge">${fmtSet64Text(__tipMakeQty)}</span>`
+      : `<span class="tipBadge">레시피</span>`;
+  }
 
-  const set = Math.floor(n / 64);
-  const ea  = n % 64;
-
-  // "제작 2 세트 14 개" 형태 (텍스트만 반환)
-  if(set > 0 && ea > 0) return `${set} 세트 ${ea} 개`;
-  if(set > 0)          return `${set} 세트`;
-  return `${ea} 개`;
-}
-
-
-
-
-  // ── 재료 목록: 개수 기준 전개 ──
+  // ── 재료 목록: 소비 재료 → yield(×2) 숨김 ──
   const lines = Object.entries(r)
-    .map(([mat, perCraft]) => {
-      // 1회 제작당 필요 재료(perCraft)
-      // 1회 제작당 생산 개수(yieldN)
-      const perItem = perCraft / yieldN;
-
-      // 안전장치 (정수/에센스는 항상 나눠떨어져야 함)
-      if (perItem !== Math.floor(perItem)) {
-        console.warn("레시피/생산량 불일치:", name, mat);
-      }
-
-      const total = makeQty * perItem;
-      if (total <= 0) return "";
-
+    .map(([mat, per]) => {
+      const total = Math.max(0, Math.floor(Number(per || 0) * mul));
       return `
         <div class="tipRow">
           <div class="tipLeft"><span>${matLabel(mat, false)}</span></div>
@@ -3538,13 +3354,6 @@ function fmtSet64Text(n){
     }
 
     tip.hidden = false;
-    // [THEME] recipe tooltip theme sync
-    try{
-      const root = document.documentElement;
-      const isBlue = root && root.dataset && root.dataset.theme === "blue";
-      tip.classList.toggle("themeBlue", !!isBlue);
-    }catch(e){}
-
     setPosNearCursor(clientX, clientY);
   }
 
@@ -3645,8 +3454,8 @@ renderMidInvGrid();   // ✅ 이 줄
 bindMidInvResetButtons();
 updateMidInvBadge();
 loadExpectedInv();
-// [PATCH] disable auto-load on startup
-// loadBaseInv();
+syncExpectedToBase();
+loadBaseInv();
 recalcFromCurrent();
 updateTotalsActual();
 
@@ -4758,418 +4567,334 @@ try{ renderTradeSummaryActual(); }catch(e){};
 })();
 
 
-// === Theme toggle compatibility (safe) ===
-(function(){
-  const sw = document.querySelector('.themeSwitch');
-  if(!sw) return;
-  const root = document.documentElement;
-  const saved = localStorage.getItem('theme');
-  if(saved){
-    root.dataset.theme = saved;
-  }
-  sw.addEventListener('click', ()=>{
-    const cur = root.dataset.theme === 'blue' ? '' : 'blue';
-    if(cur) root.dataset.theme = cur;
-    else delete root.dataset.theme;
-    localStorage.setItem('theme', cur);
-  });
-})();
-
-
-
 // ================================
-// Fish inventory: set / unit (SAFE, scoped)
-// - Does NOT touch trade or other tables
-// - Keeps underlying value as total units
+// FIX: 재고 불러오기 버튼 바인딩 (id가 달라도 동작)
+// - 우선순위: #btnLoadInv -> .btn-strong(텍스트 포함) -> 텍스트 매칭
 // ================================
-const FISH_SET_SIZE = 64;
+function _doSyncExpectedToBase(){
+  const arr = (typeof getExpectedInv === "function") ? getExpectedInv() : null;
+  if(!Array.isArray(arr)) return;
 
-// Enhance fish inventory table rows AFTER render
-function enhanceFishInvRows(){
-  const rows = document.querySelectorAll("#invTbl tbody tr");
-  rows.forEach(tr=>{
-    if(tr.dataset.enhanced) return;
-
-    const inp = tr.querySelector("input[type='number']");
-    if(!inp) return;
-
-    // read existing total
-    const total = Math.max(0, Number(inp.value||0));
-    const set = Math.floor(total / FISH_SET_SIZE);
-    const unit = total % FISH_SET_SIZE;
-
-    // build wrapper
-    const wrap = document.createElement("div");
-    wrap.className = "fishSetUnitWrap";
-    wrap.style.display = "flex";
-    wrap.style.gap = "8px";
-    wrap.style.justifyContent = "flex-end";
-
-    const setInp = document.createElement("input");
-    setInp.type = "number";
-    setInp.min = "0";
-    setInp.className = inp.className;
-    setInp.value = set;
-
-    const unitInp = document.createElement("input");
-    unitInp.type = "number";
-    unitInp.min = "0";
-    unitInp.max = String(FISH_SET_SIZE-1);
-    unitInp.className = inp.className;
-    unitInp.value = unit;
-
-    // sync to hidden original input
-    function sync(){
-      const s = Math.max(0, Number(setInp.value||0));
-      const u = Math.max(0, Number(unitInp.value||0));
-      const tot = s * FISH_SET_SIZE + u;
-      inp.value = tot;
-      inp.dispatchEvent(new Event("input", {bubbles:true}));
+  arr.forEach((v,i)=>{
+    if (typeof _writeSetEa === "function") _writeSetEa("base", i, v);
+    else{
+      const el = document.getElementById(`base_${i}`);
+      if(el) el.value = v;
     }
-    setInp.addEventListener("input", sync);
-    unitInp.addEventListener("input", sync);
-
-    // hide original, insert wrapper
-    inp.type = "hidden";
-    wrap.appendChild(setInp);
-    wrap.appendChild(unitInp);
-    inp.parentElement.appendChild(wrap);
-
-    tr.dataset.enhanced = "1";
   });
+
+  if (typeof updateTotalsActual === "function") updateTotalsActual();
 }
 
-// Observe fish inventory table only
+function _bindLoadInvButton(){
+  // 1) exact id
+  let btn = document.getElementById("btnLoadInv");
+  if(btn){
+    btn.addEventListener("click", syncExpectedToBase_click);
+    return true;
+  }
+
+  // 2) class hint (CSS에 .btn-strong이 있음)
+  const strongs = Array.from(document.querySelectorAll("button.btn-strong, .btn.btn-strong"));
+  for(const b of strongs){
+    const t = (b.textContent || "").replace(/\s+/g,"").trim();
+    if(t.includes("재고") && (t.includes("불러") || t.includes("이월"))){
+      b.addEventListener("click", syncExpectedToBase_click);
+      return true;
+    }
+  }
+
+  // 3) text fallback
+  const btns = Array.from(document.querySelectorAll("button"));
+  for(const b of btns){
+    const t = (b.textContent || "").replace(/\s+/g," ").trim();
+    if(
+      t.includes("재고 불러") ||
+      t.includes("재고불러") ||
+      (t.includes("불러") && t.includes("재고")) ||
+      t.includes("잔여 재고 이월") ||
+      t.includes("재고 이월")
+    ){
+      b.addEventListener("click", syncExpectedToBase_click);
+      return true;
+    }
+  }
+  return false;
+}
+
 document.addEventListener("DOMContentLoaded", ()=>{
-  const tbody = document.querySelector("#invTbl tbody");
-  if(!tbody) return;
-
-  const mo = new MutationObserver(()=>enhanceFishInvRows());
-  mo.observe(tbody, {childList:true, subtree:true});
-  setTimeout(enhanceFishInvRows, 0);
+  try{ _bindLoadInvButton(); }catch(e){}
 });
+// ================================
 
 
 
-// NOTE: 탭1 → 탭2 어패류 재고 "자동" 동기화는 제거됨.
-// (입력 중간에 탭2 base_*가 덮어써지며 총재고가 증식하는 원인)
+// ================================
+// FINAL FIX: 재고 불러오기 (문서 위임 + 클릭 전용)
+// ================================
 
+// 실제 작업 (confirm 없음)
+function _doSyncExpectedToBase(){
+  const arr = (typeof getExpectedInv === "function") ? getExpectedInv() : null;
+  if(!Array.isArray(arr)) return;
 
-// === TAB2 today harvest set/ea enhancer (POST-BUILD, SAFE) ===
-(function(){
-  function enhance(){
-    if(typeof FISH_ROWS === "undefined") return;
-    FISH_ROWS.forEach((_, i)=>{
-      const harv = document.getElementById(`harv_${i}`);
-      if(!harv || harv.dataset.seteaEnhanced) return;
-      harv.dataset.seteaEnhanced = "1";
-
-      const td = harv.parentElement;
-      if(!td) return;
-
-      harv.style.display = "none";
-
-      const wrap = document.createElement("span");
-      wrap.style.display = "inline-flex";
-      wrap.style.alignItems = "center";
-      wrap.style.gap = "4px";
-
-      const setI = document.createElement("input");
-      setI.type = "number"; setI.min = "0"; setI.step = "1"; setI.value = "0";
-      setI.style.width = "56px";
-
-      const setL = document.createElement("span");
-      setL.textContent = "세트";
-
-      const eaI = document.createElement("input");
-      eaI.type = "number"; eaI.min = "0"; eaI.step = "1"; eaI.value = "0";
-      eaI.style.width = "56px";
-
-      const eaL = document.createElement("span");
-      eaL.textContent = "개";
-
-      const sync = ()=>{
-        harv.value = (Number(setI.value||0)*64) + Number(eaI.value||0);
-        if(typeof updateTotalsActual === "function") updateTotalsActual();
-      };
-      setI.addEventListener("input", sync);
-      eaI.addEventListener("input", sync);
-
-      td.appendChild(wrap);
-      wrap.appendChild(setI);
-      wrap.appendChild(setL);
-      wrap.appendChild(eaI);
-      wrap.appendChild(eaL);
-    });
-  }
-
-  // hook after buildInvActual
-  if(typeof buildInvActual === "function"){
-    const _orig = buildInvActual;
-    buildInvActual = function(){
-      const r = _orig.apply(this, arguments);
-      enhance();
-      return r;
-    };
-  }
-
-  // fallback after load
-  window.addEventListener("DOMContentLoaded", ()=>{
-    setTimeout(enhance, 0);
+  arr.forEach((v,i)=>{
+    if (typeof _writeSetEa === "function") _writeSetEa("base", i, v);
+    else{
+      const el = document.getElementById(`base_${i}`);
+      if(el) el.value = v;
+    }
   });
-})();
 
-
-// === TAB1 inventory set/ea label enhancer (UI ONLY) ===
-(function(){
-  function enhanceTab1(){
-    if(typeof FISH_ROWS === "undefined") return;
-    FISH_ROWS.forEach((_, i)=>{
-      const base = document.getElementById(`inv_${i}`);
-      if(!base) return;
-
-      const td = base.parentElement;
-      if(!td || td.dataset.seteaLabeled) return;
-      td.dataset.seteaLabeled = "1";
-
-      const inputs = td.querySelectorAll("input[type='number']");
-      if(inputs.length < 2) return;
-
-      const setI = inputs[0];
-      const eaI  = inputs[1];
-
-      const wrap = document.createElement("span");
-      wrap.style.display = "inline-flex";
-      wrap.style.alignItems = "center";
-      wrap.style.gap = "4px";
-
-      setI.before(wrap);
-      wrap.appendChild(setI);
-      wrap.insertAdjacentHTML("beforeend", "<span class='qty-unit'>세트</span>");
-      wrap.appendChild(eaI);
-      wrap.insertAdjacentHTML("beforeend", "<span class='qty-unit'>개</span>");
-    });
-  }
-
-  if(typeof buildTables === "function"){
-    const _b = buildTables;
-    buildTables = function(){
-      const r = _b.apply(this, arguments);
-      enhanceTab1();
-      return r;
-    };
-  }
-
-  window.addEventListener("DOMContentLoaded", ()=> setTimeout(enhanceTab1, 0));
-})();
-
-
-
-/* ===============================
-   PERSISTENCE PATCH
-   - Fish inventories (inv/base/harv)
-   - Upgrade stages
-   =============================== */
-
-const LS_KEY_FISH_INV = "DDTY_FISH_INV_V1";
-const LS_KEY_STAGE_CFG = "DDTY_STAGE_CFG_V1";
-
-function saveFishInv(){
-  if(typeof FISH_ROWS === "undefined") return;
-  const data = {};
-  FISH_ROWS.forEach((_, i)=>{
-    data[i] = {
-      inv:  Number(document.getElementById(`inv_${i}`)?.value  || 0),
-      base: Number(document.getElementById(`base_${i}`)?.value || 0),
-      harv: Number(document.getElementById(`harv_${i}`)?.value || 0),
-    };
-  });
-  localStorage.setItem(LS_KEY_FISH_INV, JSON.stringify(data));
+  if (typeof updateTotalsActual === "function") updateTotalsActual();
 }
 
-function loadFishInv(){
-  try{
-    const raw = localStorage.getItem(LS_KEY_FISH_INV);
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    if(typeof FISH_ROWS === "undefined") return;
-    FISH_ROWS.forEach((_, i)=>{
-      const row = data[i];
-      if(!row) return;
-      const inv  = document.getElementById(`inv_${i}`);
-      const base = document.getElementById(`base_${i}`);
-      const harv = document.getElementById(`harv_${i}`);
-      if(inv)  inv.value  = row.inv  ?? 0;
-      if(base) base.value = row.base ?? 0;
-      if(harv) harv.value = row.harv ?? 0;
-    });
-  }catch(e){}
+// 클릭 전용 핸들러
+function _handleLoadInvClick(){
+  if(!window.confirm("탭1 재고를 탭2 기존 재고로 불러오시겠습니까?")) return;
+  _doSyncExpectedToBase();
 }
 
-function bindFishInvPersistence(){
-  if(typeof FISH_ROWS === "undefined") return;
-  FISH_ROWS.forEach((_, i)=>{
-    ["inv","base","harv"].forEach(k=>{
-      const el = document.getElementById(`${k}_${i}`);
-      if(el){
-        el.addEventListener("input", saveFishInv);
-        el.addEventListener("change", saveFishInv);
+// 문서 위임: 어떤 렌더 타이밍에도 동작
+document.addEventListener("click", function(e){
+  const t = e.target;
+  if(!t) return;
+
+  // 버튼 자체 또는 버튼 안 요소 클릭 대응
+  const btn = t.closest && t.closest("button");
+  if(!btn) return;
+
+  const txt = (btn.textContent || "").replace(/\s+/g," ").trim();
+  if(
+    btn.id === "btnLoadInv" ||
+    txt.includes("재고 불러") ||
+    txt.includes("재고불러") ||
+    (txt.includes("불러") && txt.includes("재고")) ||
+    txt.includes("잔여 재고 이월") ||
+    txt.includes("재고 이월")
+  ){
+    e.preventDefault();
+    _handleLoadInvClick();
+  }
+});
+// ================================
+
+
+
+// ================================
+// FINAL FIX: 재고 초기화 버튼 (세트/개 대응, 문서 위임)
+// ================================
+
+function _doResetInventory(){
+  // 탭1 (기댓값)
+  if (typeof FISH_ROWS !== "undefined"){
+    FISH_ROWS.forEach((_, i)=>{
+      if (typeof _writeSetEa === "function"){
+        _writeSetEa("inv", i, 0);
+      } else {
+        const el = document.getElementById(`inv_${i}`);
+        if(el) el.value = 0;
       }
     });
-  });
-}
+  }
 
-function saveStages(){
-  const data = {};
-  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) data[id] = el.value;
-  });
-  localStorage.setItem(LS_KEY_STAGE_CFG, JSON.stringify(data));
-}
-
-function loadStages(){
-  try{
-    const raw = localStorage.getItem(LS_KEY_STAGE_CFG);
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    Object.entries(data).forEach(([id,val])=>{
-      const el = document.getElementById(id);
-      if(el) el.value = val;
+  // 탭2 (기존 + 오늘 채집)
+  if (typeof FISH_ROWS !== "undefined"){
+    FISH_ROWS.forEach((_, i)=>{
+      if (typeof _writeSetEa === "function"){
+        _writeSetEa("base", i, 0);
+        _writeSetEa("harv", i, 0);
+      } else {
+        const b = document.getElementById(`base_${i}`);
+        const h = document.getElementById(`harv_${i}`);
+        if(b) b.value = 0;
+        if(h) h.value = 0;
+      }
+      const t = document.getElementById(`tot_${i}`);
+      if(t) t.textContent = "0";
     });
-  }catch(e){}
+  }
+
+  if (typeof updateTotalsActual === "function") updateTotalsActual();
 }
 
-function bindStagePersistence(){
-  ["toolStage","premiumStage","deepStage","starStage"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.addEventListener("change", saveStages);
-  });
+function _handleResetInvClick(){
+  if(!window.confirm("모든 재고를 초기화하시겠습니까?")) return;
+  _doResetInventory();
 }
 
-window.addEventListener("DOMContentLoaded", ()=>{
-  loadFishInv();
-  loadStages();
-  bindFishInvPersistence();
-  bindStagePersistence();
-  if(typeof updateTotalsActual === "function"){
-    updateTotalsActual();
+// 문서 위임
+document.addEventListener("click", function(e){
+  const btn = e.target?.closest && e.target.closest("button");
+  if(!btn) return;
+
+  const txt = (btn.textContent || "").replace(/\s+/g," ").trim();
+  if(
+    btn.id === "btnResetInv" ||
+    txt.includes("재고 초기화") ||
+    txt.includes("재고초기화") ||
+    (txt.includes("초기화") && txt.includes("재고"))
+  ){
+    e.preventDefault();
+    _handleResetInvClick();
   }
 });
+// ================================
 
 
 
-
-
-
-// 탭2 어패류 기존 재고 초기화 (탭1 재고 초기화와 동일 개념)
-
-
-// 📥 재고 불러오기 (탭1 어패류 기존 재고 → 탭2 어패류 기존 재고)
-document.getElementById("btnLoadToActual")?.addEventListener("click", ()=>{
-  if(!confirm("탭1 어패류 기존 재고를 불러올까요?")) return;
-  FISH_ROWS.forEach((_, i)=>{
-    const inv = document.getElementById(`inv_${i}`);
-    const bs  = document.getElementById(`base_set_${i}`);
-    const be  = document.getElementById(`base_ea_${i}`);
-    if(!inv || !bs || !be) return;
-    const units = Math.max(0, Math.floor(Number(inv.value||0)));
-    const set = Math.floor(units / SET_SIZE);
-    const ea  = units % SET_SIZE;
-    bs.value = set;
-    be.value = ea;
-  });
-  try{ saveBaseInv(); }catch(e){}
-  try{ updateTotalsActual(); }catch(e){}
-});
-
-// 🗑️ 재고 초기화 (탭2 연금품/어패류 기존 재고)
-document.getElementById("btnResetActualInv")?.addEventListener("click", ()=>{
-  if(!confirm("재고를 초기화할까요?")) return;
-  FISH_ROWS.forEach((_, i)=>{
-    const bs = document.getElementById(`base_set_${i}`);
-    const be = document.getElementById(`base_ea_${i}`);
-    if(bs) bs.value = 0;
-    if(be) be.value = 0;
-  });
-  try{ saveBaseInv(); }catch(e){}
-  try{ updateTotalsActual(); }catch(e){}
-});
-
-
-// ===============================
-// 탭2 계산 후 남은 어패류 스냅샷 저장
-// ===============================
-window.__lastLeftoverFish = null;
-
+// ================================
+// RECIPE TOOLTIP BADGE THEME FIX
+// - tipBadge is a <span>, styled in index with beige colors.
+// - Add blue-theme override via injected <style> (safe, append-only)
+// ================================
 (function(){
-  const _updateTotalsActual = window.updateTotalsActual;
-  if (typeof _updateTotalsActual !== "function") return;
+  const css = `
+/* tipBadge (recipe tooltip) - blue theme override */
+html[data-theme="blue"] .recipeTip .tipBadge{
+  background: rgba(90,110,255,.10) !important;
+  border: 1px solid rgba(90,110,255,.35) !important;
+  color: rgba(55,75,190,.95) !important;
+}
+html[data-theme="blue"] .recipeTip .tipBadge.strong{
+  background: rgba(90,110,255,.12) !important;
+  border-color: rgba(90,110,255,.40) !important;
+  color: rgba(55,75,190,.98) !important;
+}
+`;
+  function inject(){
+    if(document.getElementById("tipBadgeThemeFix")) return;
+    const st = document.createElement("style");
+    st.id = "tipBadgeThemeFix";
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", inject);
+  else inject();
+})();
 
-  window.updateTotalsActual = function(){
-    const ret = _updateTotalsActual.apply(this, arguments);
 
-    try{
-      const snap = [];
-      FISH_ROWS.forEach((_, i)=>{
-        const bs = document.getElementById(`base_set_${i}`);
-        const be = document.getElementById(`base_ea_${i}`);
-        const set = Math.max(0, Number(bs?.value || 0));
-        const ea  = Math.max(0, Number(be?.value || 0));
-        snap[i] = set * SET_SIZE + ea; // 총 개수로 정규화
-      });
-      window.__lastLeftoverFish = snap;
-    }catch(e){
-      console.error("leftover snapshot failed", e);
+
+// =============================
+// TAB2: 하위 제작 필요량(중간재) - 티어 헤더 렌더
+// - 기존 renderNeedCraftTableTo 로직(툴팁 qtyToCrafts 포함) 재사용
+// =============================
+function renderNeedCraftTableTieredTo(sel, rows){
+  const tb = document.querySelector(sel);
+  if(!tb) return;
+  tb.innerHTML = "";
+
+  const byTier = {1:[],2:[],3:[]};
+  (rows||[]).forEach(r=>{
+    const t = getTierFromName(r.name);
+    (byTier[t] || byTier[1]).push(r);
+  });
+
+  [0,1,2,3].forEach(t=>{
+    const arr = byTier[t];
+    if(!arr || arr.length===0) return;
+
+    const trH = document.createElement("tr");
+    trH.className = `tier-sep tier-${t}`;
+    trH.innerHTML = `<td colspan="4" class="tier-title">${__tierLabel(t)}</td>`;
+    tb.appendChild(trH);
+
+    // 기존 행 렌더 그대로
+    arr.forEach(r=>{
+      const tr = document.createElement("tr");
+
+      const craftNeedQty = Math.max(0, Math.floor(Number(r.craft || 0)));
+      const invQty       = Math.max(0, Math.floor(Number(r.inv   || 0)));
+      if(craftNeedQty <= 0 && invQty <= 0) return;
+
+      const yieldPerCraft =
+        (typeof recipeYield === "function")
+          ? Math.max(1, recipeYield(r.name))
+          : 1;
+
+      const crafts =
+        (typeof qtyToCrafts === "function")
+          ? qtyToCrafts(r.name, craftNeedQty)
+          : Math.ceil(craftNeedQty / yieldPerCraft);
+
+      const shownQty = crafts * yieldPerCraft;
+      const totalQty = shownQty + invQty;
+      const craftCls = shownQty > 0 ? "neg" : "muted";
+
+      tr.innerHTML =
+        `<td>
+          <span class="tipName"
+            data-tipname="${r.name}"
+            data-tipqty="${crafts}"
+          >${matLabel(r.name)}</span>
+        </td>` +
+        `<td class="right ${craftCls}">${fmtSet64(shownQty)}</td>` +
+        `<td class="right">${fmtSet64(invQty)}</td>` +
+        `<td class="right">${fmtSet64(totalQty)}</td>`;
+
+      tb.appendChild(tr);
+    });
+  });
+}
+
+
+
+// =============================
+// TAB2: 부재료(needMat) - 티어 헤더 + 삽입순서 렌더(정렬 금지)
+// =============================
+
+function renderNeedMatTableTieredTo(sel, byTier){
+  const tb = document.querySelector(sel);
+  if(!tb) return;
+  tb.innerHTML = "";
+
+  [0,1,2,3].forEach(t=>{
+    const m = byTier?.[t];
+    if(!m || m.size===0) return;
+
+    // Tier header
+    const trH = document.createElement("tr");
+    trH.className = `tier-sep tier-${t}`;
+    trH.innerHTML = `<td colspan="2" class="tier-title">${__tierLabel(t)}</td>`;
+    tb.appendChild(trH);
+
+    let lastGroup = null;
+
+    for(const [k, v0] of m.entries()){
+      const v = Math.round(Number(v0||0));
+      if(v<=0) continue;
+
+      const g = MAT_GROUP_NAME(k);
+      if(g && g !== lastGroup){
+        const sub = document.createElement("tr");
+        sub.className = "mat-subhead";
+        sub.innerHTML = `<td colspan="2">${g}</td>`;
+        tb.appendChild(sub);
+        lastGroup = g;
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${matLabel(k)}</td><td class="right">${fmtSet64(v)}</td>`;
+      tb.appendChild(tr);
     }
-
-    return ret;
-  };
-})();
-
-
-function renderLeftoverAnalysis(){
-  const box = document.getElementById("leftoverAnalysisBody");
-  if(!box) return;
-  const snap = window.__lastLeftoverFish;
-  if(!snap){
-    box.textContent = "아직 계산된 데이터가 없습니다. 탭2 계산을 실행하세요.";
-    return;
-  }
-  const rows = [];
-  FISH_ROWS.forEach((label,i)=>{
-    const v = snap[i]||0;
-    if(v>0) rows.push(`<div>${matLabel(label)}: ${v}개</div>`);
   });
-  box.innerHTML = rows.length ? rows.join("") : "<div>남은 어패류가 없습니다.</div>";
 }
 
-// hook after updateTotalsActual snapshot
-(function(){
-  const _u = window.updateTotalsActual;
-  if(typeof _u !== "function") return;
-  window.updateTotalsActual = function(){
-    const r = _u.apply(this, arguments);
-    try{ renderLeftoverAnalysis(); }catch(e){}
-    return r;
-  };
-})();
 
 
-// style tweak: match list appearance with other cards
-(function(){
-  const _r = window.renderLeftoverAnalysis;
-  if(typeof _r !== "function") return;
-  window.renderLeftoverAnalysis = function(){
-    const box=document.getElementById("leftoverAnalysisBody");
-    if(!box) return;
-    const snap=window.__lastLeftoverFish;
-    if(!snap){ box.textContent="아직 계산된 데이터가 없습니다. 탭2 계산을 실행하세요."; return; }
-    const rows=[];
-    FISH_ROWS.forEach((label,i)=>{
-      const v=snap[i]||0;
-      if(v>0) rows.push(`<div class="noteLine">• ${matLabel(label)} : <span class="num">${v}</span>개</div>`);
-    });
-    box.innerHTML = rows.length? rows.join("") : "<div class='muted'>남은 어패류가 없습니다.</div>";
-  };
-})();
+// =============================
+// 부재료 소헤더 스타일
+// =============================
+const __matSubStyle = document.createElement("style");
+__matSubStyle.textContent = `
+  .mat-subhead td{
+    padding:8px 8px;
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:#444;
+    background:transparent;
+    border-top:1px solid rgba(0,0,0,.08);
+  }
+`;
+document.head.appendChild(__matSubStyle);
