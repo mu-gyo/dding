@@ -1815,33 +1815,21 @@ function star3Bonus(level){
   return map[level] ?? 0.00;
 }
 function applyStarBonus(base, level){
-  // 별별별: 3성 확률을 +bonus(절대값)만큼 올리고,
-  // 총합 100%를 유지하도록 1성/2성에서 비율대로 차감
   const bonus = star3Bonus(level);
 
   let p1 = Number(base.p1 || 0);
   let p2 = Number(base.p2 || 0);
   let p3 = Number(base.p3 || 0);
 
-  // 입력이 1이 아닐 수도 있으니 일단 정규화
-  const sum = p1 + p2 + p3;
-  if(sum > 0){
-    p1 /= sum; p2 /= sum; p3 /= sum;
-  }
-
-  const newP3 = Math.max(0, Math.min(1, p3 + bonus));
-  const remain = 1 - newP3;
-  const p12 = p1 + p2;
-
-  if(p12 <= 0){
-    // 예외: 1/2성이 0이면 남은 확률은 2성에 몰아줌
-    return { p1: 0, p2: remain, p3: newP3 };
-  }
+  // 방어
+  if(!Number.isFinite(p1)) p1 = 0;
+  if(!Number.isFinite(p2)) p2 = 0;
+  if(!Number.isFinite(p3)) p3 = 0;
 
   return {
-    p1: remain * (p1 / p12),
-    p2: remain * (p2 / p12),
-    p3: newP3
+    p1,                 // ✅ 고정
+    p2,                 // ✅ 고정
+    p3: p3 + bonus      // ✅ 3성만 증가
   };
 }
 
