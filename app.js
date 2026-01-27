@@ -757,7 +757,15 @@ function recipeYield(name){
 function qtyToCrafts(item, qty){
   const q = Math.max(0, Math.floor(Number(qty || 0)));
   if(q <= 0) return 0;
+
   const y = recipeYield(item);
+
+  // ✅ 정수★ / 에센스★★ 등 2개 생산 레시피는 홀수 오버 제작 방지
+  if(y === 2){
+    const craftableQty = Math.floor(q / 2) * 2;
+    return craftableQty / 2;
+  }
+
   return Math.ceil(q / y);
 }
 
@@ -2869,8 +2877,8 @@ function buildActualBalanceLP(pricesFinal){
   const midInv = loadMidInv();                    // ✅ 중간재 재고(그대로)
 
   // "중간재+최종품 레시피" 맵
-const TIP_RECIPES = getAllRecipesForMid();
-
+  const recipes = getAllRecipesForMid(); // ✅ 희석액(EXTRA) 포함
+  const TIP_RECIPES = recipes;
 function getRecipeForTip(name){
   return TIP_RECIPES[name] || null;
 }
@@ -2932,7 +2940,7 @@ function optimizeActual(){
   let prices = PRODUCTS.map(p=> Math.round(p.base * premiumMul));
   prices = equalizePricesWithinTierMax(prices);
 
-  // ✅ 탭2는 "재고 밸런스 LP"로 풂 (중간재를 중간재로 사용)
+  // ✅ 탭2: 최대 매출 LP (희석액 포함) — 중간재는 판매 불가(목적함수 0), 제약으로만 사용
   const {A, b, c, items, fishSupply} = buildActualBalanceLP(prices);
 
   const res = simplexMax(A, b, c);
@@ -2941,26 +2949,49 @@ function optimizeActual(){
     return;
   }
 
-  const intRes = floorAndGreedyIntegerize(A, b, c, res.x);
-
-  // ✅ 기존 UI는 최종품 9개만 그리므로 yFinal만 추출
+  // ✅ 실수 해 → 안전한 정수 제작량(내림). (내리면 항상 제약을 더 만족하므로 feasible)
   const yFinal = PRODUCTS.map(p=>{
     const idx = items.indexOf(p.name);
-    return idx >= 0 ? (intRes.x[idx] || 0) : 0;
+    return idx >= 0 ? Math.max(0, Math.floor(res.x[idx] || 0)) : 0;
   });
 
+  // usedFish: fish matrix 기반으로 yFinal만큼 실제 어패류 소모량 계산(표시/검증용)
+  let usedFish = Array(FISH_ROWS.length).fill(0);
+  try{
+    const BM = buildFishMatrix();
+    const yByBM = (BM.products || []).map(name=>{
+      const pi = PRODUCTS.findIndex(pp => pp.name === name);
+      return pi >= 0 ? Math.max(0, Math.floor(yFinal[pi] || 0)) : 0;
+    });
+
+    const usedMap = {};
+    for(let r=0;r<(BM.fishRows||[]).length;r++){
+      const fr = BM.fishRows[r];
+      let s = 0;
+      for(let j=0;j<yByBM.length;j++){
+        s += Number((BM[r]||[])[j] || 0) * Number(yByBM[j] || 0);
+      }
+      usedMap[String(fr||"")] = s;
+    }
+
+    const norm = (x)=> String(x||"").replace(/\s+/g,"");
+    for(let i=0;i<FISH_ROWS.length;i++){
+      const key = norm(FISH_ROWS[i]);
+      usedFish[i] = Math.max(0, Math.floor(usedMap[key] || 0));
+    }
+  }catch(e){}
+
   LAST_ACTUAL = {
-    x: intRes.x,          // 전체 변수(중간재 제작량 포함)
-    y: yFinal,            // 최종품만
+    x: res.x,              // LP 해(실수)
+    y: yFinal,             // 최종품(정수)
     prices,
     fishSupply,
     A
   };
 
-const usedFish = calcFishUsedFromLP(LAST_ACTUAL.A, LAST_ACTUAL.x);
-renderActualResult(yFinal, prices, fishSupply, usedFish);
-
+  renderActualResult(yFinal, prices, fishSupply, usedFish);
 }
+
 
  
 
